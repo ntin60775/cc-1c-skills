@@ -955,29 +955,40 @@ async function pickFromTypeDialog(formNum, typeName) {
   await page.click(`#form${findFormNum}_Find`, { force: true });
   await page.waitForTimeout(3000);
 
-  // 6. Verify grid WHILE "Найти" is still open (Cancel resets the search)
+  // 6. Read ALL visible grid rows and check how many match the search text.
+  // After Ctrl+F the grid scrolls to the found row — nearby matching rows are visible too.
+  // The "Найти" dialog may auto-close after search, so don't rely on clicking "Найти" again.
   const gridCheck = await page.evaluate(`(() => {
     const grid = document.getElementById('form${formNum}_ValueList');
-    if (!grid) return { visible: [] };
+    if (!grid) return { visible: [], selected: null };
     const body = grid.querySelector('.gridBody');
-    if (!body) return { visible: [] };
+    if (!body) return { visible: [], selected: null };
     const lines = body.querySelectorAll('.gridLine');
     const visible = [];
+    let selected = null;
     for (const line of lines) {
       const text = (line.innerText || '').trim().replace(/\\u00a0/g, ' ');
-      if (text) visible.push(text);
+      if (!text) continue;
+      visible.push(text);
+      if (line.classList.contains('select') || line.classList.contains('selRow')) selected = text;
     }
-    return { visible };
+    return { visible, selected };
   })()`);
 
   const typeNorm = normYo(typeName.toLowerCase());
-  const matchInGrid = gridCheck.visible?.some(t => normYo(t.toLowerCase()).includes(typeNorm));
-  if (!matchInGrid) {
-    // Type not found — close dialogs via Escape (multiple times for safety)
+  const matching = (gridCheck.visible || []).filter(t => normYo(t.toLowerCase()).includes(typeNorm));
+
+  if (matching.length === 0) {
     for (let i = 0; i < 3; i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(300); }
     await waitForStable();
     throw new Error(`selectValue: type "${typeName}" not found in type selection dialog` +
       `. Visible: ${(gridCheck.visible || []).join(', ')}`);
+  }
+
+  if (matching.length > 1) {
+    for (let i = 0; i < 3; i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(300); }
+    await waitForStable();
+    throw new Error(`selectValue: multiple types match "${typeName}": ${matching.map(m => '"' + m + '"').join(', ')}. Specify a more precise type name`);
   }
 
   // 7. Click OK on type dialog via page.click({force:true}) — bypasses "Найти" modal
