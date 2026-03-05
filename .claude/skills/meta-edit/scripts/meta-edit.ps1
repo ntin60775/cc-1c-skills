@@ -269,6 +269,17 @@ function Build-TypeContentXml {
 	param([string]$indent, [string]$typeStr)
 	if (-not $typeStr) { return "" }
 
+	# Composite type: "Type1 + Type2 + Type3"
+	if ($typeStr.Contains(' + ')) {
+		$parts = $typeStr -split '\s*\+\s*'
+		$sb = New-Object System.Text.StringBuilder
+		foreach ($part in $parts) {
+			$inner = Build-TypeContentXml $indent $part.Trim()
+			if ($inner) { $sb.AppendLine($inner) | Out-Null }
+		}
+		return $sb.ToString().TrimEnd("`r","`n")
+	}
+
 	$typeStr = Resolve-TypeStr $typeStr
 	$sb = New-Object System.Text.StringBuilder
 
@@ -342,9 +353,9 @@ function Build-TypeContentXml {
 		return $sb.ToString().TrimEnd("`r","`n")
 	}
 
-	# Reference types
+	# Reference types — use local xmlns declaration for 1C compatibility
 	if ($typeStr -match '^(CatalogRef|DocumentRef|EnumRef|ChartOfAccountsRef|ChartOfCharacteristicTypesRef|ChartOfCalculationTypesRef|ExchangePlanRef|BusinessProcessRef|TaskRef)\.(.+)$') {
-		$sb.AppendLine("$indent<v8:Type>cfg:$typeStr</v8:Type>") | Out-Null
+		$sb.AppendLine("$indent<v8:Type xmlns:d5p1=`"http://v8.1c.ru/8.1/data/enterprise/current-config`">d5p1:$typeStr</v8:Type>") | Out-Null
 		return $sb.ToString().TrimEnd("`r","`n")
 	}
 
@@ -624,7 +635,7 @@ function Parse-AttributeShorthand {
 	$name = "$($val.name)"
 	$result = @{
 		name        = $name
-		type        = if ($val.type) { "$($val.type)" } else { "" }
+		type        = if ($val.type -is [array]) { ($val.type | ForEach-Object { "$_" }) -join ' + ' } elseif ($val.type) { "$($val.type)" } else { "" }
 		synonym     = if ($val.synonym) { "$($val.synonym)" } else { Split-CamelCase $name }
 		comment     = if ($val.comment) { "$($val.comment)" } else { "" }
 		flags       = @(if ($val.flags) { $val.flags } else { @() })

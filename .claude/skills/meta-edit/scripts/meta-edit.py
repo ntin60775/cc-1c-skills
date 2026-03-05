@@ -188,6 +188,16 @@ def build_type_content_xml(indent, type_str):
     if not type_str:
         return ""
 
+    # Composite type: "Type1 + Type2 + Type3"
+    if " + " in type_str:
+        parts = [p.strip() for p in type_str.split("+")]
+        results = []
+        for part in parts:
+            inner = build_type_content_xml(indent, part)
+            if inner:
+                results.append(inner)
+        return "\r\n".join(results)
+
     type_str = resolve_type_str(type_str)
     lines = []
 
@@ -258,14 +268,14 @@ def build_type_content_xml(indent, type_str):
         lines.append(f"{indent}<v8:TypeSet>cfg:DefinedType.{dt_name}</v8:TypeSet>")
         return "\r\n".join(lines)
 
-    # Reference types
+    # Reference types — use local xmlns declaration for 1C compatibility
     m = re.match(
         r"^(CatalogRef|DocumentRef|EnumRef|ChartOfAccountsRef|ChartOfCharacteristicTypesRef|"
         r"ChartOfCalculationTypesRef|ExchangePlanRef|BusinessProcessRef|TaskRef)\.(.+)$",
         type_str,
     )
     if m:
-        lines.append(f"{indent}<v8:Type>cfg:{type_str}</v8:Type>")
+        lines.append(f'{indent}<v8:Type xmlns:d5p1="http://v8.1c.ru/8.1/data/enterprise/current-config">d5p1:{type_str}</v8:Type>')
         return "\r\n".join(lines)
 
     # Fallback
@@ -538,7 +548,7 @@ def parse_attribute_shorthand(val):
     name = str(val.get("name", ""))
     result = {
         "name": name,
-        "type": str(val.get("type", "")),
+        "type": " + ".join(str(t) for t in val["type"]) if isinstance(val.get("type"), list) else str(val.get("type", "")),
         "synonym": str(val.get("synonym", "")) if val.get("synonym") else split_camel_case(name),
         "comment": str(val.get("comment", "")),
         "flags": list(val.get("flags", [])),
@@ -1961,6 +1971,13 @@ def save_xml(tree, path):
     xml_bytes = etree.tostring(tree, xml_declaration=True, encoding="UTF-8")
     # Fix encoding quotes: encoding='UTF-8' -> encoding="UTF-8"
     xml_bytes = xml_bytes.replace(b"encoding='UTF-8'", b'encoding="UTF-8"')
+    # Fix d5p1 namespace declarations stripped by lxml (it treats them as unused
+    # because d5p1: appears only in text content, not in element/attribute names)
+    xml_bytes = re.sub(
+        b'(<v8:Type)(?! xmlns:d5p1)(>d5p1:)',
+        b'\\1 xmlns:d5p1="http://v8.1c.ru/8.1/data/enterprise/current-config"\\2',
+        xml_bytes
+    )
     with open(path, "wb") as f:
         f.write(b"\xef\xbb\xbf")
         f.write(xml_bytes)
