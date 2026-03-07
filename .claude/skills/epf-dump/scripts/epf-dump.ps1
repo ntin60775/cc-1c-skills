@@ -94,20 +94,11 @@ if (-not (Test-Path $V8Path)) {
     exit 1
 }
 
-# --- Auto-create empty database if no connection specified ---
-$autoCreatedBase = $null
+# --- Validate database connection ---
 if (-not $InfoBasePath -and (-not $InfoBaseServer -or -not $InfoBaseRef)) {
-    $autoBasePath = Join-Path $env:TEMP "epf_dump_db_$(Get-Random)"
-    Write-Host "No database specified. Creating temporary empty database..."
-    Write-Host "WARNING: Reference types (CatalogRef, DocumentRef, etc.) will be lost - converted to strings. Use a real database to preserve types." -ForegroundColor Yellow
-    $createArgs = "CREATEINFOBASE File=`"$autoBasePath`" /DisableStartupDialogs"
-    $createProc = Start-Process -FilePath $V8Path -ArgumentList $createArgs -NoNewWindow -Wait -PassThru
-    if ($createProc.ExitCode -ne 0) {
-        Write-Host "Error: failed to create temporary database" -ForegroundColor Red
-        exit 1
-    }
-    $InfoBasePath = $autoBasePath
-    $autoCreatedBase = $autoBasePath
+    Write-Host "Error: database connection required. Specify -InfoBasePath or -InfoBaseServer/-InfoBaseRef" -ForegroundColor Red
+    Write-Host "Dump in an empty database loses reference types (CatalogRef, DocumentRef, etc.) irreversibly." -ForegroundColor Yellow
+    exit 1
 }
 
 # --- Validate input file ---
@@ -172,8 +163,5 @@ try {
 } finally {
     if (Test-Path $tempDir) {
         Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
-    }
-    if ($autoCreatedBase -and (Test-Path $autoCreatedBase)) {
-        Remove-Item -Path $autoCreatedBase -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
