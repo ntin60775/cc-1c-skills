@@ -1,4 +1,4 @@
-﻿# meta-validate v1.0 — Validate 1C metadata object structure
+﻿# meta-validate v1.1 — Validate 1C metadata object structure
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[Parameter(Mandatory)]
@@ -11,6 +11,31 @@ param(
 
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# --- Batch mode: pipe-separated paths (comma reserved by PowerShell) ---
+
+$pathList = @($ObjectPath -split '\|' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+if ($pathList.Count -gt 1) {
+	$batchOk = 0
+	$batchFail = 0
+	foreach ($singlePath in $pathList) {
+		$callArgs = @{ ObjectPath = $singlePath; MaxErrors = $MaxErrors }
+		if ($OutFile) {
+			$baseName = [System.IO.Path]::GetFileNameWithoutExtension($OutFile)
+			$ext = [System.IO.Path]::GetExtension($OutFile)
+			$dir = Split-Path $OutFile
+			if (-not $dir) { $dir = "." }
+			$objLeaf = [System.IO.Path]::GetFileNameWithoutExtension($singlePath)
+			$callArgs.OutFile = Join-Path $dir "$baseName`_$objLeaf$ext"
+		}
+		& $PSCommandPath @callArgs
+		if ($LASTEXITCODE -eq 0) { $batchOk++ } else { $batchFail++ }
+	}
+	Write-Host ""
+	Write-Host "=== Batch: $($pathList.Count) objects, $batchOk passed, $batchFail failed ==="
+	if ($batchFail -gt 0) { exit 1 }
+	exit 0
+}
 
 # --- Resolve path ---
 

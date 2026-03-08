@@ -1,8 +1,9 @@
-# meta-validate v1.0 — Validate 1C metadata object structure (Python port)
+# meta-validate v1.1 — Validate 1C metadata object structure (Python port)
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 import argparse
 import os
 import re
+import subprocess
 import sys
 
 from lxml import etree
@@ -18,9 +19,31 @@ parser.add_argument("-MaxErrors", type=int, default=30)
 parser.add_argument("-OutFile", default="")
 args = parser.parse_args()
 
-object_path = args.ObjectPath
 max_errors = args.MaxErrors
 out_file = args.OutFile
+
+# ── batch mode: pipe-separated paths ─────────────────────────
+
+path_list = [p.strip() for p in args.ObjectPath.split('|') if p.strip()]
+if len(path_list) > 1:
+    batch_ok = 0
+    batch_fail = 0
+    for single_path in path_list:
+        cmd = [sys.executable, __file__, "-ObjectPath", single_path, "-MaxErrors", str(max_errors)]
+        if out_file:
+            base, ext = os.path.splitext(out_file)
+            obj_leaf = os.path.splitext(os.path.basename(single_path))[0]
+            cmd += ["-OutFile", f"{base}_{obj_leaf}{ext}"]
+        rc = subprocess.call(cmd)
+        if rc == 0:
+            batch_ok += 1
+        else:
+            batch_fail += 1
+    print()
+    print(f"=== Batch: {len(path_list)} objects, {batch_ok} passed, {batch_fail} failed ===")
+    sys.exit(1 if batch_fail > 0 else 0)
+
+object_path = path_list[0]
 
 # ── resolve path ─────────────────────────────────────────────
 
