@@ -1,7 +1,7 @@
 ---
 name: role-validate
 description: Валидация роли 1С. Используй после создания или модификации роли для проверки корректности
-argument-hint: <RightsPath> [-Detailed] [-MaxErrors 30] [-MetadataPath <path>]
+argument-hint: <RightsPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash
   - Read
@@ -14,16 +14,14 @@ allowed-tools:
 ## Использование
 
 ```
-/role-validate <RightsPath>
-/role-validate Roles/МояРоль/Ext/Rights.xml Roles/МояРоль.xml
+/role-validate Roles/МояРоль
 ```
 
 ## Параметры
 
 | Параметр     | Обяз. | Умолч. | Описание                                        |
 |--------------|:-----:|---------|-------------------------------------------------|
-| RightsPath   | да    | —       | Путь к `Rights.xml` роли                         |
-| MetadataPath | нет   | —       | Путь к метаданным роли (`Roles/ИмяРоли.xml`)     |
+| RightsPath   | да    | —       | Путь к роли (директория или `Rights.xml`)        |
 | Detailed     | нет   | —       | Показывать [OK] для каждой проверки              |
 | MaxErrors    | нет   | 30      | Макс. ошибок до остановки (по умолчанию 30)      |
 | OutFile      | нет   | —       | Записать результат в файл (UTF-8 BOM)            |
@@ -33,10 +31,8 @@ allowed-tools:
 ## Команда
 
 ```powershell
-powershell.exe -NoProfile -File .claude/skills/role-validate/scripts/role-validate.ps1 -RightsPath "<Roles/ИмяРоли>" [-MetadataPath "<path>"]
+powershell.exe -NoProfile -File .claude/skills/role-validate/scripts/role-validate.ps1 -RightsPath "<Roles/ИмяРоли>"
 ```
-
-Можно указать директорию роли — скрипт найдёт Ext/Rights.xml автоматически.
 
 ## Проверки
 

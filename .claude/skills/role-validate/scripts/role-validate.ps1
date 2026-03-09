@@ -4,8 +4,6 @@ param(
 	[Parameter(Mandatory)]
 	[string]$RightsPath,
 
-	[string]$MetadataPath,
-
 	[string]$OutFile,
 
 	[switch]$Detailed,
@@ -223,6 +221,14 @@ if (-not (Test-Path $RightsPath)) {
 	exit 1
 }
 
+# Auto-detect metadata: Roles/Name/Ext/Rights.xml → Roles/Name.xml
+$resolvedRights = (Resolve-Path $RightsPath).Path
+$extDir = Split-Path $resolvedRights -Parent
+$roleDir = Split-Path $extDir -Parent
+$rolesDir = Split-Path $roleDir -Parent
+$roleDirName = Split-Path $roleDir -Leaf
+$MetadataPath = Join-Path $rolesDir "$roleDirName.xml"
+
 # 3a. Parse XML
 try {
 	[xml]$xml = Get-Content -Path $RightsPath -Encoding UTF8
@@ -394,59 +400,50 @@ if ($templates.Count -gt 0) {
 	Report-OK "$($templates.Count) templates: $($tplNames -join ', ')"
 }
 
-# --- 4. Validate metadata (optional) ---
+# --- 4. Validate metadata ---
 
-if ($MetadataPath) {
+if (Test-Path $MetadataPath) {
 	Out-Line ""
-
-	if (-not (Test-Path $MetadataPath)) {
-		Report-Error "Metadata file not found: $MetadataPath"
-	} else {
-		try {
-			[xml]$metaXml = Get-Content -Path $MetadataPath -Encoding UTF8
-			$roleNode = $metaXml.DocumentElement.SelectSingleNode("//*[local-name()='Role']")
-			if (-not $roleNode) {
-				Report-Error "Metadata: <Role> element not found"
+	try {
+		[xml]$metaXml = Get-Content -Path $MetadataPath -Encoding UTF8
+		$roleNode = $metaXml.DocumentElement.SelectSingleNode("//*[local-name()='Role']")
+		if (-not $roleNode) {
+			Report-Error "Metadata: <Role> element not found"
+		} else {
+			$uuid = $roleNode.GetAttribute("uuid")
+			if ($uuid -match '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') {
+				Report-OK "Metadata: UUID valid ($uuid)"
 			} else {
-				$uuid = $roleNode.GetAttribute("uuid")
-				if ($uuid -match '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') {
-					Report-OK "Metadata: UUID valid ($uuid)"
-				} else {
-					Report-Error "Metadata: invalid UUID format '$uuid'"
-				}
-
-				$nameNode = $roleNode.SelectSingleNode(".//*[local-name()='Name']")
-				if ($nameNode -and $nameNode.InnerText) {
-					Report-OK "Metadata: Name = $($nameNode.InnerText)"
-				} else {
-					Report-Error "Metadata: <Name> is empty or missing"
-				}
-
-				$synNode = $roleNode.SelectSingleNode(".//*[local-name()='Synonym']")
-				if ($synNode -and $synNode.InnerXml) {
-					Report-OK "Metadata: Synonym present"
-				} else {
-					Report-Warn "Metadata: <Synonym> is empty"
-				}
+				Report-Error "Metadata: invalid UUID format '$uuid'"
 			}
-		} catch {
-			Report-Error "Metadata XML parse error: $($_.Exception.Message)"
+
+			$nameNode = $roleNode.SelectSingleNode(".//*[local-name()='Name']")
+			if ($nameNode -and $nameNode.InnerText) {
+				Report-OK "Metadata: Name = $($nameNode.InnerText)"
+			} else {
+				Report-Error "Metadata: <Name> is empty or missing"
+			}
+
+			$synNode = $roleNode.SelectSingleNode(".//*[local-name()='Synonym']")
+			if ($synNode -and $synNode.InnerXml) {
+				Report-OK "Metadata: Synonym present"
+			} else {
+				Report-Warn "Metadata: <Synonym> is empty"
+			}
 		}
+	} catch {
+		Report-Error "Metadata XML parse error: $($_.Exception.Message)"
 	}
 }
 
 # --- 5. Check registration in Configuration.xml ---
 
-# Infer paths: RightsPath = .../Roles/Name/Ext/Rights.xml
-$extDir2 = Split-Path (Resolve-Path $RightsPath).Path -Parent
-$roleDir2 = Split-Path $extDir2 -Parent
-$rolesDir2 = Split-Path $roleDir2 -Parent
-$configDir2 = Split-Path $rolesDir2 -Parent
-$configXmlPath2 = Join-Path $configDir2 "Configuration.xml"
-$inferredRoleName = Split-Path $roleDir2 -Leaf
+$configDir = Split-Path $rolesDir -Parent
+$configXmlPath = Join-Path $configDir "Configuration.xml"
+$inferredRoleName = $roleDirName
 
 # Use metadata name if available
-if ($MetadataPath -and (Test-Path $MetadataPath)) {
+if (Test-Path $MetadataPath) {
 	try {
 		[xml]$metaXml2 = Get-Content -Path $MetadataPath -Encoding UTF8
 		$nameNode2 = $metaXml2.DocumentElement.SelectSingleNode("//*[local-name()='Role']//*[local-name()='Name']")
@@ -456,10 +453,10 @@ if ($MetadataPath -and (Test-Path $MetadataPath)) {
 	} catch { }
 }
 
-if (Test-Path $configXmlPath2) {
+if (Test-Path $configXmlPath) {
 	Out-Line ""
 	try {
-		[xml]$cfgXml = Get-Content -Path $configXmlPath2 -Encoding UTF8
+		[xml]$cfgXml = Get-Content -Path $configXmlPath -Encoding UTF8
 		$cfgNs = New-Object System.Xml.XmlNamespaceManager($cfgXml.NameTable)
 		$cfgNs.AddNamespace("md", "http://v8.1c.ru/8.3/MDClasses")
 		$childObj = $cfgXml.SelectSingleNode("//md:Configuration/md:ChildObjects", $cfgNs)

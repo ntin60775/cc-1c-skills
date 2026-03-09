@@ -19,8 +19,6 @@ allowed-tools:
 /skd-validate path/to/Ext/Template.xml
 ```
 
-`TemplatePath` авторезолв: если указан каталог макета — ищет `Ext/Template.xml`.
-
 ## Параметры
 
 | Параметр     | Обяз. | Умолч. | Описание                                              |
@@ -35,8 +33,6 @@ allowed-tools:
 ```powershell
 powershell.exe -NoProfile -File .claude/skills/skd-validate/scripts/skd-validate.ps1 -TemplatePath "<.../Templates/ИмяМакета>"
 ```
-
-Можно указать директорию макета — скрипт найдёт Ext/Template.xml автоматически.
 
 ## Проверки (~30)
 

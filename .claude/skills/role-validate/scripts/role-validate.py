@@ -180,14 +180,12 @@ def main():
         description='Validate 1C role Rights.xml structure', allow_abbrev=False
     )
     parser.add_argument('-RightsPath', dest='RightsPath', required=True)
-    parser.add_argument('-MetadataPath', dest='MetadataPath', default='')
     parser.add_argument('-OutFile', dest='OutFile', default='')
     parser.add_argument('-Detailed', dest='Detailed', action='store_true')
     parser.add_argument('-MaxErrors', dest='MaxErrors', type=int, default=30)
     args = parser.parse_args()
 
     rights_path = args.RightsPath
-    metadata_path = args.MetadataPath
     out_file = args.OutFile
 
     if not os.path.isabs(rights_path):
@@ -203,6 +201,15 @@ def main():
             c = os.path.join(os.path.dirname(rights_path), 'Ext', fn)
             if os.path.exists(c):
                 rights_path = c
+
+    resolved_path = os.path.abspath(rights_path)
+
+    # Auto-detect metadata: Roles/Name/Ext/Rights.xml → Roles/Name.xml
+    ext_dir = os.path.dirname(resolved_path)
+    role_dir = os.path.dirname(ext_dir)
+    roles_dir = os.path.dirname(role_dir)
+    role_dir_name = os.path.basename(role_dir)
+    metadata_path = os.path.join(roles_dir, f'{role_dir_name}.xml')
 
     # --- Output helpers ---
     lines = []
@@ -407,88 +414,62 @@ def main():
 
     # --- 4. Validate metadata (optional) ---
     inferred_role_name = ''
-    if metadata_path:
+    if os.path.isfile(metadata_path):
         lines.append('')
 
-        if not os.path.isabs(metadata_path):
-            metadata_path = os.path.join(os.getcwd(), metadata_path)
+        try:
+            meta_parser = etree.XMLParser(remove_blank_text=False)
+            meta_xml = etree.parse(metadata_path, meta_parser)
+            meta_root = meta_xml.getroot()
+            # Find <Role> element anywhere
+            role_node = None
+            for el in meta_root.iter():
+                if isinstance(el.tag, str) and etree.QName(el.tag).localname == 'Role':
+                    role_node = el
+                    break
 
-        if not os.path.exists(metadata_path):
-            report_error(f'Metadata file not found: {metadata_path}')
-        else:
-            try:
-                meta_parser = etree.XMLParser(remove_blank_text=False)
-                meta_xml = etree.parse(metadata_path, meta_parser)
-                meta_root = meta_xml.getroot()
-                # Find <Role> element anywhere
-                role_node = None
-                for el in meta_root.iter():
-                    if isinstance(el.tag, str) and etree.QName(el.tag).localname == 'Role':
-                        role_node = el
+            if role_node is None:
+                report_error('Metadata: <Role> element not found')
+            else:
+                uuid_val = role_node.get('uuid', '')
+                if GUID_PATTERN.match(uuid_val):
+                    report_ok(f'Metadata: UUID valid ({uuid_val})')
+                else:
+                    report_error(f"Metadata: invalid UUID format '{uuid_val}'")
+
+                # Find Name
+                name_node = None
+                for el in role_node.iter():
+                    if isinstance(el.tag, str) and etree.QName(el.tag).localname == 'Name':
+                        name_node = el
                         break
 
-                if role_node is None:
-                    report_error('Metadata: <Role> element not found')
+                if name_node is not None and name_node.text:
+                    report_ok(f'Metadata: Name = {name_node.text}')
+                    inferred_role_name = name_node.text
                 else:
-                    uuid_val = role_node.get('uuid', '')
-                    if GUID_PATTERN.match(uuid_val):
-                        report_ok(f'Metadata: UUID valid ({uuid_val})')
-                    else:
-                        report_error(f"Metadata: invalid UUID format '{uuid_val}'")
+                    report_error('Metadata: <Name> is empty or missing')
 
-                    # Find Name
-                    name_node = None
-                    for el in role_node.iter():
-                        if isinstance(el.tag, str) and etree.QName(el.tag).localname == 'Name':
-                            name_node = el
-                            break
+                # Find Synonym
+                syn_node = None
+                for el in role_node.iter():
+                    if isinstance(el.tag, str) and etree.QName(el.tag).localname == 'Synonym':
+                        syn_node = el
+                        break
 
-                    if name_node is not None and name_node.text:
-                        report_ok(f'Metadata: Name = {name_node.text}')
-                        inferred_role_name = name_node.text
-                    else:
-                        report_error('Metadata: <Name> is empty or missing')
-
-                    # Find Synonym
-                    syn_node = None
-                    for el in role_node.iter():
-                        if isinstance(el.tag, str) and etree.QName(el.tag).localname == 'Synonym':
-                            syn_node = el
-                            break
-
-                    if syn_node is not None and len(syn_node) > 0:
-                        report_ok('Metadata: Synonym present')
-                    else:
-                        report_warn('Metadata: <Synonym> is empty')
-            except etree.XMLSyntaxError as e:
-                report_error(f'Metadata XML parse error: {e}')
+                if syn_node is not None and len(syn_node) > 0:
+                    report_ok('Metadata: Synonym present')
+                else:
+                    report_warn('Metadata: <Synonym> is empty')
+        except etree.XMLSyntaxError as e:
+            report_error(f'Metadata XML parse error: {e}')
 
     # --- 5. Check registration in Configuration.xml ---
-    resolved_rights = os.path.abspath(rights_path)
-    ext_dir = os.path.dirname(resolved_rights)        # Ext
-    role_dir = os.path.dirname(ext_dir)                # RoleName
-    roles_dir = os.path.dirname(role_dir)              # Roles
     config_dir = os.path.dirname(roles_dir)            # config root
     config_xml_path = os.path.join(config_dir, 'Configuration.xml')
 
     if not inferred_role_name:
         inferred_role_name = os.path.basename(role_dir)
-
-    # Use metadata name if available (already set above if metadata was parsed)
-    if metadata_path and os.path.exists(metadata_path) and not inferred_role_name:
-        try:
-            meta_parser2 = etree.XMLParser(remove_blank_text=False)
-            meta_xml2 = etree.parse(metadata_path, meta_parser2)
-            for el in meta_xml2.getroot().iter():
-                if isinstance(el.tag, str) and etree.QName(el.tag).localname == 'Role':
-                    for el2 in el.iter():
-                        if isinstance(el2.tag, str) and etree.QName(el2.tag).localname == 'Name':
-                            if el2.text:
-                                inferred_role_name = el2.text
-                            break
-                    break
-        except Exception:
-            pass
 
     if os.path.exists(config_xml_path):
         lines.append('')

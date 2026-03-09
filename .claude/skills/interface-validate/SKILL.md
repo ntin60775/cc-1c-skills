@@ -34,8 +34,6 @@ allowed-tools:
 powershell.exe -NoProfile -File ".claude/skills/interface-validate/scripts/interface-validate.ps1" -CIPath "<Subsystems/ИмяПодсистемы>"
 ```
 
-Можно указать директорию подсистемы — скрипт найдёт Ext/CommandInterface.xml автоматически.
-
 ## Проверки (13)
 
 | #  | Проверка                                                    | Серьёзность |

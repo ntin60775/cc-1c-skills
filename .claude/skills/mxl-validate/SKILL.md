@@ -15,30 +15,23 @@ allowed-tools:
 ## Использование
 
 ```
-/mxl-validate <TemplatePath>
-/mxl-validate -ProcessorName "МояОбработка" -TemplateName "Макет"
+/mxl-validate Catalogs/Номенклатура/Templates/Макет
+/mxl-validate src/МояОбработка/Templates/ПечатнаяФорма
 ```
 
 ## Параметры
 
 | Параметр      | Обяз. | Умолч. | Описание                                 |
 |---------------|:-----:|---------|--------------------------------------------|
-| TemplatePath  | нет   | —       | Прямой путь к Template.xml                 |
-| ProcessorName | нет   | —       | Имя обработки (альтернатива пути)          |
-| TemplateName  | нет   | —       | Имя макета (альтернатива пути)             |
-| SrcDir        | нет   | `src`  | Каталог исходников                         |
+| TemplatePath  | да    | —       | Путь к макету (директория или Template.xml) |
 | Detailed      | нет   | —       | Показывать [OK] для каждой проверки        |
 | MaxErrors     | нет   | 20      | Остановиться после N ошибок                |
-
-Укажите либо `-TemplatePath`, либо оба `-ProcessorName` и `-TemplateName`.
 
 ## Команда
 
 ```powershell
 powershell.exe -NoProfile -File .claude/skills/mxl-validate/scripts/mxl-validate.ps1 -TemplatePath "<.../Templates/ИмяМакета>"
 ```
-
-Можно указать директорию макета — скрипт найдёт Ext/Template.xml автоматически.
 
 ## Проверки
 
