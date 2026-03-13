@@ -165,7 +165,8 @@ try {
 
 # --- Get changed files from Git ---
 $changedFiles = @()
-$configDirNormalized = $ConfigDir.TrimEnd('\', '/').Replace('\', '/')
+$ConfigDir = (Resolve-Path $ConfigDir).Path.TrimEnd('\')
+$configDirNormalized = $ConfigDir.Replace('\', '/')
 
 Push-Location $ConfigDir
 try {
