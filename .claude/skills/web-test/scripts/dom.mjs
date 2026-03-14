@@ -660,7 +660,7 @@ export function findClickTargetScript(formNum, text, { tableName, gridSelector }
         // Fallback: filter by gridName id-prefix (e.g. ИсходящиеКоманднаяПанель_Добавить)
         const gridName = gridEl.id ? gridEl.id.replace(p, '') : '';
         if (gridName) {
-          const prefixItems = items.filter(i => i.label && i.label.startsWith(gridName));
+          const prefixItems = items.filter(i => i.label && i.label.includes(gridName));
           let pf = prefixItems.find(i => i.name.toLowerCase() === target);
           if (!pf) pf = prefixItems.find(i => i.label && i.label.toLowerCase().includes(target));
           if (!pf) pf = prefixItems.find(i => i.name.toLowerCase().includes(target));
