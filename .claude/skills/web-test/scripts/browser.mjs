@@ -1444,7 +1444,7 @@ export async function fillFields(fields) {
 export async function clickElement(text, { dblclick, table } = {}) {
   ensureConnected();
   await dismissPendingErrors();
-  if (highlightMode) try { await highlight(text); await page.waitForTimeout(500); await unhighlight(); } catch {}
+  if (highlightMode) try { await highlight(text, { table }); await page.waitForTimeout(500); await unhighlight(); } catch {}
   try {
 
   // First check if there's a confirmation dialog — click matching button
@@ -4012,7 +4012,7 @@ export async function hideTitleSlide() {
  */
 export async function highlight(text, opts = {}) {
   ensureConnected();
-  const { color = '#e74c3c', padding = 4 } = opts;
+  const { color = '#e74c3c', padding = 4, table } = opts;
 
   // Remove previous highlight first
   await unhighlight();
@@ -4108,7 +4108,12 @@ export async function highlight(text, opts = {}) {
     const formNum = await page.evaluate(detectFormScript());
     if (formNum !== null) {
       // 3a. Try button/link/tab/gridRow via findClickTargetScript
-      const target = await page.evaluate(findClickTargetScript(formNum, text));
+      let gridSelector;
+      if (table) {
+        const resolved = await page.evaluate(resolveGridScript(formNum, table));
+        if (!resolved.error) gridSelector = resolved.gridSelector;
+      }
+      const target = await page.evaluate(findClickTargetScript(formNum, text, table ? { tableName: table, gridSelector } : undefined));
       if (target && !target.error) {
         if (target.id) {
           elId = target.id;
