@@ -18,7 +18,7 @@ import {
   findClickTargetScript, findFieldButtonScript, readSubmenuScript,
   resolveFieldsScript, getFormStateScript,
   detectFormScript, readTableScript, checkErrorsScript,
-  switchTabScript
+  switchTabScript, resolveGridScript
 } from './dom.mjs';
 
 let browser = null;
@@ -548,11 +548,17 @@ export async function getFormState() {
 }
 
 /** Read structured table data with pagination. Returns columns, rows, total count. */
-export async function readTable({ maxRows = 20, offset = 0 } = {}) {
+export async function readTable({ maxRows = 20, offset = 0, table } = {}) {
   ensureConnected();
   const formNum = await page.evaluate(detectFormScript());
   if (formNum === null) throw new Error('readTable: no form found');
-  return await page.evaluate(readTableScript(formNum, { maxRows, offset }));
+  let gridSelector;
+  if (table) {
+    const resolved = await page.evaluate(resolveGridScript(formNum, table));
+    if (resolved.error) throw new Error(`readTable: ${resolved.message || resolved.error}. Available: ${resolved.available?.map(a => a.name).join(', ') || 'none'}`);
+    gridSelector = resolved.gridSelector;
+  }
+  return await page.evaluate(readTableScript(formNum, { maxRows, offset, gridSelector }));
 }
 
 /**
@@ -1435,7 +1441,7 @@ export async function fillFields(fields) {
 }
 
 /** Click a button/hyperlink/tab on the current form. Use {dblclick: true} to double-click (open items from lists). */
-export async function clickElement(text, { dblclick } = {}) {
+export async function clickElement(text, { dblclick, table } = {}) {
   ensureConnected();
   await dismissPendingErrors();
   if (highlightMode) try { await highlight(text); await page.waitForTimeout(500); await unhighlight(); } catch {}
@@ -1515,8 +1521,16 @@ export async function clickElement(text, { dblclick } = {}) {
   let formNum = await page.evaluate(detectFormScript());
   if (formNum === null) throw new Error(`clickElement: no form found`);
 
+  // Pre-resolve grid when table is specified
+  let gridSelector;
+  if (table) {
+    const resolved = await page.evaluate(resolveGridScript(formNum, table));
+    if (resolved.error) throw new Error(`clickElement: table "${table}" not found. Available: ${resolved.available?.map(a => a.name).join(', ') || 'none'}`);
+    gridSelector = resolved.gridSelector;
+  }
+
   // Find the target element ID
-  let target = await page.evaluate(findClickTargetScript(formNum, text));
+  let target = await page.evaluate(findClickTargetScript(formNum, text, { tableName: table, gridSelector }));
 
   // Retry: if not found, a modal form may still be loading (e.g. after F4).
   // Wait up to 2s for a new form to appear and re-detect.
@@ -1526,7 +1540,7 @@ export async function clickElement(text, { dblclick } = {}) {
       const newForm = await page.evaluate(detectFormScript());
       if (newForm !== null && newForm !== formNum) {
         formNum = newForm;
-        target = await page.evaluate(findClickTargetScript(formNum, text));
+        target = await page.evaluate(findClickTargetScript(formNum, text, { tableName: table, gridSelector }));
         if (!target?.error) break;
       }
     }
@@ -2062,11 +2076,19 @@ export async function selectValue(fieldName, searchText, { type } = {}) {
  * @param {boolean} [options.add] - Click "Добавить" to create a new row first
  * @returns {{ filled[], notFilled[]?, form }}
  */
-export async function fillTableRow(fields, { tab, add, row } = {}) {
+export async function fillTableRow(fields, { tab, add, row, table } = {}) {
   ensureConnected();
   await dismissPendingErrors();
   const formNum = await page.evaluate(detectFormScript());
   if (formNum === null) throw new Error('fillTableRow: no form found');
+
+  // Pre-resolve grid when table is specified
+  let gridSelector;
+  if (table) {
+    const resolved = await page.evaluate(resolveGridScript(formNum, table));
+    if (resolved.error) throw new Error(`fillTableRow: table "${table}" not found. Available: ${resolved.available?.map(a => a.name).join(', ') || 'none'}`);
+    gridSelector = resolved.gridSelector;
+  }
 
   try {
   // 1. Switch tab if requested
@@ -2076,7 +2098,7 @@ export async function fillTableRow(fields, { tab, add, row } = {}) {
 
   // 2. Add new row if requested
   if (add) {
-    await clickElement('Добавить');
+    await clickElement('Добавить', { table });
     // Poll for edit mode (INPUT inside grid) instead of fixed 1000ms wait
     for (let aw = 0; aw < 6; aw++) {
       await page.waitForTimeout(150);
@@ -2094,8 +2116,9 @@ export async function fillTableRow(fields, { tab, add, row } = {}) {
   if (row != null) {
     const fieldKeys = JSON.stringify(Object.keys(fields).map(k => k.toLowerCase()));
     const cellCoords = await page.evaluate(`(() => {
-      const grids = [...document.querySelectorAll('.grid')].filter(el => el.offsetWidth > 0);
-      const grid = grids[grids.length - 1];
+      const grid = ${gridSelector
+        ? `document.querySelector(${JSON.stringify(gridSelector)})`
+        : `(() => { const grids = [...document.querySelectorAll('.grid')].filter(el => el.offsetWidth > 0); return grids[grids.length - 1]; })()`};
       if (!grid) return { error: 'no_grid' };
       const head = grid.querySelector('.gridHead');
       const body = grid.querySelector('.gridBody');
@@ -2304,8 +2327,9 @@ export async function fillTableRow(fields, { tab, add, row } = {}) {
         if (info.filled) continue;
         // Find column for this key and dblclick on it
         const nextCoords = await page.evaluate(`(() => {
-          const grids = [...document.querySelectorAll('.grid')].filter(el => el.offsetWidth > 0);
-          const grid = grids[grids.length - 1];
+          const grid = ${gridSelector
+            ? `document.querySelector(${JSON.stringify(gridSelector)})`
+            : `(() => { const grids = [...document.querySelectorAll('.grid')].filter(el => el.offsetWidth > 0); return grids[grids.length - 1]; })()`};
           if (!grid) return null;
           const head = grid.querySelector('.gridHead');
           const body = grid.querySelector('.gridBody');
@@ -2383,8 +2407,9 @@ export async function fillTableRow(fields, { tab, add, row } = {}) {
       // Commit the edit: click on a different row (Escape cancels in tree grids).
       // Find the first visible row that is NOT the edited row and click it.
       const commitCoords = await page.evaluate(`(() => {
-        const grids = [...document.querySelectorAll('.grid')].filter(el => el.offsetWidth > 0);
-        const grid = grids[grids.length - 1];
+        const grid = ${gridSelector
+          ? `document.querySelector(${JSON.stringify(gridSelector)})`
+          : `(() => { const grids = [...document.querySelectorAll('.grid')].filter(el => el.offsetWidth > 0); return grids[grids.length - 1]; })()`};
         if (!grid) return null;
         const body = grid.querySelector('.gridBody');
         if (!body) return null;
@@ -2937,8 +2962,9 @@ export async function fillTableRow(fields, { tab, add, row } = {}) {
   // Escape (e.g. from closeForm) would cancel the entire row.
   const commitTarget = await page.evaluate(`(() => {
     // Find the active grid
-    const grids = [...document.querySelectorAll('.grid')].filter(el => el.offsetWidth > 0);
-    const grid = grids[grids.length - 1];
+    const grid = ${gridSelector
+      ? `document.querySelector(${JSON.stringify(gridSelector)})`
+      : `(() => { const grids = [...document.querySelectorAll('.grid')].filter(el => el.offsetWidth > 0); return grids[grids.length - 1]; })()`};
     if (!grid) return null;
     const body = grid.querySelector('.gridBody');
     if (!body) return null;
@@ -3005,11 +3031,19 @@ export async function fillTableRow(fields, { tab, add, row } = {}) {
  * @param {string} [options.tab] - Switch to this form tab before operating
  * @returns {{ deleted, rowsBefore, rowsAfter, form }}
  */
-export async function deleteTableRow(row, { tab } = {}) {
+export async function deleteTableRow(row, { tab, table } = {}) {
   ensureConnected();
   await dismissPendingErrors();
   const formNum = await page.evaluate(detectFormScript());
   if (formNum === null) throw new Error('deleteTableRow: no form found');
+
+  // Pre-resolve grid when table is specified
+  let gridSelector;
+  if (table) {
+    const resolved = await page.evaluate(resolveGridScript(formNum, table));
+    if (resolved.error) throw new Error(`deleteTableRow: table "${table}" not found. Available: ${resolved.available?.map(a => a.name).join(', ') || 'none'}`);
+    gridSelector = resolved.gridSelector;
+  }
 
   // 1. Switch tab if requested
   if (tab) {
@@ -3019,8 +3053,9 @@ export async function deleteTableRow(row, { tab } = {}) {
 
   // 2. Find the target row and click to select it
   const cellCoords = await page.evaluate(`(() => {
-    const grids = [...document.querySelectorAll('.grid')].filter(el => el.offsetWidth > 0);
-    const grid = grids[grids.length - 1];
+    const grid = ${gridSelector
+      ? `document.querySelector(${JSON.stringify(gridSelector)})`
+      : `(() => { const grids = [...document.querySelectorAll('.grid')].filter(el => el.offsetWidth > 0); return grids[grids.length - 1]; })()`};
     if (!grid) return { error: 'no_grid' };
     const body = grid.querySelector('.gridBody');
     if (!body) return { error: 'no_grid_body' };
@@ -3048,8 +3083,9 @@ export async function deleteTableRow(row, { tab } = {}) {
 
   // 4. Count rows after deletion
   const rowsAfter = await page.evaluate(`(() => {
-    const grids = [...document.querySelectorAll('.grid')].filter(el => el.offsetWidth > 0);
-    const grid = grids[grids.length - 1];
+    const grid = ${gridSelector
+      ? `document.querySelector(${JSON.stringify(gridSelector)})`
+      : `(() => { const grids = [...document.querySelectorAll('.grid')].filter(el => el.offsetWidth > 0); return grids[grids.length - 1]; })()`};
     if (!grid) return 0;
     const body = grid.querySelector('.gridBody');
     return body ? body.querySelectorAll('.gridLine').length : 0;

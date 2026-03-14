@@ -185,24 +185,31 @@ const READ_FORM_FN = `function readForm(p) {
     }
   });
 
-  // Table/grid — pick the first VISIBLE grid (tab switching hides inactive grids)
-  const grid = [...document.querySelectorAll('[id^="' + p + '"].grid, [id^="' + p + '"] .grid')]
-    .find(g => g.offsetWidth > 0 && g.offsetHeight > 0);
-  if (grid) {
-    const head = grid.querySelector('.gridHead');
-    const body = grid.querySelector('.gridBody');
-    const columns = [];
-    if (head) {
-      const headLine = head.querySelector('.gridLine') || head;
-      [...headLine.children].forEach(box => {
-        if (box.offsetWidth === 0) return;
-        const textEl = box.querySelector('.gridBoxText');
-        const text = (textEl || box).innerText?.trim().replace(/\\n/g, ' ') || '';
-        if (text) columns.push(text);
-      });
-    }
-    const rowCount = body ? body.querySelectorAll('.gridLine').length : 0;
-    result.table = { present: true, columns, rowCount };
+  // Tables/grids — collect ALL visible grids
+  const allGrids = [...document.querySelectorAll('[id^="' + p + '"].grid, [id^="' + p + '"] .grid')]
+    .filter(g => g.offsetWidth > 0 && g.offsetHeight > 0);
+  if (allGrids.length > 0) {
+    const tables = allGrids.map(grid => {
+      const name = grid.id ? grid.id.replace(p, '') : '';
+      const head = grid.querySelector('.gridHead');
+      const body = grid.querySelector('.gridBody');
+      const columns = [];
+      if (head) {
+        const headLine = head.querySelector('.gridLine') || head;
+        [...headLine.children].forEach(box => {
+          if (box.offsetWidth === 0) return;
+          const textEl = box.querySelector('.gridBoxText');
+          const text = (textEl || box).innerText?.trim().replace(/\\n/g, ' ') || '';
+          if (text) columns.push(text);
+        });
+      }
+      const rowCount = body ? body.querySelectorAll('.gridLine').length : 0;
+      return { name, columns, rowCount };
+    });
+    result.tables = tables;
+    // Backward compat: table = first grid summary
+    const first = tables[0];
+    result.table = { present: true, columns: first.columns, rowCount: first.rowCount };
   }
 
   // Active filters (train badges above grid: *СостояниеПросмотра)
@@ -357,17 +364,72 @@ export function readFormScript(formNum) {
 }
 
 /**
+ * Resolve a specific grid by semantic name (table parameter).
+ * Cascade: exact gridName match → gridName contains → column contains.
+ * Returns { gridSelector, gridId, gridName, gridIndex, columns } or { error, available }.
+ */
+export function resolveGridScript(formNum, tableName) {
+  const p = `form${formNum}_`;
+  return `(() => {
+    const p = ${JSON.stringify(p)};
+    const target = ${JSON.stringify(tableName.toLowerCase().replace(/ё/g, 'е'))};
+    const norm = s => (s || '').replace(/ё/gi, 'е');
+    const allGrids = [...document.querySelectorAll('[id^="' + p + '"].grid, [id^="' + p + '"] .grid')]
+      .filter(g => g.offsetWidth > 0 && g.offsetHeight > 0);
+    if (!allGrids.length) return { error: 'no_grids', message: 'No grids found on form' };
+    const infos = allGrids.map((g, idx) => {
+      const gridId = g.id || '';
+      const gridName = gridId.replace(p, '');
+      const head = g.querySelector('.gridHead');
+      const columns = [];
+      if (head) {
+        const headLine = head.querySelector('.gridLine') || head;
+        [...headLine.children].forEach(box => {
+          if (box.offsetWidth === 0) return;
+          const textEl = box.querySelector('.gridBoxText');
+          const text = (textEl || box).innerText?.trim().replace(/\\n/g, ' ') || '';
+          if (text) columns.push(text);
+        });
+      }
+      return { idx, gridId, gridName, columns, el: g };
+    });
+    // 1. Exact gridName match (case-insensitive)
+    let found = infos.find(i => norm(i.gridName).toLowerCase() === target);
+    // 2. gridName contains target
+    if (!found) found = infos.find(i => norm(i.gridName).toLowerCase().includes(target));
+    // 3. Any column contains target
+    if (!found) found = infos.find(i => i.columns.some(c => norm(c).toLowerCase().includes(target)));
+    if (found) {
+      return {
+        gridSelector: found.gridId ? '#' + CSS.escape(found.gridId) : null,
+        gridId: found.gridId,
+        gridName: found.gridName,
+        gridIndex: found.idx,
+        columns: found.columns
+      };
+    }
+    return {
+      error: 'not_found',
+      message: 'Table "' + ${JSON.stringify(tableName)} + '" not found',
+      available: infos.map(i => ({ name: i.gridName, columns: i.columns }))
+    };
+  })()`;
+}
+
+/**
  * Read table/grid data with pagination.
  * Parses grid.innerText — \n separates rows, \t separates cells.
  * First row = column headers.
  * Returns { name, columns[], rows[{col:val}], total, offset, shown }.
  */
-export function readTableScript(formNum, { maxRows = 20, offset = 0 } = {}) {
+export function readTableScript(formNum, { maxRows = 20, offset = 0, gridSelector } = {}) {
   const p = `form${formNum}_`;
   return `(() => {
     const p = ${JSON.stringify(p)};
-    const grid = [...document.querySelectorAll('[id^="' + p + '"].grid, [id^="' + p + '"] .grid')]
-      .find(g => g.offsetWidth > 0 && g.offsetHeight > 0);
+    const grid = ${gridSelector
+      ? `document.querySelector(${JSON.stringify(gridSelector)})`
+      : `[...document.querySelectorAll('[id^="' + p + '"].grid, [id^="' + p + '"] .grid')]
+      .find(g => g.offsetWidth > 0 && g.offsetHeight > 0)`};
     if (!grid) return { error: 'no_table', message: 'No table found on form ${formNum}' };
     const name = grid.id ? grid.id.replace(p, '') : '';
 
@@ -507,12 +569,14 @@ export function openCommandScript(name) {
  * Supports synonym matching: visible text AND internal name from DOM ID.
  * Fuzzy order: exact name -> exact label -> includes name -> includes label.
  */
-export function findClickTargetScript(formNum, text) {
+export function findClickTargetScript(formNum, text, { tableName, gridSelector } = {}) {
   const p = `form${formNum}_`;
   return `(() => {
     const norm = s => (s?.trim().replace(/\\u00a0/g, ' ') || '').replace(/ё/gi, 'е');
     const target = ${JSON.stringify(text.toLowerCase().replace(/ё/g, 'е'))};
     const p = ${JSON.stringify(p)};
+    const tableName = ${JSON.stringify(tableName || '')};
+    const gridSelector = ${JSON.stringify(gridSelector || '')};
     const items = [];
 
     // Buttons (a.press)
@@ -560,6 +624,39 @@ export function findClickTargetScript(formNum, text) {
     }).forEach(el => {
       items.push({ id: el.id, name: el.dataset.content, label: '', kind: 'tab' });
     });
+
+    // When table is specified, scope button search to grid's parent container
+    if (gridSelector) {
+      const gridEl = document.querySelector(gridSelector);
+      if (gridEl) {
+        // Find parent container that has id with formPrefix and contains the grid
+        let container = gridEl.parentElement;
+        while (container && container !== document.body) {
+          if (container.id && container.id.startsWith(p)) break;
+          container = container.parentElement;
+        }
+        // Filter items to those inside the container
+        const containerItems = container && container !== document.body
+          ? items.filter(i => { const el = document.getElementById(i.id); return el && container.contains(el); })
+          : [];
+        // Try fuzzy match within container first
+        let cf = containerItems.find(i => i.name.toLowerCase() === target);
+        if (!cf) cf = containerItems.find(i => i.label && i.label.toLowerCase() === target);
+        if (!cf) cf = containerItems.find(i => i.name.toLowerCase().includes(target));
+        if (!cf) cf = containerItems.find(i => i.label && i.label.toLowerCase().includes(target));
+        if (cf) return { id: cf.id, kind: cf.kind, name: cf.name };
+        // Fallback: filter by gridName id-prefix (e.g. ИсходящиеКоманднаяПанель_Добавить)
+        const gridName = gridEl.id ? gridEl.id.replace(p, '') : '';
+        if (gridName) {
+          const prefixItems = items.filter(i => i.label && i.label.startsWith(gridName));
+          let pf = prefixItems.find(i => i.name.toLowerCase() === target);
+          if (!pf) pf = prefixItems.find(i => i.label && i.label.toLowerCase().includes(target));
+          if (!pf) pf = prefixItems.find(i => i.name.toLowerCase().includes(target));
+          if (pf) return { id: pf.id, kind: pf.kind, name: pf.name };
+        }
+      }
+      // Fall through to unscoped search
+    }
 
     // Fuzzy match: exact name -> exact label -> startsWith name -> startsWith label -> includes name -> includes label
     let found = items.find(i => i.name.toLowerCase() === target);
