@@ -2417,7 +2417,8 @@ export async function fillTableRow(fields, { tab, add, row, table } = {}) {
         const otherIdx = ${row} === 0 ? 1 : 0;
         const other = rows[otherIdx];
         if (!other) return null;
-        const box = [...other.children].filter(b => b.offsetWidth > 0)[0];
+        const visBoxes = [...other.children].filter(b => b.offsetWidth > 0 && !b.classList.contains('gridBoxComp'));
+        const box = visBoxes.length > 1 ? visBoxes[1] : visBoxes[0];
         if (!box) return null;
         const r = box.getBoundingClientRect();
         return { x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2) };
@@ -2981,7 +2982,8 @@ export async function fillTableRow(fields, { tab, add, row, table } = {}) {
     const targetIdx = activeRowIdx === 0 ? 1 : 0;
     const target = rows[targetIdx];
     if (target) {
-      const box = [...target.children].find(b => b.offsetWidth > 0);
+      const visBoxes = [...target.children].filter(b => b.offsetWidth > 0 && !b.classList.contains('gridBoxComp'));
+      const box = visBoxes.length > 1 ? visBoxes[1] : visBoxes[0];
       if (box) {
         const r = box.getBoundingClientRect();
         return { x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2) };
@@ -3062,9 +3064,12 @@ export async function deleteTableRow(row, { tab, table } = {}) {
     const rows = [...body.querySelectorAll('.gridLine')];
     if (${row} >= rows.length) return { error: 'row_out_of_range', total: rows.length };
     const line = rows[${row}];
-    const cells = [...line.querySelectorAll('.gridBoxText')];
-    const cell = cells.length > 1 ? cells[1] : cells[0];
-    if (!cell) return { error: 'no_cell' };
+    // Use visible gridBox containers (not gridBoxText) to avoid clicking checkboxes
+    const boxes = [...line.children].filter(b => b.offsetWidth > 0 && !b.classList.contains('gridBoxComp'));
+    // Skip first column (row number / checkbox) — pick second visible box
+    const box = boxes.length > 1 ? boxes[1] : boxes[0];
+    if (!box) return { error: 'no_cell' };
+    const cell = box.querySelector('.gridBoxText') || box;
     const r = cell.getBoundingClientRect();
     return { x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2), total: rows.length };
   })()`);
