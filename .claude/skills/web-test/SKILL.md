@@ -378,6 +378,37 @@ console.log('Title:', report.title);
 console.log('Data rows:', report.data?.length);
 ```
 
+### Work with multi-grid forms
+
+Some forms have multiple grids (e.g. "Входящие" and "Исходящие" tables on a single form). Without `table`, buttons like "Добавить" hit the first match and `readTable` reads the first grid — which may not be the one you need.
+
+**Step 1 — discover tables** via `getFormState()`:
+```js
+const form = await getFormState();
+// form.tables = [
+//   { name: "ДеревоБизнесПроцессов", columns: ["Полный код", "Бизнес-процесс"], rowCount: 21 },
+//   { name: "Входящие", columns: ["Объект", "Бизнес-процесс источник", ...], rowCount: 1 },
+//   { name: "Исходящие", columns: ["Объект", "Бизнес-процесс приемник", ...], rowCount: 1 }
+// ]
+```
+
+**Step 2 — use `table` name** in any grid operation:
+```js
+// Read specific table
+const t = await readTable({ table: 'Исходящие' });
+
+// Add row — fillTableRow with add:true already clicks the right "Добавить" button
+await fillTableRow({ 'Объект': 'БДДС' }, { table: 'Исходящие', add: true });
+
+// Or click buttons separately
+await clickElement('Добавить', { table: 'Входящие' });
+
+// Delete from specific table
+await deleteTableRow(0, { table: 'Исходящие' });
+```
+
+Table name matching is fuzzy: `'Исходящие'` matches grid id `form1_Исходящие`. If the grid id is technical (e.g. `ТаблицаТоваров`), use that name — it's from `tables[].name`, not the visual label.
+
 ### Keyboard shortcuts (via `page.keyboard.press`)
 
 | Key | Context | Action |
