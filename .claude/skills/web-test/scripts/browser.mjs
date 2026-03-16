@@ -2188,20 +2188,20 @@ export async function fillTableRow(fields, { tab, add, row, table } = {}) {
     await page.mouse.click(cellCoords.x, cellCoords.y);
 
     // Check if clicked cell is a checkbox (toggle-on-click, no edit mode)
-    const checkboxState = await page.evaluate(`(() => {
+    const checkboxInfo = await page.evaluate(`(() => {
       const el = document.elementFromPoint(${cellCoords.x}, ${cellCoords.y});
-      const line = el?.closest('.gridLine');
-      if (!line) return null;
-      const chk = line.querySelector('.checkbox');
+      const cell = el?.closest('.gridBox');
+      if (!cell) return null;
+      const chk = cell.querySelector('.checkbox');
       if (!chk) return null;
-      return { checked: chk.classList.contains('select') };
+      const r = chk.getBoundingClientRect();
+      return { checked: chk.classList.contains('select'), x: Math.round(r.x + r.width/2), y: Math.round(r.y + r.height/2) };
     })()`);
-    if (checkboxState !== null) {
-      // Checkbox cell — click already toggled it
+    if (checkboxInfo !== null) {
+      // Checkbox cell found — click directly on the checkbox icon (not cell center)
       const desired = ['true', 'да', '1', 'yes'].includes(String(firstVal0).toLowerCase().trim());
-      if (checkboxState.checked !== desired) {
-        // Click toggled to wrong state — click again to undo
-        await page.mouse.click(cellCoords.x, cellCoords.y);
+      if (checkboxInfo.checked !== desired) {
+        await page.mouse.click(checkboxInfo.x, checkboxInfo.y);
         await page.waitForTimeout(300);
       }
       const results = [{ field: firstKey0, ok: true, method: 'toggle', value: desired }];
