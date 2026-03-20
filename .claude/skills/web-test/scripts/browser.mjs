@@ -1532,9 +1532,17 @@ export async function fillFields(fields) {
           results.push({ field: r.field, error: 'option_not_found', available: r.options.map(o => o.label) });
         }
       } else if (r.hasSelect) {
-        // Reference field: DLB-based selection (dropdown or selection form)
+        // Combobox/reference with DLB: DLB-first, then paste fallback
         const refResult = await fillReferenceField(selector, r.field, fields[r.field], formNum);
         results.push(refResult);
+      } else if (r.hasPick) {
+        // Reference field without DLB (non-editable): delegate to selectValue (F4 → selection form)
+        const svResult = await selectValue(r.field, String(fields[r.field]));
+        if (svResult?.error) {
+          results.push({ field: r.field, error: svResult.error, message: svResult.message });
+        } else {
+          results.push({ field: r.field, ok: true, value: svResult.value || String(fields[r.field]), method: svResult.method || 'form' });
+        }
       } else {
         // Plain field: clipboard paste + Tab to commit
         // page.fill() sets DOM value but doesn't trigger 1C input events;
