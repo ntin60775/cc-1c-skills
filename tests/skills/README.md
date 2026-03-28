@@ -10,12 +10,21 @@ Snapshot-тестирование скриптов навыков: навык п
 node tests/skills/runner.mjs                                    # все кейсы
 node tests/skills/runner.mjs cases/meta-compile                 # один навык
 node tests/skills/runner.mjs cases/meta-compile/catalog-basic   # один кейс
+node tests/skills/runner.mjs --verbose                          # подробный вывод (дерево)
 node tests/skills/runner.mjs --update-snapshots                 # обновить эталоны
 node tests/skills/runner.mjs --runtime python                   # запуск на PY-версиях
 node tests/skills/runner.mjs --json report.json                 # JSON-отчёт
 ```
 
 Exit code: 0 = все прошли, 1 = есть падения.
+
+## Что делать при падении
+
+1. Смотри **case id** в выводе — это путь к файлу кейса (можно перезапустить: `node runner.mjs <case-id>`)
+2. Открой `.json` кейса — посмотри что на входе
+3. Открой `snapshots/<кейс>/` — посмотри эталон
+4. Если изменение **намеренное** (доработка навыка) — обнови эталон: `node runner.mjs <case-id> --update-snapshots`
+5. Если **баг** — починить скрипт навыка и перезапустить тест
 
 ## Как добавить навык
 
@@ -42,10 +51,10 @@ Exit code: 0 = все прошли, 1 = есть падения.
 
 | Поле | Описание |
 |---|---|
-| `script` | Путь от `.claude/skills/`, без расширения. Раннер добавит `.ps1` или `.py` |
-| `setup` | Фикстура: `"empty-config"` (пустая конфа), `"base-config"`, `"none"`, `"fixture:<name>"` |
+| `script` | Путь от `.claude/skills/`, без расширения. Раннер добавит `.ps1` (по умолчанию) или `.py` |
+| `setup` | Фикстура: `"empty-config"`, `"base-config"`, `"none"`, `"fixture:<name>"` |
 | `args` | Маппинг параметров навыка (см. ниже) |
-| `snapshot` | Настройки сравнения: `root` и `normalizeUuids` |
+| `snapshot` | Настройки сравнения: `root` (`"workDir"` или `"outputPath"`) и `normalizeUuids` |
 
 ### Значения `from` в args
 
@@ -54,7 +63,8 @@ Exit code: 0 = все прошли, 1 = есть падения.
 | `"inputFile"` | Путь к temp-файлу с `case.input` (JSON) |
 | `"workDir"` | Рабочая директория (копия фикстуры) |
 | `"outputPath"` | `workDir` + `case.outputPath` |
-| `"case.<field>"` | Поле из JSON кейса, напр. `case.name`, `case.objectPath` |
+| `"workPath"` | `workDir` + значение из `params.<field>`. Поле указывается в `mapping.field` (по умолчанию `objectPath`) |
+| `"case.<field>"` | Значение из `params.<field>` (приоритет) или корня кейса |
 | `"switch"` | Флаг без значения (напр. `-Detailed`) |
 | `"literal"` | Фиксированное значение из `mapping.value` |
 
@@ -73,18 +83,48 @@ Exit code: 0 = все прошли, 1 = есть падения.
 
 Раннер проверит: exitCode=0 + выход совпадает со snapshot (если есть).
 
-### С дополнительными проверками
+### С параметрами навыка
 
 ```json
 {
-  "name": "Справочник с ТЧ",
-  "input": { "type": "Catalog", "name": "Товары", "tabularSections": [...] },
-  "expect": {
-    "files": ["Catalogs/Товары.xml"],
-    "stdoutContains": "compiled"
-  }
+  "name": "Обзор справочника",
+  "params": { "objectPath": "Catalogs/Номенклатура" },
+  "expect": { "stdoutContains": "Номенклатура" }
 }
 ```
+
+`params` — параметры для навыка. Используются через `case.<field>` и `workPath` в `_skill.json`.
+
+### С дополнительными CLI-аргументами
+
+```json
+{
+  "name": "Конфигурация с поставщиком",
+  "params": { "name": "Бухгалтерия" },
+  "args_extra": ["-Vendor", "Тест", "-Version", "2.0.1"]
+}
+```
+
+`args_extra` — дополнительные аргументы, не описанные в `_skill.json`, передаются навыку как есть.
+
+### С предварительными шагами
+
+```json
+{
+  "name": "Добавление реквизита к справочнику",
+  "preRun": [
+    {
+      "script": "meta-compile/scripts/meta-compile",
+      "input": { "type": "Catalog", "name": "Контрагенты" },
+      "args": { "-JsonPath": "{inputFile}", "-OutputDir": "{workDir}" }
+    }
+  ],
+  "params": { "objectPath": "Catalogs/Контрагенты" },
+  "input": { "operations": [{ "op": "add-attribute", "name": "ИНН", "type": "String", "length": 12 }] }
+}
+```
+
+`preRun` — шаги подготовки перед основным навыком. Каждый шаг: `script` (путь без расширения), `input` (JSON), `args` (маппинг с `{workDir}` и `{inputFile}` плейсхолдерами).
 
 ### Негативный кейс
 
@@ -96,16 +136,19 @@ Exit code: 0 = все прошли, 1 = есть падения.
 }
 ```
 
-`expectError: true` — ожидается exitCode≠0. Можно указать строку — проверит наличие в stderr.
+`expectError: true` — ожидается exitCode≠0. Строковое значение — проверит наличие в stderr.
 
-### Поля кейса
+### Все поля кейса
 
 | Поле | Обязательно | Описание |
 |---|---|---|
 | `name` | да | Название теста (отображается в отчёте) |
 | `input` | нет | JSON-объект, передаётся навыку через temp-файл |
+| `params` | нет | Параметры для `case.<field>` и `workPath` маппинга |
 | `setup` | нет | Переопределение setup из `_skill.json` |
-| `outputPath` | нет | Относительный путь для `-OutputPath` навыков |
+| `outputPath` | нет | Относительный путь для навыков с `-OutputPath` |
+| `args_extra` | нет | Массив дополнительных CLI-аргументов |
+| `preRun` | нет | Массив шагов подготовки (создание объектов и т.п.) |
 | `expect` | нет | Дополнительные проверки: `files`, `stdoutContains` |
 | `expectError` | нет | `true` или строка — ожидается ошибка |
 
@@ -116,14 +159,16 @@ Exit code: 0 = все прошли, 1 = есть падения.
 ### Создание / обновление эталонов
 
 ```bash
-node tests/skills/runner.mjs --update-snapshots                 # все кейсы
+node tests/skills/runner.mjs --update-snapshots                     # все кейсы
 node tests/skills/runner.mjs cases/meta-compile --update-snapshots  # один навык
+node tests/skills/runner.mjs cases/meta-compile/enum --update-snapshots  # один кейс
 ```
 
 ### Когда обновлять
 
-- После изменения логики навыка (новый выход — новый эталон)
+- После **намеренного** изменения логики навыка (новый выход — новый эталон)
 - После сертификации: загрузить результат в 1С (`db-load-xml`), убедиться что платформа приняла, затем `--update-snapshots`
+- **Не обновлять** если падение — неожиданный побочный эффект (это баг)
 
 ### Нормализация
 
@@ -140,6 +185,8 @@ tests/skills/
   README.md               # этот файл
   .cache/                 # кэш фикстур (в .gitignore)
   fixtures/               # broken-фикстуры для тестов валидаторов
+    broken/
+      <имя>/              # сломанный XML для негативных тестов validate-навыков
   cases/
     <навык>/
       _skill.json         # конфиг навыка
