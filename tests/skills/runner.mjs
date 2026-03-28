@@ -122,13 +122,14 @@ function resolveScript(scriptRelPath, runtime) {
   return full;
 }
 
-function execSkillRaw(runtime, scriptPath, args) {
+function execSkillRaw(runtime, scriptPath, args, cwd) {
+  const execCwd = cwd || REPO_ROOT;
   if (runtime === 'python') {
     return execFileSync(process.env.PYTHON || 'python', [scriptPath, ...args], {
       encoding: 'utf8',
       timeout: 60_000,
       stdio: ['pipe', 'pipe', 'pipe'],
-      cwd: REPO_ROOT,
+      cwd: execCwd,
     });
   }
   // PowerShell
@@ -139,7 +140,7 @@ function execSkillRaw(runtime, scriptPath, args) {
     encoding: 'utf8',
     timeout: 60_000,
     stdio: ['pipe', 'pipe', 'pipe'],
-    cwd: REPO_ROOT,
+    cwd: execCwd,
   });
 }
 
@@ -358,7 +359,8 @@ function runCase(testCase, opts) {
           }
         }
         try {
-          execSkillRaw(opts.runtime, preScript, preArgs);
+          const preCwd = step.cwd === '{workDir}' ? workDir : undefined;
+          execSkillRaw(opts.runtime, preScript, preArgs, preCwd);
         } catch (e) {
           throw new Error(`preRun step "${step.script}" failed: ${e.stderr || e.message}`);
         }
@@ -377,7 +379,8 @@ function runCase(testCase, opts) {
     let stdout = '', stderr = '', exitCode = 0;
 
     try {
-      stdout = execSkillRaw(opts.runtime, scriptPath, args);
+      const execCwd = skillConfig.cwd === 'workDir' ? workDir : undefined;
+      stdout = execSkillRaw(opts.runtime, scriptPath, args, execCwd);
     } catch (e) {
       exitCode = e.status ?? 1;
       stdout = e.stdout || '';
