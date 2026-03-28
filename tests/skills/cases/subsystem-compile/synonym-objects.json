@@ -1,5 +1,5 @@
 {
-  "name": "Подсистема с объектами",
+  "name": "Синоним: objects вместо content",
   "preRun": [
     {
       "script": "meta-compile/scripts/meta-compile",
@@ -10,7 +10,7 @@
   "input": {
     "name": "Склад",
     "synonym": "Склад",
-    "content": ["Catalogs.Товары"]
+    "objects": ["Catalogs.Товары"]
   },
   "expect": {
     "files": ["Subsystems/Склад.xml"]

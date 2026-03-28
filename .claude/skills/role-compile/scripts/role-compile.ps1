@@ -1,4 +1,4 @@
-﻿# role-compile v1.0 — Compile 1C role from JSON
+﻿# role-compile v1.1 — Compile 1C role from JSON
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[Parameter(Mandatory)]
@@ -491,6 +491,9 @@ function Parse-ObjectEntry {
 }
 
 # --- 7. Parse all object entries ---
+
+# Synonym: accept "rights" as alias for "objects"
+if (-not $def.objects -and $def.rights) { $def | Add-Member -NotePropertyName objects -NotePropertyValue $def.rights }
 
 $parsedObjects = @()
 if ($def.objects) {

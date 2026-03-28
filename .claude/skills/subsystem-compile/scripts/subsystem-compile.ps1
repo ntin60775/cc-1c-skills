@@ -1,4 +1,4 @@
-﻿# subsystem-compile v1.0 — Create 1C subsystem from JSON definition
+﻿# subsystem-compile v1.1 — Create 1C subsystem from JSON definition
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[string]$DefinitionFile,
@@ -93,6 +93,9 @@ $includeInCI = if ($null -ne $def.includeInCommandInterface) { "$($def.includeIn
 $useOneCommand = if ($null -ne $def.useOneCommand) { "$($def.useOneCommand)".ToLower() } else { "false" }
 $explanation = if ($def.explanation) { "$($def.explanation)" } else { "" }
 $picture = if ($def.picture) { "$($def.picture)" } else { "" }
+
+# Synonym: accept "objects" as alias for "content"
+if (-not $def.content -and $def.objects) { $def | Add-Member -NotePropertyName content -NotePropertyValue $def.objects }
 
 $contentItems = @()
 if ($def.content) {

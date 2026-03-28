@@ -18,8 +18,8 @@
       { "name": "Объект", "type": "FormDataStructure", "main": true }
     ],
     "elements": [
-      { "type": "InputField", "dataPath": "Объект.Наименование", "title": "Наименование" },
-      { "type": "InputField", "dataPath": "Объект.Артикул", "title": "Артикул" }
+      { "input": "Наименование", "path": "Объект.Наименование", "title": "Наименование" },
+      { "input": "Артикул", "path": "Объект.Артикул", "title": "Артикул" }
     ]
   }
 }

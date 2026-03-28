@@ -1,5 +1,5 @@
 {
-  "name": "Подсистема с объектами",
+  "name": "Синоним: rights вместо objects",
   "preRun": [
     {
       "script": "meta-compile/scripts/meta-compile",
@@ -8,11 +8,12 @@
     }
   ],
   "input": {
-    "name": "Склад",
-    "synonym": "Склад",
-    "content": ["Catalogs.Товары"]
+    "name": "Кладовщик",
+    "rights": [
+      "Catalog.Товары: Read View"
+    ]
   },
   "expect": {
-    "files": ["Subsystems/Склад.xml"]
+    "files": ["Кладовщик.xml", "Кладовщик/Ext/Rights.xml"]
   }
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# form-add v1.0 — Add managed form to 1C config object
+# form-add v1.1 — Add managed form to 1C config object
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 
 import argparse
@@ -49,8 +49,17 @@ def main():
 
     # --- Phase 1: Determine object type ---
 
+    # Resolve ObjectPath (directory → .xml)
+    if not os.path.isabs(object_path):
+        object_path = os.path.join(os.getcwd(), object_path)
     if os.path.isdir(object_path):
-        object_path = object_path.rstrip("/\\") + ".xml"
+        dir_name = os.path.basename(object_path.rstrip("/\\"))
+        candidate = os.path.join(object_path, dir_name + ".xml")
+        sibling = os.path.join(os.path.dirname(object_path.rstrip("/\\")), dir_name + ".xml")
+        if os.path.isfile(candidate):
+            object_path = candidate
+        elif os.path.isfile(sibling):
+            object_path = sibling
     if not os.path.isfile(object_path):
         print(f"Файл объекта не найден: {object_path}", file=sys.stderr)
         sys.exit(1)

@@ -9,8 +9,8 @@
   ],
   "input": {
     "name": "Кладовщик",
-    "rights": [
-      { "object": "Catalog.Товары", "rights": ["Read", "View"] }
+    "objects": [
+      "Catalog.Товары: Read View"
     ]
   },
   "expect": {

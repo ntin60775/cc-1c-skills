@@ -11,9 +11,31 @@
 		<Autofill>false</Autofill>
 	</AutoCommandBar>
 	<ChildItems>
+		<InputField name="Наименование" id="1">
+			<DataPath>Объект.Наименование</DataPath>
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Наименование</v8:content>
+				</v8:item>
+			</Title>
+			<ContextMenu name="НаименованиеКонтекстноеМеню" id="2"/>
+			<ExtendedTooltip name="НаименованиеРасширеннаяПодсказка" id="3"/>
+		</InputField>
+		<InputField name="Артикул" id="4">
+			<DataPath>Объект.Артикул</DataPath>
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Артикул</v8:content>
+				</v8:item>
+			</Title>
+			<ContextMenu name="АртикулКонтекстноеМеню" id="5"/>
+			<ExtendedTooltip name="АртикулРасширеннаяПодсказка" id="6"/>
+		</InputField>
 	</ChildItems>
 	<Attributes>
-		<Attribute name="Объект" id="1">
+		<Attribute name="Объект" id="7">
 			<Type>
 				<v8:Type>FormDataStructure</v8:Type>
 			</Type>

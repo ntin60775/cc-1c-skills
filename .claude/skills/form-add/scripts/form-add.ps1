@@ -1,4 +1,4 @@
-﻿# form-add v1.0 — Add managed form to 1C config object
+﻿# form-add v1.1 — Add managed form to 1C config object
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[Parameter(Mandatory)]
@@ -17,6 +17,18 @@ param(
 $ErrorActionPreference = "Stop"
 
 # --- Фаза 1: Определение типа объекта ---
+
+# Resolve ObjectPath (directory → .xml)
+if (-not [System.IO.Path]::IsPathRooted($ObjectPath)) {
+	$ObjectPath = Join-Path (Get-Location).Path $ObjectPath
+}
+if (Test-Path $ObjectPath -PathType Container) {
+	$dirName = Split-Path $ObjectPath -Leaf
+	$candidate = Join-Path $ObjectPath "$dirName.xml"
+	$sibling = Join-Path (Split-Path $ObjectPath) "$dirName.xml"
+	if (Test-Path $candidate) { $ObjectPath = $candidate }
+	elseif (Test-Path $sibling) { $ObjectPath = $sibling }
+}
 
 if (-not (Test-Path $ObjectPath)) {
 	Write-Error "Файл объекта не найден: $ObjectPath"
