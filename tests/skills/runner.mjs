@@ -488,12 +488,12 @@ function printReport(results, opts) {
     const allOk = skillFailed.length === 0;
 
     if (opts.verbose) {
-      // Verbose: show every case
+      // Verbose: show every case with id
       console.log(`  ${skill}`);
       for (const r of cases) {
         const icon = r.passed ? '\u2713' : '\u2717';
         const suffix = r.snapshotUpdated ? ' [snapshot updated]' : '';
-        console.log(`    ${icon} ${r.name} (${r.elapsed})${suffix}`);
+        console.log(`    ${icon} ${r.name} (${r.elapsed})  ${r.id}${suffix}`);
         if (!r.passed) {
           for (const err of r.errors) {
             for (const line of err.split('\n')) {
@@ -508,7 +508,7 @@ function printReport(results, opts) {
       console.log(`  ${icon} ${skill}  ${skillPassed}/${skillTotal} (${skillTime}s)`);
       if (!allOk) {
         for (const r of skillFailed) {
-          console.log(`    \u2717 ${r.name} (${r.elapsed})`);
+          console.log(`    \u2717 ${r.name}  ${r.id}`);
           for (const err of r.errors) {
             for (const line of err.split('\n')) {
               console.log(`      ${line}`);
