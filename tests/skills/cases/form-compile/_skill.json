@@ -1,0 +1,12 @@
+{
+  "script": "form-compile/scripts/form-compile",
+  "setup": "empty-config",
+  "args": [
+    { "flag": "-JsonPath", "from": "inputFile" },
+    { "flag": "-OutputPath", "from": "workPath", "field": "outputPath" }
+  ],
+  "snapshot": {
+    "root": "workDir",
+    "normalizeUuids": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "script": "form-add/scripts/form-add",
+  "setup": "empty-config",
+  "args": [
+    { "flag": "-ObjectPath", "from": "workPath", "field": "objectPath" },
+    { "flag": "-FormName", "from": "case.formName" }
+  ],
+  "snapshot": {
+    "root": "workDir",
+    "normalizeUuids": true
+  }
+}

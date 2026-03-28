@@ -1,0 +1,12 @@
+{
+  "script": "skd-compile/scripts/skd-compile",
+  "setup": "none",
+  "args": [
+    { "flag": "-DefinitionFile", "from": "inputFile" },
+    { "flag": "-OutputPath", "from": "workPath", "field": "outputPath" }
+  ],
+  "snapshot": {
+    "root": "workDir",
+    "normalizeUuids": true
+  }
+}

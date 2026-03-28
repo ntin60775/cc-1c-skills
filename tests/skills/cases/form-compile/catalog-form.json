@@ -1,0 +1,25 @@
+{
+  "name": "Форма элемента справочника",
+  "preRun": [
+    {
+      "script": "meta-compile/scripts/meta-compile",
+      "input": { "type": "Catalog", "name": "Товары", "attributes": [{ "name": "Артикул", "type": "String", "length": 25 }] },
+      "args": { "-JsonPath": "{inputFile}", "-OutputDir": "{workDir}" }
+    },
+    {
+      "script": "form-add/scripts/form-add",
+      "args": { "-ObjectPath": "{workDir}/Catalogs/Товары.xml", "-FormName": "ФормаЭлемента" }
+    }
+  ],
+  "params": { "outputPath": "Catalogs/Товары/Forms/ФормаЭлемента/Ext/Form.xml" },
+  "input": {
+    "title": "Товар",
+    "attributes": [
+      { "name": "Объект", "type": "FormDataStructure", "main": true }
+    ],
+    "elements": [
+      { "type": "InputField", "dataPath": "Объект.Наименование", "title": "Наименование" },
+      { "type": "InputField", "dataPath": "Объект.Артикул", "title": "Артикул" }
+    ]
+  }
+}
