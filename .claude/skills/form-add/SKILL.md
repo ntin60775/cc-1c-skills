@@ -44,26 +44,6 @@ powershell.exe -NoProfile -File .claude/skills/form-add/scripts/form-add.ps1 -Ob
 | Choice  | Document, Catalog, ChartOf*, ExchangePlan, BusinessProcess, Task | Список (DynamicList) | DefaultChoiceForm |
 | Record  | InformationRegister | Запись (InformationRegisterRecordManager) | DefaultRecordForm |
 
-## Что создаётся
-
-```
-<ObjectDir>/Forms/
-├── <FormName>.xml                    # Метаданные формы (UUID)
-└── <FormName>/
-    └── Ext/
-        ├── Form.xml                  # Описание формы (logform namespace)
-        └── Form/
-            └── Module.bsl           # BSL-модуль с 5 регионами + ПриСозданииНаСервере
-```
-
-## Что модифицируется
-
-- `<ObjectPath>` — добавляется `<Form>` в `ChildObjects` (перед `<Template>` или `<TabularSection>`), обновляется Default*Form (автоматически если пустое, или явно при `--set-default`)
-
-## Поддерживаемые типы объектов
-
-Document, Catalog, DataProcessor, Report, ExternalDataProcessor, ExternalReport, InformationRegister, ChartOfAccounts, ChartOfCharacteristicTypes, ExchangePlan, BusinessProcess, Task
-
 ## Примеры
 
 ```

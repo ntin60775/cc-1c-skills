@@ -117,9 +117,3 @@ powershell.exe -NoProfile -File .claude/skills/meta-compile/scripts/meta-compile
 ]
 ```
 
-## Что генерируется
-
-- `{TypePlural}/{Name}.xml` — метаданные объекта
-- `{TypePlural}/{Name}/Ext/*.bsl` — модули (ObjectModule, RecordSetModule, Module — зависит от типа)
-- `Configuration.xml` — автоматическая регистрация в `<ChildObjects>`
-
