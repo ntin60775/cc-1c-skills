@@ -1,4 +1,4 @@
-// web-test browser v1.6 — Playwright browser management for 1C web client
+// web-test browser v1.7 — Playwright browser management for 1C web client
 // Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 /**
  * Playwright browser management for 1C web client.
@@ -2071,7 +2071,7 @@ export async function clickElement(text, { dblclick, table, toggle, expand, modi
             const icon = line.querySelector('.gridListH, .gridListV');
             if (icon) {
               const r = icon.getBoundingClientRect();
-              const isExpanded = !!icon.classList.contains('gridListH');
+              const isExpanded = !!icon.classList.contains('gridListV');
               return { x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2), isExpanded };
             }
           }
