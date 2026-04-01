@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-# switch.py v1.2 — Переключение навыков 1С между AI-платформами и рантаймами
+# switch.py v1.3 — Переключение навыков 1С между AI-платформами и рантаймами
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 """
-Копирует навыки из .claude/skills/ на другие AI-платформы (Cursor, Codex, Copilot,
-Kiro, Gemini CLI, OpenCode, Windsurf, Kilo Code, Cline, Roo Code, Augment и др.)
-с перезаписью путей, и/или переключает рантайм (PowerShell ↔ Python).
+Копирует (или создаёт ссылки на) навыки из .claude/skills/ на другие AI-платформы
+(Cursor, Codex, Copilot, Kiro, Gemini CLI, OpenCode, Windsurf, Kilo Code, Cline,
+Roo Code, Augment и др.) с перезаписью путей, и/или переключает рантайм (PowerShell ↔ Python).
 
 Использование:
   python scripts/switch.py                                       # интерактивный режим
   python scripts/switch.py cursor                                # скопировать на Cursor
   python scripts/switch.py cursor --runtime python               # скопировать + Python
   python scripts/switch.py claude-code --project-dir /my/proj    # установить в проект
+  python scripts/switch.py claude-code --project-dir /my/proj --link  # ссылки вместо копий
   python scripts/switch.py --undo cursor                         # удалить копию
   python scripts/switch.py --runtime python                      # сменить runtime in-place
 """
@@ -57,6 +58,52 @@ GITIGNORE_RECOMMENDATIONS = [
 # ---------------------------------------------------------------------------
 RX_PS = re.compile(r'powershell\.exe\s+(?:-NoProfile\s+)?-File\s+(.+?)\.ps1')
 RX_PY = re.compile(r"python\s+('?[\w./_-]+?)\.py")
+
+
+# ---------------------------------------------------------------------------
+# Junction / symlink helpers
+# ---------------------------------------------------------------------------
+def is_junction(path):
+    """Check if path is a junction or symlink."""
+    if os.path.islink(path):
+        return True
+    if hasattr(os.path, 'isjunction'):
+        return os.path.isjunction(path)
+    return False
+
+
+def remove_junction(path):
+    """Remove junction/symlink without following it."""
+    if sys.platform == 'win32':
+        os.rmdir(path)
+    else:
+        os.unlink(path)
+
+
+def create_junction(src, dst):
+    """Create directory junction (Windows) or symlink (Unix)."""
+    if sys.platform == 'win32':
+        import _winapi
+        _winapi.CreateJunction(src, dst)
+    else:
+        os.symlink(src, dst, target_is_directory=True)
+
+
+def safe_rmtree(path):
+    """Remove directory tree, handling junctions/symlinks safely.
+
+    Unlike shutil.rmtree, this does not follow junctions/symlinks —
+    it removes the link itself without touching the target.
+    """
+    for entry in os.listdir(path):
+        entry_path = os.path.join(path, entry)
+        if is_junction(entry_path):
+            remove_junction(entry_path)
+        elif os.path.isdir(entry_path):
+            shutil.rmtree(entry_path)
+        else:
+            os.unlink(entry_path)
+    os.rmdir(path)
 
 
 def repo_root():
@@ -221,7 +268,7 @@ def cmd_install(platform, runtime, project_dir):
         existing = scan_skills(target_dir)
         if existing:
             print(f"В {target_prefix}/ уже есть {len(existing)} навыков. Обновляю...")
-            shutil.rmtree(target_dir)
+            safe_rmtree(target_dir)
 
     os.makedirs(target_dir, exist_ok=True)
 
@@ -291,6 +338,64 @@ def cmd_install(platform, runtime, project_dir):
     return 0
 
 
+def cmd_link(platform, project_dir):
+    """Create junctions/symlinks to skills instead of copying."""
+    if platform != 'claude-code':
+        print(f"Ошибка: ссылки поддерживаются только для claude-code "
+              f"(выбрано: {platform}).", file=sys.stderr)
+        print("Для других платформ требуется перезапись путей в SKILL.md — "
+              "используйте копирование.", file=sys.stderr)
+        return 1
+
+    src_dir = source_skills_dir()
+    target_prefix = PLATFORMS[platform]
+    target_dir = os.path.join(project_dir, target_prefix.replace('/', os.sep))
+
+    if not is_different_dir(target_dir, src_dir):
+        print("Ошибка: нельзя создать ссылки на самого себя.", file=sys.stderr)
+        return 1
+
+    skills = scan_skills(src_dir)
+    if not skills:
+        print(f"Ошибка: навыки не найдены в {src_dir}", file=sys.stderr)
+        return 1
+
+    if os.path.isdir(target_dir):
+        existing = scan_skills(target_dir)
+        if existing:
+            print(f"В {target_prefix}/ уже есть {len(existing)} навыков. "
+                  f"Обновляю...")
+            safe_rmtree(target_dir)
+
+    os.makedirs(target_dir, exist_ok=True)
+
+    # Copy root-level files (.gitignore etc.)
+    for name in os.listdir(src_dir):
+        src_path = os.path.join(src_dir, name)
+        if os.path.isfile(src_path):
+            shutil.copy2(src_path, os.path.join(target_dir, name))
+
+    linked = 0
+    link_type = "junction" if sys.platform == 'win32' else "symlink"
+    print(f"\nСоздание {link_type}-ссылок на {len(skills)} навыков "
+          f"в {target_prefix}/ ...")
+
+    for skill_name in skills:
+        src_skill = os.path.join(src_dir, skill_name)
+        dst_skill = os.path.join(target_dir, skill_name)
+        create_junction(src_skill, dst_skill)
+        print(f"  [OK] {skill_name}")
+        linked += 1
+
+    print(f"\nГотово! {linked} навыков подключено через {link_type} "
+          f"в {target_prefix}/")
+    print("Обновления в источнике автоматически подхватятся.")
+    print_gitignore_recommendations(project_dir)
+    print(f"\nДля удаления: python scripts/switch.py --undo claude-code"
+          f" --project-dir \"{project_dir}\"")
+    return 0
+
+
 def cmd_undo(platform, project_dir):
     """Remove installed skills for a platform."""
     target_prefix = PLATFORMS[platform]
@@ -301,7 +406,7 @@ def cmd_undo(platform, project_dir):
         return 0
 
     skills = scan_skills(target_dir)
-    shutil.rmtree(target_dir)
+    safe_rmtree(target_dir)
 
     # Clean up empty parent directories
     parent = os.path.dirname(target_dir)
@@ -480,6 +585,17 @@ def interactive_mode():
                 print("Отмена.")
                 return 0
 
+    # Ask install method for claude-code to different project
+    if platform == 'claude-code' and install_mode \
+            and is_different_dir(project_dir, repo_root()):
+        method_options = [
+            ("Ссылки (junction)", "обновления подхватываются автоматически"),
+            ("Копирование",       "независимая копия навыков"),
+        ]
+        method = ask_choice("Способ установки:", method_options)
+        if method == 1:
+            return cmd_link('claude-code', project_dir)
+
     runtime_options = [
         ("PowerShell", "рекомендуется для Windows"),
         ("Python",     "рекомендуется для Linux/Mac"),
@@ -506,6 +622,7 @@ def main():
                '  python scripts/switch.py cursor\n'
                '  python scripts/switch.py cursor --runtime python\n'
                '  python scripts/switch.py claude-code --project-dir /my/proj\n'
+               '  python scripts/switch.py claude-code --project-dir /my/proj --link\n'
                '  python scripts/switch.py --undo cursor\n'
                '  python scripts/switch.py --runtime python\n',
         formatter_class=argparse.RawDescriptionHelpFormatter
@@ -518,8 +635,20 @@ def main():
                         help='удалить навыки для указанной платформы')
     parser.add_argument('--project-dir', default=os.getcwd(),
                         help='путь к целевому проекту (по умолчанию: текущий каталог)')
+    parser.add_argument('--link', action='store_true',
+                        help='создать ссылки (junction/symlink) вместо копирования '
+                             '(только для claude-code)')
 
     args = parser.parse_args()
+
+    # --link: create junctions/symlinks
+    if args.link:
+        if not args.platform:
+            parser.error("--link требует указания платформы")
+        if args.runtime:
+            parser.error("--link несовместим с --runtime "
+                         "(ссылки используют рантайм источника)")
+        return cmd_link(args.platform, args.project_dir)
 
     # --undo requires platform
     if args.undo:

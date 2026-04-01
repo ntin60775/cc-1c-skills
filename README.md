@@ -8,12 +8,29 @@
 
 ## Быстрый старт
 
-Скопируйте каталог `.claude/skills/` в корень вашего проекта. Навыки станут доступны при запуске Claude Code из этого каталога.
+Скопируйте каталог `.claude/skills/` в корень вашего проекта — или создайте ссылки на папки навыков из склонированного репозитория. Навыки станут доступны при запуске Claude Code из этого каталога.
+
+Скопируйте каталог `.claude/skills/` из этого репозитория в корень вашего проекта:
 
 ```
 МойПроект/
-├── .claude/skills/    ← скопировать из этого репозитория
+├── .claude/skills/    ← скопировать сюда
 └── ...
+```
+
+Или используйте скрипт установки:
+
+```bash
+git clone https://github.com/Nikolay-Shirokov/cc-1c-skills.git tools/cc-1c-skills
+
+# Ссылки (рекомендуется): обновления подхватываются через git pull
+python tools/cc-1c-skills/scripts/switch.py claude-code --project-dir . --link
+
+# Копия: независимая копия, обновление — повторный запуск
+python tools/cc-1c-skills/scripts/switch.py claude-code --project-dir .
+
+# Интерактивный режим: пошаговый выбор платформы, способа установки и рантайма
+python tools/cc-1c-skills/scripts/switch.py
 ```
 
 Не обязательно запоминать команды и параметры — просто опишите задачу своими словами, Claude сам подберёт нужные навыки. Слеш-команды (например `/epf-init МояОбработка`) тоже работают — для точного контроля.
@@ -54,11 +71,14 @@
 python scripts/switch.py                                       # интерактивный режим
 python scripts/switch.py cursor                                # скопировать навыки для Cursor
 python scripts/switch.py cursor --runtime python               # Cursor + Python-рантайм
-python scripts/switch.py claude-code --project-dir /my/proj    # установить в другой проект
-python scripts/switch.py --undo cursor                         # удалить копию
+python scripts/switch.py claude-code --project-dir /my/proj    # установить копию в проект
+python scripts/switch.py claude-code --project-dir /my/proj --link  # ссылки вместо копий
+python scripts/switch.py --undo cursor                         # удалить копию / ссылки
 ```
 
-Если репозиторий склонирован внутрь проекта (например, в `tools/cc-1c-skills`), используйте `--project-dir` для установки навыков в целевой проект. Обновление — `git pull` и повторный запуск.
+Если репозиторий склонирован внутрь проекта (например, в `tools/cc-1c-skills`), используйте `--project-dir` для установки навыков в целевой проект.
+
+**Ссылки vs копии.** Флаг `--link` создаёт directory junction (Windows) или symlink (Linux/Mac) вместо копирования файлов. Обновления в источнике автоматически подхватываются во всех подключённых проектах — достаточно `git pull`. Ссылки доступны только для платформы Claude Code (для остальных платформ требуется перезапись путей в SKILL.md). Удаление ссылок: `--undo` — безопасно удаляет только ссылки, не трогая источник.
 
 Поддерживаемые платформы:
 
