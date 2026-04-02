@@ -5110,6 +5110,58 @@ export async function highlight(text, opts = {}) {
     })()`);
   }
 
+  // 1b. Command group headers on the function panel (eAccentColor labels).
+  //     Match header text, then highlight the header + commands below it
+  //     until the next spacer/header/end.
+  if (!elId) {
+    const groupDone = await page.evaluate(({ target, color, padding }) => {
+      const container = document.querySelector('#funcPanel_container');
+      if (!container) return false;
+      const norm = s => (s?.trim().replace(/\u00a0/g, ' ') || '').replace(/ё/gi, 'е').toLowerCase();
+      const headers = [...container.querySelectorAll('.eAccentColor')].filter(e => e.offsetWidth > 0);
+      if (!headers.length) return false;
+
+      let headerEl = headers.find(h => norm(h.textContent) === target);
+      if (!headerEl) headerEl = headers.find(h => norm(h.textContent).startsWith(target));
+      if (!headerEl) headerEl = headers.find(h => norm(h.textContent).includes(target));
+      if (!headerEl) return false;
+
+      // Collect header + following cmd siblings until next spacer/header
+      const parent = headerEl.parentElement;
+      const children = [...parent.children];
+      const startIdx = children.indexOf(headerEl);
+      const groupEls = [headerEl];
+      for (let i = startIdx + 1; i < children.length; i++) {
+        const el = children[i];
+        if (el.classList.contains('eAccentColor')) break;
+        if (!el.id && !el.classList.contains('functionItem') && el.getBoundingClientRect().width < 10) break;
+        groupEls.push(el);
+      }
+
+      // Bounding box
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const el of groupEls) {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 && r.height === 0) continue;
+        minX = Math.min(minX, r.left);  minY = Math.min(minY, r.top);
+        maxX = Math.max(maxX, r.right); maxY = Math.max(maxY, r.bottom);
+      }
+      if (minX === Infinity) return false;
+
+      let div = document.getElementById('__web_test_highlight');
+      if (!div) { div = document.createElement('div'); div.id = '__web_test_highlight'; document.body.appendChild(div); }
+      div.style.cssText = [
+        'position:fixed', 'pointer-events:none', 'z-index:999998',
+        `top:${minY - padding}px`, `left:${minX - padding}px`,
+        `width:${maxX - minX + padding * 2}px`, `height:${maxY - minY + padding * 2}px`,
+        `outline:3px solid ${color}`, 'border-radius:4px',
+        `box-shadow:0 0 16px ${color}80`,
+      ].join(';');
+      return true;
+    }, { target: normYo(text.toLowerCase()), color, padding });
+    if (groupDone) return;
+  }
+
   // 2. Form groups/panels — checked BEFORE buttons/fields because group names
   //    often collide with command bar buttons (e.g. "БизнесПроцессы" is both a
   //    panel and a command bar element). Includes _container and _div elements
@@ -5212,6 +5264,12 @@ export async function highlight(text, opts = {}) {
       // Commands
       const cmds = [...document.querySelectorAll('[id^="cmd_"][id$="_txt"]')].filter(e => e.offsetWidth > 0).map(e => norm(e.innerText));
       if (cmds.length) result.commands = cmds;
+      // Command group headers
+      const fp = document.querySelector('#funcPanel_container');
+      if (fp) {
+        const gh = [...fp.querySelectorAll('.eAccentColor')].filter(e => e.offsetWidth > 0).map(e => norm(e.textContent));
+        if (gh.length) result.commandGroups = gh;
+      }
       // Sections
       const secs = [...document.querySelectorAll('[id^="themesCell_theme_"]')].map(e => norm(e.innerText)).filter(Boolean);
       if (secs.length) result.sections = secs;
