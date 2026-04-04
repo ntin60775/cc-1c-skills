@@ -1126,57 +1126,89 @@ function buildSpreadsheetMapping(allCells) {
 /**
  * Scroll SpreadsheetDocument to make a cell visible using arrow keys.
  * Uses native platform scroll — keeps headers, data, and scrollbar synchronized.
- * Clicks a visible cell for focus, then ArrowRight/ArrowLeft to bring target into view.
+ *
+ * How it works:
+ * 1. Check target cell visibility via Playwright boundingBox (page-level coords).
+ * 2. Click a fully-visible cell via page.mouse.click through the mxlCurrBody overlay.
+ *    This is the same native click that clickSpreadsheetCell uses — it gives keyboard
+ *    focus to the spreadsheet and keeps headers/data/scrollbar in sync.
+ *    (frame.locator().click() bypasses overlay → desyncs frozen headers;
+ *     page.mouse.click() + frameEl.focus() doesn't transfer keyboard focus.)
+ * 3. Press ArrowRight/ArrowLeft until the target cell is fully within the viewport.
+ *
+ * @param {Frame} frame - Playwright Frame containing the spreadsheet cells
+ * @param {number} physRow - physical row (y attribute) in the frame
+ * @param {number} physCol - physical column (x attribute) in the frame
+ * @param {Locator} cellLoc - Playwright locator for the target cell (from caller)
  */
-async function scrollSpreadsheetToCell(frame, physRow, physCol) {
-  const getRect = async () => frame.evaluate(`(() => {
-    const el = document.querySelector('div.R${physRow}C${physCol}');
-    if (!el) return null;
-    const r = el.getBoundingClientRect();
-    const vw = document.documentElement.clientWidth || document.body.clientWidth;
-    return { left: r.left, right: r.right, vw };
-  })()`);
+async function scrollSpreadsheetToCell(frame, physRow, physCol, cellLoc) {
+  const pageVw = await page.evaluate('window.innerWidth');
+  // Get iframe bounds — the actual visible region on page.
+  // The iframe may extend behind the section panel on the left, so cells with
+  // x >= 0 but x < iframeBox.x are behind the panel. Clicking them hits the panel.
+  const frameElm = await frame.frameElement();
+  const frameBox = await frameElm.boundingBox();
+  const visLeft = frameBox ? frameBox.x : 0;
+  const visRight = frameBox ? Math.min(frameBox.x + frameBox.width, pageVw) : pageVw;
 
-  let rect = await getRect();
-  if (!rect) return;
-  const isFullyVisible = (r) => r.left >= 0 && r.right <= r.vw;
-  if (isFullyVisible(rect)) return;
+  const getBox = async () => {
+    try { return await cellLoc.boundingBox({ timeout: 500 }); }
+    catch { return null; }
+  };
+  const isFullyVisible = (box) => box && box.x >= visLeft && (box.x + box.width) <= visRight;
 
-  // Click a visible cell to establish focus.
-  // For ArrowRight: click leftmost visible cell (maximum room to scroll right).
-  // For ArrowLeft: click leftmost visible cell too (NOT rightmost — re-clicking breaks scroll context).
-  const direction = rect.right > rect.vw ? 'ArrowRight' : 'ArrowLeft';
-  const vpWidth = await page.evaluate('window.innerWidth');
-  const allCellLocs = frame.locator('div[x]');
-  const cellCount = await allCellLocs.count();
-  const candidates = [];
-  for (let ci = 0; ci < cellCount; ci++) {
-    const box = await allCellLocs.nth(ci).boundingBox();
-    if (box && box.x >= 0 && (box.x + box.width) <= vpWidth && box.width > 5) {
-      candidates.push({ ci, box });
+  let box = await getBox();
+  if (!box) return; // cell not in DOM
+  if (isFullyVisible(box)) return;
+
+  const direction = (box.x + box.width) > pageVw ? 'ArrowRight' : 'ArrowLeft';
+
+  // Find a fully-visible cell to click for focus.
+  // Prefer cells in the target row (scrollable area), fall back to any row.
+  const targetRowSel = `div[y="${physRow}"] div[x]`;
+  const anyRowSel = 'div[x]';
+  let focusClicked = false;
+  for (const sel of [targetRowSel, anyRowSel]) {
+    const locs = frame.locator(sel);
+    const count = await locs.count();
+    const candidates = [];
+    for (let ci = 0; ci < count; ci++) {
+      const b = await locs.nth(ci).boundingBox();
+      if (b && b.width > 5 && b.x >= visLeft && (b.x + b.width) <= visRight) {
+        candidates.push({ ci, box: b });
+      }
     }
-  }
-  if (candidates.length > 0) {
+    if (candidates.length === 0) continue;
     candidates.sort((a, b) => a.box.x - b.box.x);
-    const pick = candidates[0]; // always leftmost — safest for focus
+    // ArrowRight → rightmost fully-visible (each press scrolls right immediately)
+    // ArrowLeft  → leftmost fully-visible  (each press scrolls left immediately)
+    const pick = direction === 'ArrowRight'
+      ? candidates[candidates.length - 1]
+      : candidates[0];
+    // Native click through overlay — gives keyboard focus + no header desync.
     await page.mouse.click(pick.box.x + pick.box.width / 2, pick.box.y + pick.box.height / 2);
     await page.waitForTimeout(100);
+    focusClicked = true;
+    break;
   }
+  if (!focusClicked) return; // no visible cells — can't scroll
 
-  // Arrow keys until cell is fully visible or we're stuck at document edge.
-  let prevCx = (rect.left + rect.right) / 2;
-  let scrollStarted = false;
+  // Arrow keys until cell is fully visible or we detect no progress.
+  const MAX_STALE = 5; // bail out if arrows aren't scrolling (lost focus?)
+  let prevCx = box.x + box.width / 2;
+  let staleCount = 0;
   for (let i = 0; i < 100; i++) {
     await page.keyboard.press(direction);
     await page.waitForTimeout(50);
-    rect = await getRect();
-    if (!rect) break;
-    if (isFullyVisible(rect)) break;
-    const cx = (rect.left + rect.right) / 2;
+    box = await getBox();
+    if (!box) break;
+    if (isFullyVisible(box)) break;
+    const cx = box.x + box.width / 2;
     if (Math.abs(cx - prevCx) >= 1) {
-      scrollStarted = true;
-    } else if (scrollStarted) {
-      break; // scroll was moving, now stopped — reached document edge
+      staleCount = 0;
+    } else {
+      staleCount++;
+      if (staleCount >= MAX_STALE) break;
     }
     prevCx = cx;
   }
@@ -1245,13 +1277,13 @@ async function clickSpreadsheetCell(target, { dblclick: dbl, modifier } = {}) {
 
   // Get bounding box and click via page.mouse (bypasses mxlCurrBody overlay)
   const frame = page.frames()[frameIndex];
-  const cellDiv = frame.locator(`div.R${physRow}C${physCol}`).first();
+  // Use [y]+[x] attributes — CSS class RxCy uses different numbering than y/x attrs.
+  const cellDiv = frame.locator(`div[y="${physRow}"] div[x="${physCol}"]`).first();
   // Scroll cell into view using arrow keys — the only reliable way to scroll
   // 1C SpreadsheetDocument without desynchronizing headers, data, and scrollbar.
-  // First click a visible cell to focus the spreadsheet, then arrow-key to target.
-  await scrollSpreadsheetToCell(frame, physRow, physCol);
+  await scrollSpreadsheetToCell(frame, physRow, physCol, cellDiv);
   const box = await cellDiv.boundingBox();
-  if (!box) throw new Error(`clickElement: cell R${physRow}C${physCol} not visible (no bounding box).`);
+  if (!box) throw new Error(`clickElement: cell y=${physRow} x=${physCol} not visible (no bounding box).`);
 
   const x = box.x + box.width / 2;
   const y = box.y + box.height / 2;
@@ -1298,8 +1330,8 @@ async function findSpreadsheetCellByText(formNum, searchText) {
 
   const frame = page.frames()[frameIndex];
   // Scroll cell into view using native arrow-key mechanism
-  await scrollSpreadsheetToCell(frame, found.cell.r, found.cell.c);
-  const cellDiv = frame.locator(`div.R${found.cell.r}C${found.cell.c}`).first();
+  const cellDiv = frame.locator(`div[y="${found.cell.r}"] div[x="${found.cell.c}"]`).first();
+  await scrollSpreadsheetToCell(frame, found.cell.r, found.cell.c, cellDiv);
   const box = await cellDiv.boundingBox();
   if (!box) return null;
 
