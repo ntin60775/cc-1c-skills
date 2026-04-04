@@ -1,4 +1,4 @@
-﻿# skd-edit v1.2 — Atomic 1C DCS editor
+﻿# skd-edit v1.3 — Atomic 1C DCS editor
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[Parameter(Mandatory)]
@@ -9,7 +9,7 @@ param(
 		"add-field","add-total","add-calculated-field","add-parameter","add-filter",
 		"add-dataParameter","add-order","add-selection","add-dataSetLink",
 		"add-dataSet","add-variant","add-conditionalAppearance",
-		"set-query","set-outputParameter","set-structure",
+		"set-query","patch-query","set-outputParameter","set-structure",
 		"modify-field","modify-filter","modify-dataParameter",
 		"clear-selection","clear-order","clear-filter",
 		"remove-field","remove-total","remove-calculated-field","remove-parameter","remove-filter")]
@@ -1738,6 +1738,34 @@ switch ($Operation) {
 		$queryEl.InnerText = Resolve-QueryValue $Value $script:queryBaseDir
 
 		Write-Host "[OK] Query replaced in dataset `"$dsName`""
+	}
+
+	"patch-query" {
+		$dsNode = Resolve-DataSet
+		$dsName = Get-DataSetName $dsNode
+
+		$queryEl = Find-FirstElement $dsNode @("query") $schNs
+		if (-not $queryEl) {
+			Write-Error "No <query> element found in dataset '$dsName'"
+			exit 1
+		}
+
+		foreach ($val in $values) {
+			$sepIdx = $val.IndexOf(" => ")
+			if ($sepIdx -lt 0) {
+				Write-Error "patch-query value must contain ' => ' separator: old => new"
+				exit 1
+			}
+			$oldStr = $val.Substring(0, $sepIdx)
+			$newStr = $val.Substring($sepIdx + 4)
+			$queryText = $queryEl.InnerText
+			if (-not $queryText.Contains($oldStr)) {
+				Write-Error "Substring not found in query of dataset '$dsName': $oldStr"
+				exit 1
+			}
+			$queryEl.InnerText = $queryText.Replace($oldStr, $newStr)
+			Write-Host "[OK] Query patched in dataset `"$dsName`": replaced '$oldStr'"
+		}
 	}
 
 	"set-outputParameter" {

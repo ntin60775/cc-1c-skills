@@ -1,4 +1,4 @@
-# skd-edit v1.2 — Atomic 1C DCS editor (Python port)
+# skd-edit v1.3 — Atomic 1C DCS editor (Python port)
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 import argparse
 import os
@@ -17,7 +17,7 @@ VALID_OPS = [
     "add-field", "add-total", "add-calculated-field", "add-parameter", "add-filter",
     "add-dataParameter", "add-order", "add-selection", "add-dataSetLink",
     "add-dataSet", "add-variant", "add-conditionalAppearance",
-    "set-query", "set-outputParameter", "set-structure",
+    "set-query", "patch-query", "set-outputParameter", "set-structure",
     "modify-field", "modify-filter", "modify-dataParameter",
     "clear-selection", "clear-order", "clear-filter",
     "remove-field", "remove-total", "remove-calculated-field", "remove-parameter", "remove-filter",
@@ -1487,6 +1487,27 @@ elif operation == "set-query":
         sys.exit(1)
     query_el.text = resolve_query_value(value_arg, query_base_dir)
     print(f'[OK] Query replaced in dataset "{ds_name}"')
+
+elif operation == "patch-query":
+    ds_node = resolve_data_set()
+    ds_name = get_data_set_name(ds_node)
+    query_el = find_first_element(ds_node, ["query"], SCH_NS)
+    if query_el is None:
+        print(f"No <query> element found in dataset '{ds_name}'", file=sys.stderr)
+        sys.exit(1)
+    for val in values:
+        sep_idx = val.find(" => ")
+        if sep_idx < 0:
+            print("patch-query value must contain ' => ' separator: old => new", file=sys.stderr)
+            sys.exit(1)
+        old_str = val[:sep_idx]
+        new_str = val[sep_idx + 4:]
+        query_text = query_el.text or ""
+        if old_str not in query_text:
+            print(f"Substring not found in query of dataset '{ds_name}': {old_str}", file=sys.stderr)
+            sys.exit(1)
+        query_el.text = query_text.replace(old_str, new_str)
+        print(f'[OK] Query patched in dataset "{ds_name}": replaced \'{old_str}\'')
 
 elif operation == "set-outputParameter":
     settings = resolve_variant_settings()
