@@ -1,4 +1,4 @@
-﻿# form-validate v1.2 — Validate 1C managed form
+﻿# form-validate v1.3 — Validate 1C managed form
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[Parameter(Mandatory)]
@@ -57,6 +57,20 @@ $nsMgr.AddNamespace("f", "http://v8.1c.ru/8.3/xcf/logform")
 $nsMgr.AddNamespace("v8", "http://v8.1c.ru/8.1/data/core")
 
 $root = $xmlDoc.DocumentElement
+
+# --- Detect context: config vs EPF/ERF ---
+# Walk up from FormPath looking for Configuration.xml → config context
+# No Configuration.xml → external data processor / report (EPF/ERF)
+$script:isConfigContext = $false
+$walkDir = Split-Path (Resolve-Path $FormPath) -Parent
+for ($i = 0; $i -lt 15; $i++) {
+	if (-not $walkDir -or $walkDir -eq (Split-Path $walkDir)) { break }
+	if (Test-Path (Join-Path $walkDir "Configuration.xml")) {
+		$script:isConfigContext = $true
+		break
+	}
+	$walkDir = Split-Path $walkDir
+}
 
 # --- Counters ---
 
@@ -696,6 +710,7 @@ $validCfgPrefixes = @(
 	"ChartOfCharacteristicTypesObject","ChartOfCharacteristicTypesRef"
 	"ConstantsSet","DataProcessorObject","DocumentObject","DocumentRef"
 	"DynamicList","EnumRef","ExchangePlanObject","ExchangePlanRef"
+	"ExternalDataProcessorObject","ExternalReportObject"
 	"InformationRegisterRecordManager","InformationRegisterRecordSet"
 	"ReportObject","TaskObject","TaskRef"
 )
@@ -719,7 +734,15 @@ if (-not $stopped) {
 			$cfgVal = $Matches[1]
 			if ($cfgVal -eq "DynamicList") { continue }
 			if ($cfgVal -match '^([^.]+)\.') {
-				if ($Matches[1] -in $validCfgPrefixes) { continue }
+				$pfx = $Matches[1]
+				if ($pfx -in $validCfgPrefixes) {
+					# ExternalDataProcessorObject/ExternalReportObject valid only for EPF/ERF, not config
+					if ($script:isConfigContext -and ($pfx -eq "ExternalDataProcessorObject" -or $pfx -eq "ExternalReportObject")) {
+						Report-Warn "12. Type '$tv': External* type in configuration context (use DataProcessorObject/ReportObject instead)"
+						$typeOk = $false
+					}
+					continue
+				}
 			}
 			Report-Warn "12. Type '$tv': unrecognized cfg prefix"
 			$typeOk = $false
