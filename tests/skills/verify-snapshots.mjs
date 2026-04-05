@@ -317,6 +317,11 @@ const EPF_SKILLS = new Set([
   'epf-init', 'epf-add-form', 'erf-init', 'template-add', 'help-add',
 ]);
 
+// CFE skills — two-stage load: base config → extension
+const CFE_SKILLS = new Set([
+  'cfe-init', 'cfe-borrow', 'cfe-patch-method',
+]);
+
 // cf-init produces a config dir — verify by loading the created config
 const CONFIG_INIT_SKILLS = new Set(['cf-init']);
 
@@ -474,10 +479,100 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
     }
 
     if (isEpf) {
-      // EPF/ERF skills: script succeeded → mark passed.
-      // Full build verification (epf-build + platform load) is covered by integration tests.
       result.passed = true;
       log('platform-load', true, 'skipped (EPF — verified by integration/platform-epf)');
+      return result;
+    }
+
+    if (CFE_SKILLS.has(skillName)) {
+      // CFE: two-stage load — base config first, then extension
+      const extDir = join(workDir, 'ext');
+      const baseConfigDir = workDir; // preRun puts base config directly in workDir
+      const dbDir = join(workDir, 'testdb');
+
+      // Register base config objects
+      const baseObjects = scanConfigObjects(baseConfigDir);
+      const baseCfEditOps = baseObjects
+        .filter(o => TYPE_TO_PREFIX[o.type])
+        .map(o => ({ operation: 'add-childObject', value: `${TYPE_TO_PREFIX[o.type]}.${o.name}` }));
+      if (baseCfEditOps.length > 0) {
+        try {
+          const editFile = join(workDir, '__cf-edit-base.json');
+          writeFileSync(editFile, JSON.stringify(baseCfEditOps, null, 2), 'utf8');
+          execSkill(opts.runtime, 'cf-edit/scripts/cf-edit', ['-ConfigPath', baseConfigDir, '-DefinitionFile', editFile]);
+          log('cf-edit (base)', true, `${baseCfEditOps.length} objects`);
+        } catch (e) {
+          log('cf-edit (base)', false, e.stderr || e.message);
+          result.errors.push(`cf-edit base failed: ${(e.stderr || e.message).substring(0, 500)}`);
+          return result;
+        }
+      }
+
+      // Create DB + load base config
+      try {
+        execSkill(opts.runtime, 'db-create/scripts/db-create', ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir]);
+        log('db-create', true);
+      } catch (e) {
+        log('db-create', false, e.stderr || e.message);
+        result.errors.push(`db-create failed: ${(e.stderr || e.message).substring(0, 500)}`);
+        return result;
+      }
+
+      try {
+        execSkill(opts.runtime, 'db-load-xml/scripts/db-load-xml',
+          ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir, '-ConfigDir', baseConfigDir], 180_000);
+        log('db-load-xml (config)', true);
+      } catch (e) {
+        const detail = (e.stderr || e.stdout || e.message).trim();
+        log('db-load-xml (config)', false, detail);
+        result.errors.push(`LoadConfig failed: ${detail.substring(0, 1000)}`);
+        return result;
+      }
+
+      try {
+        execSkill(opts.runtime, 'db-update/scripts/db-update',
+          ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir], 180_000);
+        log('db-update (config)', true);
+      } catch (e) {
+        const detail = (e.stderr || e.stdout || e.message).trim();
+        log('db-update (config)', false, detail);
+        result.errors.push(`UpdateDBCfg config failed: ${detail.substring(0, 1000)}`);
+        return result;
+      }
+
+      // Load extension — detect extension name from ext/Configuration.xml
+      let extName = 'Extension';
+      try {
+        const extConfigXml = readFileSync(join(extDir, 'Configuration.xml'), 'utf8');
+        const nameMatch = extConfigXml.match(/<Name>([^<]+)<\/Name>/);
+        if (nameMatch) extName = nameMatch[1];
+      } catch {}
+
+      if (existsSync(extDir)) {
+        try {
+          execSkill(opts.runtime, 'db-load-xml/scripts/db-load-xml',
+            ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir, '-ConfigDir', extDir, '-Extension', extName], 180_000);
+          log('db-load-xml (ext)', true);
+        } catch (e) {
+          const detail = (e.stderr || e.stdout || e.message).trim();
+          log('db-load-xml (ext)', false, detail);
+          result.errors.push(`LoadExtension failed: ${detail.substring(0, 1000)}`);
+          return result;
+        }
+
+        try {
+          execSkill(opts.runtime, 'db-update/scripts/db-update',
+            ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir, '-Extension', extName], 180_000);
+          log('db-update (ext)', true);
+        } catch (e) {
+          const detail = (e.stderr || e.stdout || e.message).trim();
+          log('db-update (ext)', false, detail);
+          result.errors.push(`UpdateDBCfg ext failed: ${detail.substring(0, 1000)}`);
+          return result;
+        }
+      }
+
+      result.passed = true;
       return result;
     }
 
