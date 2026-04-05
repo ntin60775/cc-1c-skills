@@ -1,4 +1,4 @@
-﻿# meta-compile v1.5 — Compile 1C metadata object from JSON
+﻿# meta-compile v1.6 — Compile 1C metadata object from JSON
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[Parameter(Mandatory)]
@@ -789,13 +789,13 @@ function Emit-Attribute {
 	X "$indent`t`t<MinValue xsi:nil=`"true`"/>"
 	X "$indent`t`t<MaxValue xsi:nil=`"true`"/>"
 
-	# FillFromFillingValue — not for tabular/processor (non-stored objects don't have these)
-	if ($context -notin @("tabular", "processor")) {
+	# FillFromFillingValue — not for tabular/processor/chart (Chart* types don't support these)
+	if ($context -notin @("tabular", "processor", "chart")) {
 		X "$indent`t`t<FillFromFillingValue>false</FillFromFillingValue>"
 	}
 
-	# FillValue — not for tabular/processor
-	if ($context -notin @("tabular", "processor")) {
+	# FillValue — not for tabular/processor/chart
+	if ($context -notin @("tabular", "processor", "chart")) {
 		Emit-FillValue "$indent`t`t" $typeStr
 	}
 
@@ -828,7 +828,10 @@ function Emit-Attribute {
 		X "$indent`t`t<Indexing>$indexing</Indexing>"
 
 		X "$indent`t`t<FullTextSearch>Use</FullTextSearch>"
-		X "$indent`t`t<DataHistory>Use</DataHistory>"
+		# DataHistory — not for Chart* types (ChartOfAccounts, ChartOfCharacteristicTypes, ChartOfCalculationTypes)
+		if ($context -ne "chart") {
+			X "$indent`t`t<DataHistory>Use</DataHistory>"
+		}
 	}
 
 	X "$indent`t</Properties>"
@@ -2633,6 +2636,7 @@ if ($objType -in $typesWithAttrTS) {
 			"Catalog"  { "catalog" }
 			"Document" { "document" }
 			{ $_ -in @("DataProcessor","Report") } { "processor" }
+			{ $_ -in @("ChartOfAccounts","ChartOfCharacteristicTypes","ChartOfCalculationTypes") } { "chart" }
 			default    { "object" }
 		}
 		foreach ($a in $attrs) {

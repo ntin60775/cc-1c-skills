@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# meta-compile v1.5 — Compile 1C metadata object from JSON
+# meta-compile v1.6 — Compile 1C metadata object from JSON
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 
 import argparse
@@ -747,9 +747,9 @@ def emit_attribute(indent, parsed, context):
     X(f'{indent}\t\t<ExtendedEdit>false</ExtendedEdit>')
     X(f'{indent}\t\t<MinValue xsi:nil="true"/>')
     X(f'{indent}\t\t<MaxValue xsi:nil="true"/>')
-    if context not in ('tabular', 'processor'):
+    if context not in ('tabular', 'processor', 'chart'):
         X(f'{indent}\t\t<FillFromFillingValue>false</FillFromFillingValue>')
-    if context not in ('tabular', 'processor'):
+    if context not in ('tabular', 'processor', 'chart'):
         emit_fill_value(f'{indent}\t\t', type_str)
     fill_checking = 'DontCheck'
     if 'req' in parsed.get('flags', []):
@@ -777,7 +777,9 @@ def emit_attribute(indent, parsed, context):
             indexing = parsed['indexing']
         X(f'{indent}\t\t<Indexing>{indexing}</Indexing>')
         X(f'{indent}\t\t<FullTextSearch>Use</FullTextSearch>')
-        X(f'{indent}\t\t<DataHistory>Use</DataHistory>')
+        # DataHistory — not for Chart* types (ChartOfAccounts, ChartOfCharacteristicTypes, ChartOfCalculationTypes)
+        if context != 'chart':
+            X(f'{indent}\t\t<DataHistory>Use</DataHistory>')
     X(f'{indent}\t</Properties>')
     X(f'{indent}</Attribute>')
 
@@ -2305,6 +2307,8 @@ if obj_type in types_with_attr_ts:
             context = 'document'
         elif obj_type in ('DataProcessor', 'Report'):
             context = 'processor'
+        elif obj_type in ('ChartOfAccounts', 'ChartOfCharacteristicTypes', 'ChartOfCalculationTypes'):
+            context = 'chart'
         else:
             context = 'object'
         for a in attrs:
