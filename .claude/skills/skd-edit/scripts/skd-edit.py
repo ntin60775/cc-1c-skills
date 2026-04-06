@@ -1,4 +1,4 @@
-# skd-edit v1.4 — Atomic 1C DCS editor (Python port)
+# skd-edit v1.5 — Atomic 1C DCS editor (Python port)
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 import argparse
 import os
@@ -350,6 +350,9 @@ def parse_filter_shorthand(s):
             elif re.match(r'^\d+(\.\d+)?$', val_part):
                 result["value"] = val_part
                 result["valueType"] = "xs:decimal"
+            elif re.match(r'^(Перечисление|Справочник|ПланСчетов|Документ|ПланВидовХарактеристик|ПланВидовРасчета)\.', val_part):
+                result["value"] = val_part
+                result["valueType"] = "dcscor:DesignTimeValue"
             else:
                 result["value"] = val_part
                 result["valueType"] = "xs:string"
@@ -480,7 +483,11 @@ def parse_conditional_appearance_shorthand(s):
         if for_idx > when_idx:
             when_end = for_idx
         when_part = s[when_idx + 6:when_end].strip()
-        result["filter"] = parse_filter_shorthand(when_part)
+        or_parts = re.split(r'\s+or\s+', when_part)
+        if len(or_parts) > 1:
+            result["filter"] = [parse_filter_shorthand(p.strip()) for p in or_parts]
+        else:
+            result["filter"] = parse_filter_shorthand(when_part)
 
     main_part = s[:main_end].strip()
     eq_idx = main_part.find("=")
@@ -866,6 +873,16 @@ def build_variant_fragment(parsed, indent):
     return "\r\n".join(lines)
 
 
+def _emit_filter_comparison(lines, f, indent):
+    lines.append(f'{indent}<dcsset:item xsi:type="dcsset:FilterItemComparison">')
+    lines.append(f'{indent}\t<dcsset:left xsi:type="dcscor:Field">{esc_xml(f["field"])}</dcsset:left>')
+    lines.append(f"{indent}\t<dcsset:comparisonType>{esc_xml(f['op'])}</dcsset:comparisonType>")
+    if f.get("value") is not None:
+        vt = f.get("valueType", "xs:string")
+        lines.append(f'{indent}\t<dcsset:right xsi:type="{vt}">{esc_xml(str(f["value"]))}</dcsset:right>')
+    lines.append(f"{indent}</dcsset:item>")
+
+
 def build_conditional_appearance_item_fragment(parsed, indent):
     i = indent
     lines = [f"{i}<dcsset:item>"]
@@ -881,15 +898,17 @@ def build_conditional_appearance_item_fragment(parsed, indent):
         lines.append(f"{i}\t<dcsset:selection/>")
 
     if parsed.get("filter"):
-        f = parsed["filter"]
+        flt = parsed["filter"]
         lines.append(f"{i}\t<dcsset:filter>")
-        lines.append(f'{i}\t\t<dcsset:item xsi:type="dcsset:FilterItemComparison">')
-        lines.append(f'{i}\t\t\t<dcsset:left xsi:type="dcscor:Field">{esc_xml(f["field"])}</dcsset:left>')
-        lines.append(f"{i}\t\t\t<dcsset:comparisonType>{esc_xml(f['op'])}</dcsset:comparisonType>")
-        if f.get("value") is not None:
-            vt = f.get("valueType", "xs:string")
-            lines.append(f'{i}\t\t\t<dcsset:right xsi:type="{vt}">{esc_xml(str(f["value"]))}</dcsset:right>')
-        lines.append(f"{i}\t\t</dcsset:item>")
+        if isinstance(flt, list):
+            # OrGroup
+            lines.append(f'{i}\t\t<dcsset:item xsi:type="dcsset:FilterItemGroup">')
+            lines.append(f"{i}\t\t\t<dcsset:groupType>OrGroup</dcsset:groupType>")
+            for f in flt:
+                _emit_filter_comparison(lines, f, f"{i}\t\t\t")
+            lines.append(f"{i}\t\t</dcsset:item>")
+        else:
+            _emit_filter_comparison(lines, flt, f"{i}\t\t")
         lines.append(f"{i}\t</dcsset:filter>")
     else:
         lines.append(f"{i}\t<dcsset:filter/>")
@@ -897,15 +916,23 @@ def build_conditional_appearance_item_fragment(parsed, indent):
     # appearance
     lines.append(f"{i}\t<dcsset:appearance>")
     val = parsed["value"]
-    val_type = "xs:string"
-    if re.match(r'^(web|style|win):', val):
-        val_type = "v8ui:Color"
-    elif val in ("true", "false"):
-        val_type = "xs:boolean"
-
     lines.append(f'{i}\t\t<dcscor:item xsi:type="dcsset:SettingsParameterValue">')
     lines.append(f"{i}\t\t\t<dcscor:parameter>{esc_xml(parsed['param'])}</dcscor:parameter>")
-    lines.append(f'{i}\t\t\t<dcscor:value xsi:type="{val_type}">{esc_xml(val)}</dcscor:value>')
+
+    if re.match(r'^(web|style|win):', val):
+        lines.append(f'{i}\t\t\t<dcscor:value xsi:type="v8ui:Color">{esc_xml(val)}</dcscor:value>')
+    elif val in ("true", "false"):
+        lines.append(f'{i}\t\t\t<dcscor:value xsi:type="xs:boolean">{esc_xml(val)}</dcscor:value>')
+    elif parsed["param"] in ("Формат", "Текст", "Заголовок"):
+        lines.append(f'{i}\t\t\t<dcscor:value xsi:type="v8:LocalStringType">')
+        lines.append(f"{i}\t\t\t\t<v8:item>")
+        lines.append(f"{i}\t\t\t\t\t<v8:lang>ru</v8:lang>")
+        lines.append(f"{i}\t\t\t\t\t<v8:content>{esc_xml(val)}</v8:content>")
+        lines.append(f"{i}\t\t\t\t</v8:item>")
+        lines.append(f"{i}\t\t\t</dcscor:value>")
+    else:
+        lines.append(f'{i}\t\t\t<dcscor:value xsi:type="xs:string">{esc_xml(val)}</dcscor:value>')
+
     lines.append(f"{i}\t\t</dcscor:item>")
     lines.append(f"{i}\t</dcsset:appearance>")
 

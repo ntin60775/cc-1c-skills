@@ -1,4 +1,4 @@
-﻿# skd-compile v1.5 — Compile 1C DCS from JSON
+﻿# skd-compile v1.6 — Compile 1C DCS from JSON
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[string]$DefinitionFile,
@@ -481,6 +481,9 @@ function Parse-FilterShorthand {
 			} elseif ($valPart -match '^\d+(\.\d+)?$') {
 				$result.value = $valPart
 				$result["valueType"] = "xs:decimal"
+			} elseif ($valPart -match '^(Перечисление|Справочник|ПланСчетов|Документ|ПланВидовХарактеристик|ПланВидовРасчета)\.') {
+				$result.value = $valPart
+				$result["valueType"] = "dcscor:DesignTimeValue"
 			} else {
 				$result.value = $valPart
 				$result["valueType"] = "xs:string"
@@ -1520,7 +1523,7 @@ function Emit-AppearanceValue {
 		X "$indent`t<dcscor:value xsi:type=`"v8ui:Color`">$(Esc-Xml $actualVal)</dcscor:value>"
 	} elseif ($actualVal -eq "true" -or $actualVal -eq "false") {
 		X "$indent`t<dcscor:value xsi:type=`"xs:boolean`">$actualVal</dcscor:value>"
-	} elseif ($key -eq "Текст" -or $key -eq "Заголовок") {
+	} elseif ($key -eq "Текст" -or $key -eq "Заголовок" -or $key -eq "Формат") {
 		X "$indent`t<dcscor:value xsi:type=`"v8:LocalStringType`">"
 		X "$indent`t`t<v8:item>"
 		X "$indent`t`t`t<v8:lang>ru</v8:lang>"

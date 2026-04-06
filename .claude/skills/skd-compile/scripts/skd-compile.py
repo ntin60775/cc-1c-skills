@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# skd-compile v1.5 — Compile 1C DCS from JSON
+# skd-compile v1.6 — Compile 1C DCS from JSON
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 import argparse
 import json
@@ -371,6 +371,9 @@ def parse_filter_shorthand(s):
             elif re.match(r'^\d+(\.\d+)?$', val_part):
                 result['value'] = val_part
                 result['valueType'] = 'xs:decimal'
+            elif re.match(r'^(Перечисление|Справочник|ПланСчетов|Документ|ПланВидовХарактеристик|ПланВидовРасчета)\.', val_part):
+                result['value'] = val_part
+                result['valueType'] = 'dcscor:DesignTimeValue'
             else:
                 result['value'] = val_part
                 result['valueType'] = 'xs:string'
@@ -1281,7 +1284,7 @@ def emit_appearance_value(lines, key, val, indent):
         lines.append(f'{indent}\t<dcscor:value xsi:type="v8ui:Color">{esc_xml(actual_val)}</dcscor:value>')
     elif actual_val == 'true' or actual_val == 'false':
         lines.append(f'{indent}\t<dcscor:value xsi:type="xs:boolean">{actual_val}</dcscor:value>')
-    elif key == '\u0422\u0435\u043a\u0441\u0442' or key == '\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a':
+    elif key in ('\u0422\u0435\u043a\u0441\u0442', '\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a', '\u0424\u043e\u0440\u043c\u0430\u0442'):
         lines.append(f'{indent}\t<dcscor:value xsi:type="v8:LocalStringType">')
         lines.append(f'{indent}\t\t<v8:item>')
         lines.append(f'{indent}\t\t\t<v8:lang>ru</v8:lang>')

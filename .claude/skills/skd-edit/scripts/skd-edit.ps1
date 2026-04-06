@@ -1,4 +1,4 @@
-﻿# skd-edit v1.4 — Atomic 1C DCS editor
+﻿# skd-edit v1.5 — Atomic 1C DCS editor
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[Parameter(Mandatory)]
@@ -357,6 +357,9 @@ function Parse-FilterShorthand {
 			} elseif ($valPart -match '^\d+(\.\d+)?$') {
 				$result.value = $valPart
 				$result["valueType"] = "xs:decimal"
+			} elseif ($valPart -match '^(Перечисление|Справочник|ПланСчетов|Документ|ПланВидовХарактеристик|ПланВидовРасчета)\.') {
+				$result.value = $valPart
+				$result["valueType"] = "dcscor:DesignTimeValue"
 			} else {
 				$result.value = $valPart
 				$result["valueType"] = "xs:string"
@@ -503,12 +506,17 @@ function Parse-ConditionalAppearanceShorthand {
 		$result.fields = @($forPart -split '\s*,\s*' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 	}
 
-	# Parse "when" filter
+	# Parse "when" filter (supports " or " for OrGroup)
 	if ($whenIdx -ge 0) {
 		$whenEnd = $s.Length
 		if ($forIdx -gt $whenIdx) { $whenEnd = $forIdx }
 		$whenPart = $s.Substring($whenIdx + 6, $whenEnd - $whenIdx - 6).Trim()
-		$result.filter = Parse-FilterShorthand $whenPart
+		$orParts = $whenPart -split '\s+or\s+'
+		if ($orParts.Count -gt 1) {
+			$result.filter = @($orParts | ForEach-Object { Parse-FilterShorthand $_.Trim() })
+		} else {
+			$result.filter = Parse-FilterShorthand $whenPart
+		}
 	}
 
 	# Parse main part: "Param = Value"
@@ -973,6 +981,20 @@ function Build-VariantFragment {
 	return $lines -join "`r`n"
 }
 
+function Emit-FilterComparison {
+	param($f, [string]$indent)
+	$lines = @()
+	$lines += "$indent<dcsset:item xsi:type=`"dcsset:FilterItemComparison`">"
+	$lines += "$indent`t<dcsset:left xsi:type=`"dcscor:Field`">$(Esc-Xml $f.field)</dcsset:left>"
+	$lines += "$indent`t<dcsset:comparisonType>$(Esc-Xml $f.op)</dcsset:comparisonType>"
+	if ($null -ne $f.value) {
+		$vt = if ($f["valueType"]) { $f["valueType"] } else { "xs:string" }
+		$lines += "$indent`t<dcsset:right xsi:type=`"$vt`">$(Esc-Xml "$($f.value)")</dcsset:right>"
+	}
+	$lines += "$indent</dcsset:item>"
+	return $lines
+}
+
 function Build-ConditionalAppearanceItemFragment {
 	param($parsed, [string]$indent)
 
@@ -996,15 +1018,17 @@ function Build-ConditionalAppearanceItemFragment {
 	# filter
 	if ($parsed.filter) {
 		$lines += "$i`t<dcsset:filter>"
-		$f = $parsed.filter
-		$lines += "$i`t`t<dcsset:item xsi:type=`"dcsset:FilterItemComparison`">"
-		$lines += "$i`t`t`t<dcsset:left xsi:type=`"dcscor:Field`">$(Esc-Xml $f.field)</dcsset:left>"
-		$lines += "$i`t`t`t<dcsset:comparisonType>$(Esc-Xml $f.op)</dcsset:comparisonType>"
-		if ($null -ne $f.value) {
-			$vt = if ($f["valueType"]) { $f["valueType"] } else { "xs:string" }
-			$lines += "$i`t`t`t<dcsset:right xsi:type=`"$vt`">$(Esc-Xml "$($f.value)")</dcsset:right>"
+		if ($parsed.filter -is [array]) {
+			# OrGroup
+			$lines += "$i`t`t<dcsset:item xsi:type=`"dcsset:FilterItemGroup`">"
+			$lines += "$i`t`t`t<dcsset:groupType>OrGroup</dcsset:groupType>"
+			foreach ($f in $parsed.filter) {
+				$lines += Emit-FilterComparison $f "$i`t`t`t"
+			}
+			$lines += "$i`t`t</dcsset:item>"
+		} else {
+			$lines += Emit-FilterComparison $parsed.filter "$i`t`t"
 		}
-		$lines += "$i`t`t</dcsset:item>"
 		$lines += "$i`t</dcsset:filter>"
 	} else {
 		$lines += "$i`t<dcsset:filter/>"
@@ -1013,18 +1037,25 @@ function Build-ConditionalAppearanceItemFragment {
 	# appearance
 	$lines += "$i`t<dcsset:appearance>"
 
-	# Auto-detect value type
 	$val = $parsed.value
-	$valType = "xs:string"
-	if ($val -match '^(web|style|win):') {
-		$valType = "v8ui:Color"
-	} elseif ($val -eq "true" -or $val -eq "false") {
-		$valType = "xs:boolean"
-	}
-
 	$lines += "$i`t`t<dcscor:item xsi:type=`"dcsset:SettingsParameterValue`">"
 	$lines += "$i`t`t`t<dcscor:parameter>$(Esc-Xml $parsed.param)</dcscor:parameter>"
-	$lines += "$i`t`t`t<dcscor:value xsi:type=`"$valType`">$(Esc-Xml $val)</dcscor:value>"
+
+	if ($val -match '^(web|style|win):') {
+		$lines += "$i`t`t`t<dcscor:value xsi:type=`"v8ui:Color`">$(Esc-Xml $val)</dcscor:value>"
+	} elseif ($val -eq "true" -or $val -eq "false") {
+		$lines += "$i`t`t`t<dcscor:value xsi:type=`"xs:boolean`">$(Esc-Xml $val)</dcscor:value>"
+	} elseif ($parsed.param -eq "Формат" -or $parsed.param -eq "Текст" -or $parsed.param -eq "Заголовок") {
+		$lines += "$i`t`t`t<dcscor:value xsi:type=`"v8:LocalStringType`">"
+		$lines += "$i`t`t`t`t<v8:item>"
+		$lines += "$i`t`t`t`t`t<v8:lang>ru</v8:lang>"
+		$lines += "$i`t`t`t`t`t<v8:content>$(Esc-Xml $val)</v8:content>"
+		$lines += "$i`t`t`t`t</v8:item>"
+		$lines += "$i`t`t`t</dcscor:value>"
+	} else {
+		$lines += "$i`t`t`t<dcscor:value xsi:type=`"xs:string`">$(Esc-Xml $val)</dcscor:value>"
+	}
+
 	$lines += "$i`t`t</dcscor:item>"
 	$lines += "$i`t</dcsset:appearance>"
 
