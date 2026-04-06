@@ -1893,8 +1893,10 @@ switch ($Operation) {
 			if ($groupName) {
 				# Find named StructureItemGroup
 				$dcssetNs = "http://v8.1c.ru/8.1/data-composition-system/settings"
+				$xsiNs = "http://www.w3.org/2001/XMLSchema-instance"
 				$nsMgr = New-Object System.Xml.XmlNamespaceManager($xmlDoc.NameTable)
 				$nsMgr.AddNamespace("dcsset", $dcssetNs)
+				$nsMgr.AddNamespace("xsi", $xsiNs)
 				$groupEl = $settings.SelectSingleNode(".//dcsset:item[@xsi:type='dcsset:StructureItemGroup'][dcsset:name='$groupName']", $nsMgr)
 				if (-not $groupEl) {
 					Write-Host "[WARN] StructureItemGroup `"$groupName`" not found — adding to variant level"
