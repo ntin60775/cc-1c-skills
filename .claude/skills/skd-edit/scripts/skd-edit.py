@@ -1,4 +1,4 @@
-# skd-edit v1.5 — Atomic 1C DCS editor (Python port)
+# skd-edit v1.6 — Atomic 1C DCS editor (Python port)
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 import argparse
 import os
@@ -1481,9 +1481,38 @@ elif operation == "modify-parameter":
 
         child_indent = get_child_indent(param_el)
 
-        if rest.startswith("availableValue="):
-            av_rest = rest[len("availableValue="):]
-            av_parts = av_rest.split(" presentation=", 1)
+        # Separate availableValue=... from simple kv pairs
+        simple_rest = rest
+        av_part = None
+        av_idx = rest.find("availableValue=")
+        if av_idx >= 0:
+            simple_rest = rest[:av_idx].strip()
+            av_part = rest[av_idx:]
+
+        # Process simple key=value pairs (use, denyIncompleteValues, etc.)
+        if simple_rest:
+            for m in re.finditer(r'(\w+)=(\S+)', simple_rest):
+                key, value = m.group(1), m.group(2)
+                existing = next((ch for ch in param_el if isinstance(ch.tag, str) and local_name(ch) == key), None)
+                if existing is not None:
+                    existing.text = value
+                    print(f'[OK] Parameter "{param_name}": {key} updated to {value}')
+                else:
+                    # Schema order: ...value, useRestriction, availableValue*, denyIncompleteValues, use
+                    ref_node = None
+                    if key == "denyIncompleteValues":
+                        ref_node = next((ch for ch in param_el if isinstance(ch.tag, str) and local_name(ch) == "use"), None)
+                    frag_xml = f"{child_indent}<{key}>{esc_xml(value)}</{key}>"
+                    nodes = import_fragment(xml_doc, frag_xml)
+                    for node in nodes:
+                        insert_before_element(param_el, node, ref_node, child_indent)
+                    print(f'[OK] Parameter "{param_name}": {key}={value} added')
+
+        # Process availableValue
+        if av_part:
+            av_rest = av_part[len("availableValue="):]
+            # Parse: "Перечисление...X presentation=текст с пробелами"
+            av_parts = re.split(r'\s+presentation=', av_rest, 1)
             av_value = av_parts[0].strip()
             av_presentation = av_parts[1].strip() if len(av_parts) > 1 else ""
 
@@ -1503,32 +1532,16 @@ elif operation == "modify-parameter":
             av_lines.append(f"{child_indent}</availableValue>")
             frag_xml = "\r\n".join(av_lines)
 
+            # Insert before first of (denyIncompleteValues, use) in document order
             ref_node = None
-            for tag in ["denyIncompleteValues", "use"]:
-                found = param_el.find(tag)
-                if found is not None:
-                    ref_node = found
+            for child in param_el:
+                if isinstance(child.tag, str) and local_name(child) in ("denyIncompleteValues", "use"):
+                    ref_node = child
                     break
             nodes = import_fragment(xml_doc, frag_xml)
             for node in nodes:
                 insert_before_element(param_el, node, ref_node, child_indent)
             print(f'[OK] Parameter "{param_name}": availableValue added')
-        else:
-            for m in re.finditer(r'(\w+)=(\S+)', rest):
-                key, value = m.group(1), m.group(2)
-                existing = param_el.find(key)
-                if existing is not None:
-                    existing.text = value
-                    print(f'[OK] Parameter "{param_name}": {key} updated to {value}')
-                else:
-                    frag_xml = f"{child_indent}<{key}>{esc_xml(value)}</{key}>"
-                    nodes = import_fragment(xml_doc, frag_xml)
-                    for node in nodes:
-                        last_child = list(param_el)[-1] if len(param_el) else None
-                        if last_child is not None:
-                            last_child.tail = (last_child.tail or "") + "\r\n" + child_indent
-                        param_el.append(node)
-                    print(f'[OK] Parameter "{param_name}": {key}={value} added')
 
 elif operation == "add-filter":
     settings = resolve_variant_settings()

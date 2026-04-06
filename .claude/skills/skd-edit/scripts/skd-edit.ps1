@@ -1,4 +1,4 @@
-﻿# skd-edit v1.5 — Atomic 1C DCS editor
+﻿# skd-edit v1.6 — Atomic 1C DCS editor
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[Parameter(Mandatory)]
@@ -1707,10 +1707,50 @@ switch ($Operation) {
 
 			$childIndent = Get-ChildIndent $paramEl
 
-			# Parse key=value pairs (special handling for availableValue)
-			if ($rest -match '^availableValue=(.+)') {
-				$avRest = $rest -replace '^availableValue=', ''
-				# Parse: "Перечисление...X presentation=текст"
+			# Separate availableValue=... from simple kv pairs
+			$simpleRest = $rest
+			$avPart = $null
+			$avIdx = $rest.IndexOf('availableValue=')
+			if ($avIdx -ge 0) {
+				$simpleRest = $rest.Substring(0, $avIdx).Trim()
+				$avPart = $rest.Substring($avIdx)
+			}
+
+			# Process simple key=value pairs (use, denyIncompleteValues, etc.)
+			if ($simpleRest) {
+				$kvPairs = [regex]::Matches($simpleRest, '(\w+)=(\S+)')
+				foreach ($kv in $kvPairs) {
+					$key = $kv.Groups[1].Value
+					$value = $kv.Groups[2].Value
+
+					$existing = $paramEl.SelectSingleNode($key)
+					if ($existing) {
+						$existing.InnerText = $value
+						Write-Host "[OK] Parameter `"$paramName`": $key updated to $value"
+					} else {
+						# Schema order: ...value, useRestriction, availableValue*, denyIncompleteValues, use
+						$refNode = $null
+						if ($key -eq "denyIncompleteValues") {
+							foreach ($child in $paramEl.ChildNodes) {
+								if ($child.NodeType -eq 'Element' -and $child.LocalName -eq 'use') {
+									$refNode = $child; break
+								}
+							}
+						}
+						$fragXml = "$childIndent<$key>$(Esc-Xml $value)</$key>"
+						$nodes = Import-Fragment $xmlDoc $fragXml
+						foreach ($node in $nodes) {
+							Insert-BeforeElement $paramEl $node $refNode $childIndent
+						}
+						Write-Host "[OK] Parameter `"$paramName`": $key=$value added"
+					}
+				}
+			}
+
+			# Process availableValue
+			if ($avPart) {
+				$avRest = $avPart -replace '^availableValue=', ''
+				# Parse: "Перечисление...X presentation=текст с пробелами"
 				$avParts = $avRest -split '\s+presentation=', 2
 				$avValue = $avParts[0].Trim()
 				$avPresentation = if ($avParts.Count -gt 1) { $avParts[1].Trim() } else { "" }
@@ -1735,61 +1775,18 @@ switch ($Operation) {
 				$avLines += "$childIndent</availableValue>"
 				$fragXml = $avLines -join "`r`n"
 
-				# Insert before denyIncompleteValues/use or at end
+				# Insert before first of (denyIncompleteValues, use) in document order
 				$refNode = $null
-				foreach ($tag in @("denyIncompleteValues","use")) {
-					$found = $paramEl.SelectSingleNode($tag)
-					if ($found) { $refNode = $found; break }
+				foreach ($child in $paramEl.ChildNodes) {
+					if ($child.NodeType -eq 'Element' -and ($child.LocalName -eq 'denyIncompleteValues' -or $child.LocalName -eq 'use')) {
+						$refNode = $child; break
+					}
 				}
 				$nodes = Import-Fragment $xmlDoc $fragXml
 				foreach ($node in $nodes) {
 					Insert-BeforeElement $paramEl $node $refNode $childIndent
 				}
 				Write-Host "[OK] Parameter `"$paramName`": availableValue added"
-			} else {
-				# Simple key=value pairs: use=Always, denyIncompleteValues=true
-				$kvPairs = [regex]::Matches($rest, '(\w+)=(\S+)')
-				foreach ($kv in $kvPairs) {
-					$key = $kv.Groups[1].Value
-					$value = $kv.Groups[2].Value
-
-					$existing = $paramEl.SelectSingleNode($key)
-					if ($existing) {
-						$existing.InnerText = $value
-						Write-Host "[OK] Parameter `"$paramName`": $key updated to $value"
-					} else {
-						# Determine insertion order
-						$afterTags = switch ($key) {
-							"denyIncompleteValues" { @("availableValue","useRestriction","availableAsField","expression","value","valueType","title","name") }
-							"use" { @("denyIncompleteValues","availableValue","useRestriction","availableAsField","expression","value","valueType","title","name") }
-							default { @("name") }
-						}
-						$refNode = $null
-						foreach ($tag in @("denyIncompleteValues","use")) {
-							if ($tag -eq $key) { continue }
-							$found = $paramEl.SelectSingleNode($tag)
-							if ($found -and ($afterTags -contains $tag -eq $false)) {
-								$refNode = $found; break
-							}
-						}
-
-						$fragXml = "$childIndent<$key>$(Esc-Xml $value)</$key>"
-						$nodes = Import-Fragment $xmlDoc $fragXml
-						foreach ($node in $nodes) {
-							# Append before closing tag (last whitespace child)
-							$lastChild = $paramEl.LastChild
-							if ($lastChild.NodeType -eq 'Whitespace' -or $lastChild.NodeType -eq 'SignificantWhitespace') {
-								$paramEl.InsertBefore($node, $lastChild) | Out-Null
-							} else {
-								$paramEl.AppendChild($node) | Out-Null
-							}
-						}
-						# Add trailing whitespace
-						$ws = $xmlDoc.CreateWhitespace("`r`n$($childIndent -replace '`t$','')")
-						$paramEl.AppendChild($ws) | Out-Null
-						Write-Host "[OK] Parameter `"$paramName`": $key=$value added"
-					}
-				}
 			}
 		}
 	}
