@@ -1,4 +1,4 @@
-﻿# skd-edit v1.3 — Atomic 1C DCS editor
+﻿# skd-edit v1.4 — Atomic 1C DCS editor
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[Parameter(Mandatory)]
@@ -1445,6 +1445,8 @@ $corNs = "http://v8.1c.ru/8.1/data-composition-system/core"
 
 if ($Operation -eq "set-query" -or $Operation -eq "set-structure" -or $Operation -eq "add-dataSet") {
 	$values = @($Value)
+} elseif ($Operation -eq "patch-query") {
+	$values = @($Value -split ';;' | Where-Object { $_.Trim() })
 } else {
 	$values = @($Value -split ';;' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 }

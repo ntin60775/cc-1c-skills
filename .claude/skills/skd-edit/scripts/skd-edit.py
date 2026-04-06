@@ -1,4 +1,4 @@
-# skd-edit v1.3 — Atomic 1C DCS editor (Python port)
+# skd-edit v1.4 — Atomic 1C DCS editor (Python port)
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 import argparse
 import os
@@ -1252,6 +1252,8 @@ xml_doc = tree.getroot()
 
 if operation in ("set-query", "set-structure", "add-dataSet"):
     values = [value_arg]
+elif operation == "patch-query":
+    values = [v for v in value_arg.split(";;") if v.strip()]
 else:
     values = [v.strip() for v in value_arg.split(";;") if v.strip()]
 
