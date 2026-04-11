@@ -58,8 +58,3 @@ powershell.exe -NoProfile -File '.claude/skills/subsystem-compile/scripts/subsys
 ... -Value '{"name":"Дочерняя"}' -OutputDir config/ -Parent config/Subsystems/Продажи.xml
 ```
 
-## Что генерируется
-
-- `{OutputDir}/Subsystems/{Name}.xml` — определение подсистемы
-- `{OutputDir}/Subsystems/{Name}/` — каталог (если есть children)
-- `Configuration.xml` или родительская подсистема — регистрация в `<ChildObjects>`
