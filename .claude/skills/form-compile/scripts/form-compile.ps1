@@ -1,15 +1,821 @@
-﻿# form-compile v1.4 — Compile 1C managed form from JSON
+﻿# form-compile v1.5 — Compile 1C managed form from JSON or object metadata
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
-	[Parameter(Mandatory)]
 	[string]$JsonPath,
 
 	[Parameter(Mandatory)]
-	[string]$OutputPath
+	[string]$OutputPath,
+
+	[switch]$FromObject,
+	[string]$ObjectPath,
+	[string]$Purpose,
+	[string]$Preset = "erp-standard",
+	[string]$EmitDsl
 )
 
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# ═══════════════════════════════════════════════════════════════════════════
+# FROM-OBJECT MODE: functions for metadata parsing, presets, DSL generation
+# ═══════════════════════════════════════════════════════════════════════════
+
+function Parse-ObjectMeta([string]$ObjectPath) {
+	$doc = New-Object System.Xml.XmlDocument
+	$doc.PreserveWhitespace = $false
+	$doc.Load($ObjectPath)
+
+	$ns = New-Object System.Xml.XmlNamespaceManager($doc.NameTable)
+	$ns.AddNamespace("md", "http://v8.1c.ru/8.3/MDClasses")
+	$ns.AddNamespace("xr", "http://v8.1c.ru/8.3/xcf/readable")
+	$ns.AddNamespace("v8", "http://v8.1c.ru/8.1/data/core")
+
+	# Detect object type from root child
+	$metaRoot = $doc.SelectSingleNode("md:MetaDataObject", $ns)
+	if (-not $metaRoot) { Write-Error "Not a 1C metadata XML: $ObjectPath"; exit 1 }
+	$typeNode = $metaRoot.FirstChild
+	$objType = $typeNode.LocalName  # "Document", "Catalog", etc.
+
+	$propsNode = $typeNode.SelectSingleNode("md:Properties", $ns)
+	$childObjs = $typeNode.SelectSingleNode("md:ChildObjects", $ns)
+
+	# Name
+	$objName = $propsNode.SelectSingleNode("md:Name", $ns).InnerText
+
+	# Synonym (Russian)
+	$synonym = $objName
+	$synNode = $propsNode.SelectSingleNode("md:Synonym/v8:item[v8:lang='ru']/v8:content", $ns)
+	if ($synNode) { $synonym = $synNode.InnerText }
+
+	# Helper: extract type string from md:Type
+	$extractType = {
+		param($typeParent)
+		if (-not $typeParent) { return "string" }
+		$types = @()
+		foreach ($t in $typeParent.SelectNodes("v8:Type", $ns)) {
+			$types += $t.InnerText
+		}
+		if ($types.Count -eq 0) { return "string" }
+		return ($types -join " | ")
+	}
+
+	# Helper: check if type is a reference
+	$isRefType = {
+		param([string]$t)
+		return ($t -match 'Ref\.' -or $t -match 'ссылка\.')
+	}
+
+	# Helper: extract attribute list from ChildObjects
+	$extractAttrs = {
+		param($parentNode)
+		$result = @()
+		if (-not $parentNode) { return $result }
+		foreach ($attrNode in $parentNode.SelectNodes("md:Attribute", $ns)) {
+			$ap = $attrNode.SelectSingleNode("md:Properties", $ns)
+			$aName = $ap.SelectSingleNode("md:Name", $ns).InnerText
+			$aSynNode = $ap.SelectSingleNode("md:Synonym/v8:item[v8:lang='ru']/v8:content", $ns)
+			$aSyn = if ($aSynNode) { $aSynNode.InnerText } else { $aName }
+			$aTypeNode = $ap.SelectSingleNode("md:Type", $ns)
+			$aType = & $extractType $aTypeNode
+			$result += @{
+				Name = $aName
+				Synonym = $aSyn
+				Type = $aType
+				IsRef = (& $isRefType $aType)
+			}
+		}
+		return $result
+	}
+
+	# Attributes
+	$attributes = @(& $extractAttrs $childObjs)
+
+	# Tabular sections
+	$tabularSections = @()
+	if ($childObjs) {
+		foreach ($tsNode in $childObjs.SelectNodes("md:TabularSection", $ns)) {
+			$tsp = $tsNode.SelectSingleNode("md:Properties", $ns)
+			$tsName = $tsp.SelectSingleNode("md:Name", $ns).InnerText
+			$tsSynNode = $tsp.SelectSingleNode("md:Synonym/v8:item[v8:lang='ru']/v8:content", $ns)
+			$tsSyn = if ($tsSynNode) { $tsSynNode.InnerText } else { $tsName }
+			$tsCo = $tsNode.SelectSingleNode("md:ChildObjects", $ns)
+			$tsCols = @(& $extractAttrs $tsCo)
+			$tabularSections += @{
+				Name = $tsName
+				Synonym = $tsSyn
+				Columns = $tsCols
+			}
+		}
+	}
+
+	$meta = @{
+		Type = $objType
+		Name = $objName
+		Synonym = $synonym
+		Attributes = $attributes
+		TabularSections = $tabularSections
+	}
+
+	# Type-specific properties
+	switch ($objType) {
+		"Document" {
+			$ntNode = $propsNode.SelectSingleNode("md:NumberType", $ns)
+			$meta.NumberType = if ($ntNode) { $ntNode.InnerText } else { "String" }
+		}
+		"Catalog" {
+			$clNode = $propsNode.SelectSingleNode("md:CodeLength", $ns)
+			$meta.CodeLength = if ($clNode) { [int]$clNode.InnerText } else { 0 }
+			$dlNode = $propsNode.SelectSingleNode("md:DescriptionLength", $ns)
+			$meta.DescriptionLength = if ($dlNode) { [int]$dlNode.InnerText } else { 0 }
+			$hiNode = $propsNode.SelectSingleNode("md:Hierarchical", $ns)
+			$meta.Hierarchical = ($hiNode -and $hiNode.InnerText -eq "true")
+			$htNode = $propsNode.SelectSingleNode("md:HierarchyType", $ns)
+			$meta.HierarchyType = if ($htNode) { $htNode.InnerText } else { "HierarchyFoldersAndItems" }
+			# Owners
+			$owners = @()
+			foreach ($ow in $propsNode.SelectNodes("md:Owners/xr:Item", $ns)) {
+				$owners += $ow.InnerText
+			}
+			$meta.Owners = $owners
+		}
+	}
+
+	return $meta
+}
+
+function Load-Preset([string]$PresetName, [string]$ScriptDir) {
+	# Hardcoded defaults (ERP-oriented)
+	$defaults = @{
+		"document.item" = @{
+			header = @{ position = "insidePage"; layout = "2col"; distribute = "even"; dateTitle = "от" }
+			footer = @{ fields = @("Комментарий"); position = "insidePage" }
+			tabularSections = @{ container = "pages"; exclude = @("ДополнительныеРеквизиты"); lineNumber = $true }
+			additional = @{ position = "page"; layout = "2col"; bspGroup = $true }
+			fieldDefaults = @{ ref = @{ choiceButton = $true }; boolean = @{ element = "check" } }
+			commandBar = "auto"
+			properties = @{ autoTitle = $false }
+		}
+		"document.list" = @{
+			columns = "all"; columnType = "labelField"; hiddenRef = $true
+			tableCommandBar = "none"; commandBar = "auto"
+			properties = @{}
+		}
+		"document.choice" = @{
+			basedOn = "document.list"
+			properties = @{ windowOpeningMode = "LockOwnerWindow" }
+		}
+		"catalog.item" = @{
+			header = @{ layout = "1col"; distribute = "left" }
+			codeDescription = @{ layout = "horizontal"; order = "descriptionFirst" }
+			parent = @{ title = "Входит в группу"; position = "afterCodeDescription" }
+			owner = @{ readOnly = $true; position = "first" }
+			tabularSections = @{ container = "inline"; exclude = @("ДополнительныеРеквизиты","Представления"); lineNumber = $true }
+			footer = @{ fields = @(); position = "none" }
+			additional = @{ position = "none"; bspGroup = $true }
+			fieldDefaults = @{ ref = @{ choiceButton = $true }; boolean = @{ element = "check" } }
+			commandBar = "auto"
+			properties = @{}
+		}
+		"catalog.folder" = @{
+			parent = @{ title = "Входит в группу" }
+			properties = @{ windowOpeningMode = "LockOwnerWindow" }
+		}
+		"catalog.list" = @{
+			columns = "all"; columnType = "labelField"; hiddenRef = $true
+			tableCommandBar = "none"; commandBar = "auto"
+			properties = @{}
+		}
+		"catalog.choice" = @{
+			basedOn = "catalog.list"; choiceMode = $true
+			properties = @{ windowOpeningMode = "LockOwnerWindow" }
+		}
+	}
+
+	# Deep merge helper
+	$deepMerge = {
+		param($base, $overlay)
+		if (-not $overlay) { return $base }
+		if (-not $base) { return $overlay }
+		$result = @{}
+		foreach ($k in $base.Keys) { $result[$k] = $base[$k] }
+		foreach ($k in $overlay.Keys) {
+			if ($result.ContainsKey($k) -and $result[$k] -is [hashtable] -and $overlay[$k] -is [hashtable]) {
+				$result[$k] = & $deepMerge $result[$k] $overlay[$k]
+			} else {
+				$result[$k] = $overlay[$k]
+			}
+		}
+		return $result
+	}
+
+	# Try built-in preset
+	$presetDir = Join-Path (Split-Path $ScriptDir -Parent) "presets"
+	$builtInPath = Join-Path $presetDir "$PresetName.json"
+	if (Test-Path $builtInPath) {
+		$presetJson = Get-Content -Raw -Encoding UTF8 $builtInPath | ConvertFrom-Json
+		# Convert PSCustomObject to hashtable recursively
+		$toHash = {
+			param($obj)
+			if ($obj -is [System.Management.Automation.PSCustomObject]) {
+				$h = @{}
+				foreach ($p in $obj.PSObject.Properties) {
+					$h[$p.Name] = & $toHash $p.Value
+				}
+				return $h
+			}
+			if ($obj -is [System.Object[]]) {
+				return @($obj | ForEach-Object { & $toHash $_ })
+			}
+			return $obj
+		}
+		$presetHash = & $toHash $presetJson
+		foreach ($k in @($presetHash.Keys)) {
+			$defaults[$k] = & $deepMerge $defaults[$k] $presetHash[$k]
+		}
+	}
+
+	# Try project-level preset (scan up from output path)
+	$scanDir = [System.IO.Path]::GetDirectoryName($script:outPathResolved)
+	while ($scanDir) {
+		$projPreset = Join-Path (Join-Path (Join-Path (Join-Path $scanDir "presets") "skills") "form") "$PresetName.json"
+		if (Test-Path $projPreset) {
+			$projJson = Get-Content -Raw -Encoding UTF8 $projPreset | ConvertFrom-Json
+			$projHash = & $toHash $projJson
+			foreach ($k in @($projHash.Keys)) {
+				$defaults[$k] = & $deepMerge $defaults[$k] $projHash[$k]
+			}
+			break
+		}
+		$parentDir = Split-Path $scanDir -Parent
+		if ($parentDir -eq $scanDir) { break }
+		$scanDir = $parentDir
+	}
+
+	# Resolve basedOn references
+	foreach ($k in @($defaults.Keys)) {
+		$sect = $defaults[$k]
+		if ($sect -is [hashtable] -and $sect.ContainsKey("basedOn")) {
+			$baseName = $sect["basedOn"]
+			if ($defaults.ContainsKey($baseName)) {
+				$merged = & $deepMerge $defaults[$baseName] $sect
+				$merged.Remove("basedOn")
+				$defaults[$k] = $merged
+			}
+		}
+	}
+
+	return $defaults
+}
+
+# --- Helper: build a field element DSL entry ---
+function New-FieldElement {
+	param([string]$attrName, [string]$dataPath, [string]$attrType, [hashtable]$fieldDefaults, [hashtable]$extraProps)
+
+	$isRef = ($attrType -match 'Ref\.')
+	$isBool = ($attrType -match '^\s*xs:boolean\s*$' -or $attrType -eq 'boolean' -or $attrType -match 'Boolean')
+
+	# Determine element type
+	$elType = "input"
+	if ($isBool -and $fieldDefaults -and $fieldDefaults.boolean -and $fieldDefaults.boolean.element -eq "check") {
+		$elType = "check"
+	}
+
+	$el = [ordered]@{ $elType = $attrName; path = $dataPath }
+
+	# Apply ref defaults
+	if ($isRef -and $fieldDefaults -and $fieldDefaults.ref) {
+		if ($fieldDefaults.ref.choiceButton -eq $true) { $el["choiceButton"] = $true }
+	}
+
+	# Extra props
+	if ($extraProps) {
+		foreach ($k in $extraProps.Keys) { $el[$k] = $extraProps[$k] }
+	}
+
+	return $el
+}
+
+# --- Catalog DSL generators ---
+function Generate-CatalogDSL {
+	param($meta, [hashtable]$presetData, [string]$purpose)
+
+	$purposeKey = "catalog.$($purpose.ToLower())"
+	$p = if ($presetData.ContainsKey($purposeKey)) { $presetData[$purposeKey] } else { @{} }
+	$fd = if ($p.ContainsKey("fieldDefaults")) { $p.fieldDefaults } else { @{} }
+
+	switch ($purpose) {
+		"Folder" { return Generate-CatalogFolderDSL $meta $p }
+		"List"   { return Generate-CatalogListDSL $meta $p }
+		"Choice" { return Generate-CatalogChoiceDSL $meta $p $presetData }
+		"Item"   { return Generate-CatalogItemDSL $meta $p $fd }
+	}
+}
+
+function Generate-CatalogFolderDSL($meta, [hashtable]$p) {
+	$elements = @()
+	# Code (if CodeLength > 0)
+	if ($meta.CodeLength -gt 0) {
+		$elements += [ordered]@{ input = "Код"; path = "Объект.Code" }
+	}
+	# Description
+	$elements += [ordered]@{ input = "Наименование"; path = "Объект.Description" }
+	# Parent
+	$parentTitle = if ($p.parent -and $p.parent.title) { $p.parent.title } else { $null }
+	$parentEl = [ordered]@{ input = "Родитель"; path = "Объект.Parent" }
+	if ($parentTitle) { $parentEl["title"] = $parentTitle }
+	$elements += $parentEl
+
+	$props = [ordered]@{ windowOpeningMode = "LockOwnerWindow" }
+	if ($p.properties) { foreach ($k in $p.properties.Keys) { $props[$k] = $p.properties[$k] } }
+
+	$formProps = [ordered]@{ useForFoldersAndItems = "Folders" }
+	foreach ($k in $props.Keys) { $formProps[$k] = $props[$k] }
+
+	return [ordered]@{
+		title = $meta.Synonym
+		properties = $formProps
+		elements = $elements
+		attributes = @(
+			[ordered]@{ name = "Объект"; type = "CatalogObject.$($meta.Name)"; main = $true }
+		)
+	}
+}
+
+function Generate-CatalogListDSL($meta, [hashtable]$p) {
+	# Columns
+	$columns = @()
+	# Description always first
+	$columns += [ordered]@{ labelField = "Наименование"; path = "Список.Description" }
+	# Code if present
+	if ($meta.CodeLength -gt 0) {
+		$columns += [ordered]@{ labelField = "Код"; path = "Список.Code" }
+	}
+	# Custom attributes
+	foreach ($attr in $meta.Attributes) {
+		$columns += [ordered]@{ labelField = $attr.Name; path = "Список.$($attr.Name)" }
+	}
+	# Hidden ref
+	if (-not $p.ContainsKey("hiddenRef") -or $p.hiddenRef -eq $true) {
+		$columns += [ordered]@{ labelField = "Ссылка"; path = "Список.Ref"; visible = $false }
+	}
+
+	$tableEl = [ordered]@{
+		table = "Список"; path = "Список"
+		rowPictureDataPath = "Список.DefaultPicture"
+		commandBarLocation = "None"
+		tableAutofill = $false
+		columns = $columns
+	}
+	# Hierarchical properties
+	if ($meta.Hierarchical) {
+		$tableEl["initialTreeView"] = "ExpandTopLevel"
+		$tableEl["enableStartDrag"] = $true
+		$tableEl["enableDrag"] = $true
+	}
+
+	$formProps = [ordered]@{}
+	if ($p.properties) { foreach ($k in $p.properties.Keys) { $formProps[$k] = $p.properties[$k] } }
+
+	return [ordered]@{
+		title = $meta.Synonym
+		properties = $formProps
+		elements = @($tableEl)
+		attributes = @(
+			[ordered]@{
+				name = "Список"; type = "DynamicList"; main = $true
+				settings = [ordered]@{ mainTable = "Catalog.$($meta.Name)"; dynamicDataRead = $true }
+			}
+		)
+	}
+}
+
+function Generate-CatalogChoiceDSL($meta, [hashtable]$p, [hashtable]$presetData) {
+	# Start from list
+	$listKey = "catalog.list"
+	$lp = if ($presetData.ContainsKey($listKey)) { $presetData[$listKey] } else { @{} }
+	$dsl = Generate-CatalogListDSL $meta $lp
+
+	# Add choice-specific properties
+	$dsl.properties["windowOpeningMode"] = "LockOwnerWindow"
+	if ($p.properties) { foreach ($k in $p.properties.Keys) { $dsl.properties[$k] = $p.properties[$k] } }
+
+	# Set ChoiceMode on table
+	$dsl.elements[0]["choiceMode"] = $true
+
+	return $dsl
+}
+
+function Generate-CatalogItemDSL($meta, [hashtable]$p, [hashtable]$fd) {
+	$headerChildren = @()
+
+	# Owner (if subordinate)
+	if ($meta.Owners -and $meta.Owners.Count -gt 0) {
+		$ownerEl = [ordered]@{ input = "Владелец"; path = "Объект.Owner"; readOnly = $true }
+		$headerChildren += $ownerEl
+	}
+
+	# Code + Description
+	$cdLayout = if ($p.codeDescription -and $p.codeDescription.layout) { $p.codeDescription.layout } else { "horizontal" }
+	$cdOrder = if ($p.codeDescription -and $p.codeDescription.order) { $p.codeDescription.order } else { "descriptionFirst" }
+	$hasCode = ($meta.CodeLength -gt 0)
+
+	if ($cdLayout -eq "horizontal" -and $hasCode) {
+		$cdChildren = @()
+		$descEl = [ordered]@{ input = "Наименование"; path = "Объект.Description" }
+		$codeEl = [ordered]@{ input = "Код"; path = "Объект.Code" }
+		if ($cdOrder -eq "descriptionFirst") {
+			$cdChildren = @($descEl, $codeEl)
+		} else {
+			$cdChildren = @($codeEl, $descEl)
+		}
+		$headerChildren += [ordered]@{
+			group = "horizontal"; name = "ГруппаКодНаименование"; showTitle = $false
+			representation = "none"; children = $cdChildren
+		}
+	} else {
+		# Vertical or no code
+		$headerChildren += [ordered]@{ input = "Наименование"; path = "Объект.Description" }
+		if ($hasCode) {
+			$headerChildren += [ordered]@{ input = "Код"; path = "Объект.Code" }
+		}
+	}
+
+	# Parent (for hierarchical catalogs)
+	$parentPos = if ($p.parent -and $p.parent.position) { $p.parent.position } else { "afterCodeDescription" }
+	$parentTitle = if ($p.parent -and $p.parent.title) { $p.parent.title } else { $null }
+	if ($meta.Hierarchical) {
+		$parentEl = [ordered]@{ input = "Родитель"; path = "Объект.Parent" }
+		if ($parentTitle) { $parentEl["title"] = $parentTitle }
+		if ($parentPos -eq "beforeCodeDescription") {
+			# Insert before Code/Description (after Owner if present)
+			$insertIdx = if ($meta.Owners -and $meta.Owners.Count -gt 0) { 1 } else { 0 }
+			$newChildren = @()
+			for ($i = 0; $i -lt $headerChildren.Count; $i++) {
+				if ($i -eq $insertIdx) { $newChildren += $parentEl }
+				$newChildren += $headerChildren[$i]
+			}
+			$headerChildren = $newChildren
+		} else {
+			# afterCodeDescription (default)
+			$headerChildren += $parentEl
+		}
+	}
+
+	# Custom attributes → header
+	$footerFieldNames = @()
+	if ($p.footer -and $p.footer.fields) { $footerFieldNames = @($p.footer.fields) }
+
+	foreach ($attr in $meta.Attributes) {
+		if ($footerFieldNames -contains $attr.Name) { continue }
+		$headerChildren += (New-FieldElement -attrName $attr.Name -dataPath "Объект.$($attr.Name)" -attrType $attr.Type -fieldDefaults $fd -extraProps @{})
+	}
+
+	# Build root elements
+	$rootElements = @()
+
+	# ГруппаШапка
+	$rootElements += [ordered]@{
+		group = "vertical"; name = "ГруппаШапка"; showTitle = $false
+		representation = "none"; children = $headerChildren
+	}
+
+	# Tabular sections
+	$tsExclude = @("ДополнительныеРеквизиты", "Представления")
+	if ($p.tabularSections -and $p.tabularSections.exclude) { $tsExclude = @($p.tabularSections.exclude) }
+	$tsLineNumber = if ($p.tabularSections -and $null -ne $p.tabularSections.lineNumber) { $p.tabularSections.lineNumber } else { $true }
+	$tsContainer = if ($p.tabularSections -and $p.tabularSections.container) { $p.tabularSections.container } else { "inline" }
+
+	$visibleTS = @()
+	foreach ($ts in $meta.TabularSections) {
+		if ($tsExclude -contains $ts.Name) { continue }
+		$visibleTS += $ts
+	}
+
+	foreach ($ts in $visibleTS) {
+		$tsCols = @()
+		if ($tsLineNumber) {
+			$tsCols += [ordered]@{ labelField = "$($ts.Name)НомерСтроки"; path = "Объект.$($ts.Name).LineNumber" }
+		}
+		foreach ($col in $ts.Columns) {
+			$colEl = New-FieldElement -attrName "$($ts.Name)$($col.Name)" -dataPath "Объект.$($ts.Name).$($col.Name)" -attrType $col.Type -fieldDefaults $fd -extraProps @{}
+			$tsCols += $colEl
+		}
+		$tableEl = [ordered]@{ table = $ts.Name; path = "Объект.$($ts.Name)"; columns = $tsCols }
+		$rootElements += $tableEl
+	}
+
+	# Footer fields
+	foreach ($fn in $footerFieldNames) {
+		$fAttr = $meta.Attributes | Where-Object { $_.Name -eq $fn }
+		if ($fAttr) {
+			$rootElements += (New-FieldElement -attrName $fAttr.Name -dataPath "Объект.$($fAttr.Name)" -attrType $fAttr.Type -fieldDefaults $fd -extraProps @{})
+		}
+	}
+
+	# BSP group
+	$bspGroup = if ($p.additional -and $null -ne $p.additional.bspGroup) { $p.additional.bspGroup } else { $true }
+	if ($bspGroup) {
+		$rootElements += [ordered]@{ group = "vertical"; name = "ГруппаДополнительныеРеквизиты" }
+	}
+
+	# Properties
+	$formProps = [ordered]@{}
+	if ($p.properties) { foreach ($k in $p.properties.Keys) { $formProps[$k] = $p.properties[$k] } }
+	# UseForFoldersAndItems
+	if ($meta.Hierarchical -and $meta.HierarchyType -eq "HierarchyFoldersAndItems") {
+		$formProps["useForFoldersAndItems"] = "Items"
+	}
+
+	return [ordered]@{
+		title = $meta.Synonym
+		properties = $formProps
+		elements = $rootElements
+		attributes = @(
+			[ordered]@{ name = "Объект"; type = "CatalogObject.$($meta.Name)"; main = $true }
+		)
+	}
+}
+
+# --- Document DSL generators ---
+function Generate-DocumentDSL {
+	param($meta, [hashtable]$presetData, [string]$purpose)
+
+	$purposeKey = "document.$($purpose.ToLower())"
+	$p = if ($presetData.ContainsKey($purposeKey)) { $presetData[$purposeKey] } else { @{} }
+	$fd = if ($p.ContainsKey("fieldDefaults")) { $p.fieldDefaults } else { @{} }
+
+	switch ($purpose) {
+		"List"   { return Generate-DocumentListDSL $meta $p }
+		"Choice" { return Generate-DocumentChoiceDSL $meta $p $presetData }
+		"Item"   { return Generate-DocumentItemDSL $meta $p $fd }
+	}
+}
+
+function Generate-DocumentListDSL($meta, [hashtable]$p) {
+	$columns = @()
+	# All custom attributes as labelField
+	foreach ($attr in $meta.Attributes) {
+		$columns += [ordered]@{ labelField = $attr.Name; path = "Список.$($attr.Name)" }
+	}
+	# Hidden ref
+	if (-not $p.ContainsKey("hiddenRef") -or $p.hiddenRef -eq $true) {
+		$columns += [ordered]@{ labelField = "Ссылка"; path = "Список.Ref"; visible = $false }
+	}
+
+	$tableEl = [ordered]@{
+		table = "Список"; path = "Список"
+		commandBarLocation = "None"
+		tableAutofill = $false
+		columns = $columns
+	}
+
+	$formProps = [ordered]@{}
+	if ($p.properties) { foreach ($k in $p.properties.Keys) { $formProps[$k] = $p.properties[$k] } }
+
+	return [ordered]@{
+		title = $meta.Synonym
+		properties = $formProps
+		elements = @($tableEl)
+		attributes = @(
+			[ordered]@{
+				name = "Список"; type = "DynamicList"; main = $true
+				settings = [ordered]@{ mainTable = "Document.$($meta.Name)"; dynamicDataRead = $true }
+			}
+		)
+	}
+}
+
+function Generate-DocumentChoiceDSL($meta, [hashtable]$p, [hashtable]$presetData) {
+	$listKey = "document.list"
+	$lp = if ($presetData.ContainsKey($listKey)) { $presetData[$listKey] } else { @{} }
+	$dsl = Generate-DocumentListDSL $meta $lp
+
+	$dsl.properties["windowOpeningMode"] = "LockOwnerWindow"
+	if ($p.properties) { foreach ($k in $p.properties.Keys) { $dsl.properties[$k] = $p.properties[$k] } }
+
+	return $dsl
+}
+
+function Generate-DocumentItemDSL($meta, [hashtable]$p, [hashtable]$fd) {
+	$headerPos = if ($p.header -and $p.header.position) { $p.header.position } else { "insidePage" }
+	$headerLayout = if ($p.header -and $p.header.layout) { $p.header.layout } else { "2col" }
+	$headerDistribute = if ($p.header -and $p.header.distribute) { $p.header.distribute } else { "even" }
+	$dateTitle = if ($p.header -and $p.header.dateTitle) { $p.header.dateTitle } else { "от" }
+
+	$footerFields = @()
+	if ($p.footer -and $p.footer.fields) { $footerFields = @($p.footer.fields) }
+	$footerPos = if ($p.footer -and $p.footer.position) { $p.footer.position } else { "insidePage" }
+
+	$addPos = if ($p.additional -and $p.additional.position) { $p.additional.position } else { "page" }
+	$addLayout = if ($p.additional -and $p.additional.layout) { $p.additional.layout } else { "2col" }
+	$addBspGroup = if ($p.additional -and $null -ne $p.additional.bspGroup) { $p.additional.bspGroup } else { $true }
+	$addLeft = @(); $addRight = @()
+	if ($p.additional -and $p.additional.left) { $addLeft = @($p.additional.left) }
+	if ($p.additional -and $p.additional.right) { $addRight = @($p.additional.right) }
+
+	$headerRight = @()
+	if ($p.header -and $p.header.right) { $headerRight = @($p.header.right) }
+
+	$tsExclude = @("ДополнительныеРеквизиты")
+	if ($p.tabularSections -and $p.tabularSections.exclude) { $tsExclude = @($p.tabularSections.exclude) }
+	$tsLineNumber = if ($p.tabularSections -and $null -ne $p.tabularSections.lineNumber) { $p.tabularSections.lineNumber } else { $true }
+
+	# Classify attributes
+	$claimed = @{}
+	foreach ($fn in $footerFields) { $claimed[$fn] = "footer" }
+	foreach ($fn in $headerRight) { $claimed[$fn] = "header.right" }
+	foreach ($fn in $addLeft) { $claimed[$fn] = "additional.left" }
+	foreach ($fn in $addRight) { $claimed[$fn] = "additional.right" }
+
+	$unclaimed = @()
+	foreach ($attr in $meta.Attributes) {
+		if (-not $claimed.ContainsKey($attr.Name)) { $unclaimed += $attr }
+	}
+
+	# Distribute unclaimed
+	$leftAttrs = @(); $rightExtraAttrs = @()
+	switch ($headerDistribute) {
+		"left"  { $leftAttrs = $unclaimed }
+		"right" { $rightExtraAttrs = $unclaimed }
+		default { # "even"
+			$half = [Math]::Ceiling($unclaimed.Count / 2)
+			for ($i = 0; $i -lt $unclaimed.Count; $i++) {
+				if ($i -lt $half) { $leftAttrs += $unclaimed[$i] }
+				else { $rightExtraAttrs += $unclaimed[$i] }
+			}
+		}
+	}
+
+	# Build ГруппаНомерДата
+	$numDateChildren = @(
+		[ordered]@{ input = "Номер"; path = "Объект.Number"; autoMaxWidth = $false; width = 9 }
+		[ordered]@{ input = "Дата"; path = "Объект.Date"; title = $dateTitle }
+	)
+	$numDateGroup = [ordered]@{
+		group = "horizontal"; name = "ГруппаНомерДата"; showTitle = $false; children = $numDateChildren
+	}
+
+	# Build left column
+	$leftChildren = @($numDateGroup)
+	foreach ($attr in $leftAttrs) {
+		$leftChildren += (New-FieldElement -attrName $attr.Name -dataPath "Объект.$($attr.Name)" -attrType $attr.Type -fieldDefaults $fd -extraProps @{})
+	}
+
+	# Build right column
+	$rightChildren = @()
+	foreach ($rn in $headerRight) {
+		$rAttr = $meta.Attributes | Where-Object { $_.Name -eq $rn }
+		if ($rAttr) {
+			$rightChildren += (New-FieldElement -attrName $rAttr.Name -dataPath "Объект.$($rAttr.Name)" -attrType $rAttr.Type -fieldDefaults $fd -extraProps @{})
+		}
+	}
+	foreach ($attr in $rightExtraAttrs) {
+		$rightChildren += (New-FieldElement -attrName $attr.Name -dataPath "Объект.$($attr.Name)" -attrType $attr.Type -fieldDefaults $fd -extraProps @{})
+	}
+
+	# Header group
+	$headerGroup = $null
+	if ($headerLayout -eq "2col" -and $rightChildren.Count -gt 0) {
+		$headerGroup = [ordered]@{
+			group = "horizontal"; name = "ГруппаШапка"; showTitle = $false; representation = "none"
+			children = @(
+				[ordered]@{ group = "vertical"; name = "ГруппаШапкаЛево"; showTitle = $false; children = $leftChildren }
+				[ordered]@{ group = "vertical"; name = "ГруппаШапкаПраво"; showTitle = $false; children = $rightChildren }
+			)
+		}
+	} else {
+		# 1col or no right items
+		$allHeaderFields = $leftChildren + $rightChildren
+		$headerGroup = [ordered]@{
+			group = "horizontal"; name = "ГруппаШапка"; showTitle = $false; representation = "none"
+			children = @(
+				[ordered]@{ group = "vertical"; name = "ГруппаШапкаЛево"; showTitle = $false; children = $allHeaderFields }
+			)
+		}
+	}
+
+	# Footer elements
+	$footerElements = @()
+	foreach ($fn in $footerFields) {
+		$fAttr = $meta.Attributes | Where-Object { $_.Name -eq $fn }
+		if ($fAttr) {
+			$footerElements += (New-FieldElement -attrName $fAttr.Name -dataPath "Объект.$($fAttr.Name)" -attrType $fAttr.Type -fieldDefaults $fd -extraProps @{})
+		}
+	}
+
+	# Visible tabular sections
+	$visibleTS = @()
+	foreach ($ts in $meta.TabularSections) {
+		if ($tsExclude -contains $ts.Name) { continue }
+		$visibleTS += $ts
+	}
+
+	# Additional page content
+	$additionalPage = $null
+	if ($addPos -eq "page") {
+		$addLeftEls = @(); $addRightEls = @()
+		foreach ($aln in $addLeft) {
+			$alAttr = $meta.Attributes | Where-Object { $_.Name -eq $aln }
+			if ($alAttr) {
+				$addLeftEls += (New-FieldElement -attrName $alAttr.Name -dataPath "Объект.$($alAttr.Name)" -attrType $alAttr.Type -fieldDefaults $fd -extraProps @{})
+			}
+		}
+		foreach ($arn in $addRight) {
+			$arAttr = $meta.Attributes | Where-Object { $_.Name -eq $arn }
+			if ($arAttr) {
+				$addRightEls += (New-FieldElement -attrName $arAttr.Name -dataPath "Объект.$($arAttr.Name)" -attrType $arAttr.Type -fieldDefaults $fd -extraProps @{})
+			}
+		}
+		$addPageChildren = @()
+		if ($addLayout -eq "2col") {
+			$addPageChildren += [ordered]@{
+				group = "horizontal"; name = "ГруппаПараметры"; showTitle = $false
+				children = @(
+					[ordered]@{ group = "vertical"; name = "ГруппаПараметрыЛево"; showTitle = $false; children = $addLeftEls }
+					[ordered]@{ group = "vertical"; name = "ГруппаПараметрыПраво"; showTitle = $false; children = $addRightEls }
+				)
+			}
+		} else {
+			$addPageChildren += @($addLeftEls + $addRightEls)
+		}
+		if ($addBspGroup) {
+			$addPageChildren += [ordered]@{ group = "vertical"; name = "ГруппаДополнительныеРеквизиты" }
+		}
+		$additionalPage = [ordered]@{ page = "ГруппаДополнительно"; title = "Дополнительно"; children = $addPageChildren }
+	}
+
+	# Build TS page elements
+	$tsPages = @()
+	foreach ($ts in $visibleTS) {
+		$tsCols = @()
+		if ($tsLineNumber) {
+			$tsCols += [ordered]@{ labelField = "$($ts.Name)НомерСтроки"; path = "Объект.$($ts.Name).LineNumber" }
+		}
+		foreach ($col in $ts.Columns) {
+			$tsCols += (New-FieldElement -attrName "$($ts.Name)$($col.Name)" -dataPath "Объект.$($ts.Name).$($col.Name)" -attrType $col.Type -fieldDefaults $fd -extraProps @{})
+		}
+		$tsPages += [ordered]@{
+			page = "Группа$($ts.Name)"; title = $ts.Synonym
+			children = @(
+				[ordered]@{ table = $ts.Name; path = "Объект.$($ts.Name)"; columns = $tsCols }
+			)
+		}
+	}
+
+	# Assemble root elements
+	$rootElements = @()
+
+	if ($visibleTS.Count -eq 0) {
+		# Simple form — no Pages
+		$rootElements += $headerGroup
+		if ($footerElements.Count -gt 0) { $rootElements += $footerElements }
+		if ($addBspGroup -and $addPos -ne "none") {
+			$rootElements += [ordered]@{ group = "vertical"; name = "ГруппаДополнительныеРеквизиты" }
+		}
+	} else {
+		# Pages form
+		if ($headerPos -eq "abovePages") {
+			$rootElements += $headerGroup
+			$pagesChildren = @()
+			$pagesChildren += $tsPages
+			if ($additionalPage) { $pagesChildren += $additionalPage }
+			$rootElements += [ordered]@{ pages = "ГруппаСтраницы"; children = $pagesChildren }
+		} else {
+			# insidePage (default)
+			$osnovnoeChildren = @($headerGroup)
+			if ($footerPos -eq "insidePage" -and $footerElements.Count -gt 0) {
+				$osnovnoeChildren += $footerElements
+			}
+			$pagesChildren = @()
+			$pagesChildren += [ordered]@{ page = "ГруппаОсновное"; title = "Основное"; children = $osnovnoeChildren }
+			$pagesChildren += $tsPages
+			if ($additionalPage) { $pagesChildren += $additionalPage }
+			$rootElements += [ordered]@{ pages = "ГруппаСтраницы"; children = $pagesChildren }
+		}
+
+		# Footer below pages
+		if ($footerPos -eq "belowPages" -and $footerElements.Count -gt 0) {
+			$rootElements += $footerElements
+		}
+	}
+
+	# Properties
+	$formProps = [ordered]@{ autoTitle = $false }
+	if ($p.properties) { foreach ($k in $p.properties.Keys) { $formProps[$k] = $p.properties[$k] } }
+
+	return [ordered]@{
+		title = $meta.Synonym
+		properties = $formProps
+		elements = $rootElements
+		attributes = @(
+			[ordered]@{ name = "Объект"; type = "DocumentObject.$($meta.Name)"; main = $true }
+		)
+	}
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# END OF FROM-OBJECT MODE FUNCTIONS
+# ═══════════════════════════════════════════════════════════════════════════
 
 # --- Detect XML format version ---
 
@@ -31,15 +837,140 @@ function Detect-FormatVersion([string]$dir) {
 $script:outPathResolved = if ([System.IO.Path]::IsPathRooted($OutputPath)) { $OutputPath } else { Join-Path (Get-Location) $OutputPath }
 $script:formatVersion = Detect-FormatVersion ([System.IO.Path]::GetDirectoryName($script:outPathResolved))
 
-# --- 1. Load and validate JSON ---
+# --- 0. Path normalization and mode dispatch ---
 
-if (-not (Test-Path $JsonPath)) {
-	Write-Error "File not found: $JsonPath"
+# Form name → purpose mapping
+$script:formNameToPurpose = @{
+	"ФормаДокумента"  = "Item"
+	"ФормаЭлемента"   = "Item"
+	"ФормаСписка"     = "List"
+	"ФормаВыбора"     = "Choice"
+	"ФормаГруппы"     = "Folder"
+}
+
+if ($FromObject -and $JsonPath) {
+	Write-Error "Cannot use both -JsonPath and -FromObject. Choose one mode."
+	exit 1
+}
+if (-not $FromObject -and -not $JsonPath) {
+	Write-Error "Either -JsonPath or -FromObject is required."
 	exit 1
 }
 
-$json = Get-Content -Raw -Encoding UTF8 $JsonPath
-$def = $json | ConvertFrom-Json
+if ($FromObject) {
+	# Normalize OutputPath: append /Ext/Form.xml if missing
+	$outNorm = $OutputPath -replace '[\\/]$', ''
+	if ($outNorm -notmatch '[/\\]Ext[/\\]Form\.xml$') {
+		if ($outNorm -match '[/\\]Ext$') {
+			$OutputPath = "$outNorm/Form.xml"
+		} else {
+			$OutputPath = "$outNorm/Ext/Form.xml"
+		}
+		Write-Host "[resolved] OutputPath -> $OutputPath"
+	}
+
+	# Resolve object path and purpose from OutputPath convention:
+	# .../TypePlural/ObjectName/Forms/FormName/Ext/Form.xml
+	$outAbs = if ([System.IO.Path]::IsPathRooted($OutputPath)) { $OutputPath } else { Join-Path (Get-Location) $OutputPath }
+	$pathParts = $outAbs -split '[/\\]'
+	# Find "Forms" segment
+	$formsIdx = -1
+	for ($i = $pathParts.Count - 1; $i -ge 0; $i--) {
+		if ($pathParts[$i] -eq "Forms") { $formsIdx = $i; break }
+	}
+
+	$resolvedObjectPath = $null
+	$resolvedPurpose = $null
+
+	if ($formsIdx -ge 2) {
+		$formName = $pathParts[$formsIdx + 1]
+		$objectName = $pathParts[$formsIdx - 1]
+		$typePluralAndAbove = $pathParts[0..($formsIdx - 2)] -join [IO.Path]::DirectorySeparatorChar
+
+		# Derive purpose from form name
+		if ($script:formNameToPurpose.ContainsKey($formName)) {
+			$resolvedPurpose = $script:formNameToPurpose[$formName]
+		}
+
+		# Derive object XML path
+		$candidateObjPath = Join-Path $typePluralAndAbove "$objectName.xml"
+		if (Test-Path $candidateObjPath) {
+			$resolvedObjectPath = $candidateObjPath
+		}
+	}
+
+	# Apply: explicit -ObjectPath / -Purpose override resolved values
+	$fromObjPath = $null
+	if ($ObjectPath) {
+		$fromObjPath = if ([System.IO.Path]::IsPathRooted($ObjectPath)) { $ObjectPath } else { Join-Path (Get-Location) $ObjectPath }
+		# Append .xml if missing
+		if (-not $fromObjPath.EndsWith(".xml")) { $fromObjPath = "$fromObjPath.xml" }
+	} elseif ($resolvedObjectPath) {
+		$fromObjPath = $resolvedObjectPath
+		Write-Host "[resolved] ObjectPath -> $fromObjPath"
+	} else {
+		Write-Error "Cannot derive object path from OutputPath. Use -ObjectPath explicitly."
+		exit 1
+	}
+
+	if (-not (Test-Path $fromObjPath)) {
+		Write-Error "Object file not found: $fromObjPath"
+		exit 1
+	}
+
+	$effectivePurpose = if ($Purpose) { $Purpose } elseif ($resolvedPurpose) { $resolvedPurpose } else { "Item" }
+	if ($resolvedPurpose -and -not $Purpose) {
+		Write-Host "[resolved] Purpose -> $effectivePurpose"
+	}
+
+	$meta = Parse-ObjectMeta $fromObjPath
+	Write-Host "[from-object] Type=$($meta.Type), Name=$($meta.Name), Attrs=$($meta.Attributes.Count), TS=$($meta.TabularSections.Count)"
+
+	$presetData = Load-Preset -PresetName $Preset -ScriptDir $PSScriptRoot
+
+	$supportedPurposes = switch ($meta.Type) {
+		"Document" { @("Item","List","Choice") }
+		"Catalog"  { @("Item","Folder","List","Choice") }
+		default    { @() }
+	}
+	if ($supportedPurposes.Count -eq 0) {
+		Write-Error "Object type '$($meta.Type)' is not yet supported by --from-object. Supported: Document, Catalog."
+		exit 1
+	}
+	if ($supportedPurposes -notcontains $effectivePurpose) {
+		Write-Error "Purpose '$effectivePurpose' is not valid for $($meta.Type). Valid: $($supportedPurposes -join ', ')"
+		exit 1
+	}
+
+	# Generate DSL
+	$dsl = switch ($meta.Type) {
+		"Document" { Generate-DocumentDSL -meta $meta -presetData $presetData -purpose $effectivePurpose }
+		"Catalog"  { Generate-CatalogDSL -meta $meta -presetData $presetData -purpose $effectivePurpose }
+	}
+
+	# Emit DSL if requested
+	if ($EmitDsl) {
+		$dslJson = $dsl | ConvertTo-Json -Depth 20
+		$dslPath = if ([System.IO.Path]::IsPathRooted($EmitDsl)) { $EmitDsl } else { Join-Path (Get-Location) $EmitDsl }
+		$enc = New-Object System.Text.UTF8Encoding($true)
+		[System.IO.File]::WriteAllText($dslPath, $dslJson, $enc)
+		Write-Host "[from-object] DSL saved: $dslPath"
+	}
+
+	# Feed DSL into existing compiler
+	$dslJson = $dsl | ConvertTo-Json -Depth 20
+	$def = $dslJson | ConvertFrom-Json
+} else {
+	# --- 1. Load and validate JSON (original mode) ---
+
+	if (-not (Test-Path $JsonPath)) {
+		Write-Error "File not found: $JsonPath"
+		exit 1
+	}
+
+	$json = Get-Content -Raw -Encoding UTF8 $JsonPath
+	$def = $json | ConvertFrom-Json
+}
 
 # --- 2. ID allocator ---
 
@@ -411,6 +1342,8 @@ function Emit-Element {
 		# table-specific
 		"changeRowSet"=1;"changeRowOrder"=1;"header"=1;"footer"=1
 		"commandBarLocation"=1;"searchStringLocation"=1
+		"choiceMode"=1;"initialTreeView"=1;"enableDrag"=1;"enableStartDrag"=1
+		"rowPictureDataPath"=1;"tableAutofill"=1
 		# pages-specific
 		"pagesRepresentation"=1
 		# button-specific
@@ -677,10 +1610,24 @@ function Emit-Table {
 	if ($el.searchStringLocation) {
 		X "$inner<SearchStringLocation>$($el.searchStringLocation)</SearchStringLocation>"
 	}
+	if ($el.choiceMode -eq $true) { X "$inner<ChoiceMode>true</ChoiceMode>" }
+	if ($el.initialTreeView) { X "$inner<InitialTreeView>$($el.initialTreeView)</InitialTreeView>" }
+	if ($el.enableStartDrag -eq $true) { X "$inner<EnableStartDrag>true</EnableStartDrag>" }
+	if ($el.enableDrag -eq $true) { X "$inner<EnableDrag>true</EnableDrag>" }
+	if ($el.rowPictureDataPath) { X "$inner<RowPictureDataPath>$($el.rowPictureDataPath)</RowPictureDataPath>" }
 
 	# Companions
 	Emit-Companion -tag "ContextMenu" -name "${name}КонтекстноеМеню" -indent $inner
-	Emit-Companion -tag "AutoCommandBar" -name "${name}КоманднаяПанель" -indent $inner
+	# AutoCommandBar — with optional Autofill control
+	if ($null -ne $el.tableAutofill) {
+		$acbId = New-Id
+		X "$inner<AutoCommandBar name=`"${name}КоманднаяПанель`" id=`"$acbId`">"
+		$afVal = if ($el.tableAutofill) { "true" } else { "false" }
+		X "$inner`t<Autofill>$afVal</Autofill>"
+		X "$inner</AutoCommandBar>"
+	} else {
+		Emit-Companion -tag "AutoCommandBar" -name "${name}КоманднаяПанель" -indent $inner
+	}
 	Emit-Companion -tag "SearchStringAddition" -name "${name}СтрокаПоиска" -indent $inner
 	Emit-Companion -tag "ViewStatusAddition" -name "${name}СостояниеПросмотра" -indent $inner
 	Emit-Companion -tag "SearchControlAddition" -name "${name}УправлениеПоиском" -indent $inner
@@ -998,6 +1945,18 @@ function Emit-Attributes {
 				X "$inner`t</Column>"
 			}
 			X "$inner</Columns>"
+		}
+
+		# Settings (for DynamicList)
+		if ($attr.settings) {
+			X "$inner<Settings xsi:type=`"DynamicList`">"
+			$si = "$inner`t"
+			if ($attr.settings.mainTable) { X "$si<MainTable>$($attr.settings.mainTable)</MainTable>" }
+			$mq = if ($attr.settings.manualQuery -eq $true) { "true" } else { "false" }
+			X "$si<ManualQuery>$mq</ManualQuery>"
+			$ddr = if ($attr.settings.dynamicDataRead -eq $true) { "true" } else { "false" }
+			X "$si<DynamicDataRead>$ddr</DynamicDataRead>"
+			X "$inner</Settings>"
 		}
 
 		X "$indent`t</Attribute>"
