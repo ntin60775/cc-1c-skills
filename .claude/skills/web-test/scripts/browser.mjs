@@ -1,4 +1,4 @@
-// web-test browser v1.7 — Playwright browser management for 1C web client
+// web-test browser v1.8 — Playwright browser management for 1C web client
 // Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 /**
  * Playwright browser management for 1C web client.
@@ -1044,99 +1044,168 @@ function buildSpreadsheetMapping(allCells) {
     return arr;
   });
 
-  // Strict numeric value check: digits with optional spaces/commas, excludes codes like "68/78"
+  // Generic numeric check: digits with optional spaces/commas, excludes codes like "68/78"
+  // Accepts bare integers (e.g. account codes "50", "84") — used for hasNumber / totals classification.
   const isNumericVal = (c) => {
     if (!c || !/\d/.test(c)) return false;
     const s = c.replace(/^[-\s\u00a0]+/, '').replace(/[\s\u00a0]/g, '');
     return /^\d[\d,]*$/.test(s);
   };
+  // Data-formatted numeric value: requires a formatting signal (grouping space, decimal comma, or leading minus).
+  // Used as the anchor for first data row — avoids false positives on bare account codes like "50", "51".
+  const isDataNumericVal = (c) => {
+    if (!isNumericVal(c)) return false;
+    return /[\s\u00a0,]/.test(c) || /^-/.test(c);
+  };
   const hasNumber = (row) => row.some(c => isNumericVal(c));
   const nonEmpty = (row) => row.filter(c => c !== '').length;
 
-  // Find first data row: prefer row with >=2 numeric cells, fallback to >=1
+  // Build a rich mapping (group/super/DCS) anchored at a known detailIdx + firstDataIdx.
+  // Shared by Level 1 (DCS-code anchor) and Level 2 (formatted-number anchor).
+  const buildRichMapping = (detailIdx, firstDataIdx) => {
+    let groupIdx = -1;
+    if (detailIdx > 0 && nonEmpty(rows[detailIdx - 1]) >= 2) groupIdx = detailIdx - 1;
+
+    const detailRow = rows[detailIdx];
+    const groupRow = groupIdx >= 0 ? rows[groupIdx] : null;
+
+    // Detect optional third header level above group row (bounds carry-forward)
+    let superRow = null;
+    if (groupIdx > 0 && nonEmpty(rows[groupIdx - 1]) >= 2) {
+      superRow = rows[groupIdx - 1];
+    }
+
+    // Build column names (group + detail merge)
+    const groupFilled = new Array(maxCol + 1).fill('');
+    if (groupRow) {
+      let cur = '';
+      for (let c = 0; c <= maxCol; c++) {
+        if (groupRow[c]) {
+          cur = groupRow[c];
+        } else if (superRow && superRow[c]) {
+          // New top-level header starts here — stop carry-forward
+          cur = '';
+        }
+        groupFilled[c] = cur;
+      }
+    }
+
+    const detailCounts = {};
+    for (let c = 0; c <= maxCol; c++) {
+      const n = detailRow[c];
+      if (n) detailCounts[n] = (detailCounts[n] || 0) + 1;
+    }
+
+    // Detect DCS column codes (К1, К2, ...) — always prefix with group when present
+    const detailNonEmpty = detailRow.filter(c => c);
+    const isDcsCodeRow = detailNonEmpty.length >= 2 && detailNonEmpty.every(c => /^К\d+$/.test(c));
+
+    const colNames = [];
+    for (let c = 0; c <= maxCol; c++) {
+      const detail = detailRow[c];
+      const group = groupFilled[c];
+      const sup = superRow ? superRow[c] : '';
+      if (detail) {
+        // Prefer group prefix; fall back to superRow for DCS code columns without sub-group
+        const prefix = group && group !== detail ? group : (isDcsCodeRow && sup ? sup : '');
+        const needPrefix = prefix && (isDcsCodeRow || detailCounts[detail] > 1 || (groupRow && groupRow[c] === ''));
+        colNames.push(needPrefix ? `${prefix} / ${detail}` : detail);
+      } else if (group) {
+        colNames.push(group);
+      } else if (sup) {
+        colNames.push(sup);
+      } else {
+        colNames.push(null);
+      }
+    }
+
+    const colMap = new Map();
+    for (let c = 0; c < colNames.length; c++) {
+      if (colNames[c]) colMap.set(colNames[c], c);
+    }
+
+    // Classify data rows: separate data indices and totals index
+    const dataRowIndices = [];
+    let totalsRowIdx = -1;
+    for (let i = firstDataIdx; i < rows.length; i++) {
+      if (!hasNumber(rows[i]) && nonEmpty(rows[i]) === 0) continue;
+      const first = rows[i][0]?.trim().toLowerCase();
+      if (first === 'итого' || first === 'всего') {
+        totalsRowIdx = i;
+      } else {
+        dataRowIndices.push(i);
+      }
+    }
+
+    const superRowIdx = superRow ? groupIdx - 1 : -1;
+
+    return {
+      rows, sortedRows, maxCol, colNames, colMap,
+      headerRowIdx: detailIdx, groupRowIdx: groupIdx, superRowIdx,
+      dataStartIdx: firstDataIdx, dataRowIndices, totalsRowIdx,
+      rowMap, hasNumber, nonEmpty,
+    };
+  };
+
+  // --- Level 1: DCS-code row anchor ---
+  // ФСД / СКД-отчёты всегда содержат строку "К1, К2, ..." — rock-solid structural marker.
+  // Якорение через неё — детерминированное, работает даже если все данные — голые целые (отчёт в "тыс.руб").
+  for (let i = 0; i < rows.length; i++) {
+    const detailNonEmpty = rows[i].filter(c => c);
+    if (detailNonEmpty.length >= 2 && detailNonEmpty.every(c => /^К\d+$/.test(c))) {
+      // Find first non-empty row after the К-codes row as data start
+      let firstDataIdx = rows.length;
+      for (let j = i + 1; j < rows.length; j++) {
+        if (nonEmpty(rows[j]) > 0) { firstDataIdx = j; break; }
+      }
+      return buildRichMapping(i, firstDataIdx);
+    }
+  }
+
+  // --- Level 2: formatted-number anchor (heuristic for reports without DCS codes) ---
   let firstDataIdx = rows.length;
   for (let i = 0; i < rows.length; i++) {
-    if (rows[i].filter(c => isNumericVal(c)).length >= 2) { firstDataIdx = i; break; }
+    if (rows[i].filter(c => isDataNumericVal(c)).length >= 2) { firstDataIdx = i; break; }
   }
   if (firstDataIdx === rows.length) {
     for (let i = 0; i < rows.length; i++) {
-      if (hasNumber(rows[i])) { firstDataIdx = i; break; }
+      if (rows[i].some(c => isDataNumericVal(c))) { firstDataIdx = i; break; }
     }
   }
 
-  // Find header rows
-  let detailIdx = -1;
-  for (let i = firstDataIdx - 1; i >= 0; i--) {
-    if (nonEmpty(rows[i]) >= Math.min(3, maxCol + 1)) { detailIdx = i; break; }
-  }
-  if (detailIdx === -1) return null; // no headers detected
-
-  let groupIdx = -1;
-  if (detailIdx > 0 && nonEmpty(rows[detailIdx - 1]) >= 2) groupIdx = detailIdx - 1;
-
-  const detailRow = rows[detailIdx];
-  const groupRow = groupIdx >= 0 ? rows[groupIdx] : null;
-
-  // Detect optional third header level above group row (bounds carry-forward)
-  let superRow = null;
-  if (groupIdx > 0 && nonEmpty(rows[groupIdx - 1]) >= 2) {
-    superRow = rows[groupIdx - 1];
+  if (firstDataIdx < rows.length) {
+    let detailIdx = -1;
+    for (let i = firstDataIdx - 1; i >= 0; i--) {
+      if (nonEmpty(rows[i]) >= Math.min(3, maxCol + 1)) { detailIdx = i; break; }
+    }
+    if (detailIdx !== -1) return buildRichMapping(detailIdx, firstDataIdx);
   }
 
-  // Build column names (group + detail merge)
-  const groupFilled = new Array(maxCol + 1).fill('');
-  if (groupRow) {
-    let cur = '';
-    for (let c = 0; c <= maxCol; c++) {
-      if (groupRow[c]) {
-        cur = groupRow[c];
-      } else if (superRow && superRow[c]) {
-        // New top-level header starts here — stop carry-forward
-        cur = '';
-      }
-      groupFilled[c] = cur;
+  // --- Level 3: single-row header fallback (text-only data, query console) ---
+  // First "wide" row (nonEmpty >= 2) = headers, rest = data. No multi-level composition.
+  let headerIdx = -1;
+  for (let i = 0; i < rows.length; i++) {
+    if (nonEmpty(rows[i]) >= 2) { headerIdx = i; break; }
+  }
+  // Single-column tables: accept nonEmpty >= 1
+  if (headerIdx === -1 && maxCol === 0) {
+    for (let i = 0; i < rows.length; i++) {
+      if (nonEmpty(rows[i]) >= 1) { headerIdx = i; break; }
     }
   }
+  if (headerIdx === -1) return null; // truly empty — top-level fallback to { rows, total }
 
-  const detailCounts = {};
-  for (let c = 0; c <= maxCol; c++) {
-    const n = detailRow[c];
-    if (n) detailCounts[n] = (detailCounts[n] || 0) + 1;
-  }
-
-  // Detect DCS column codes (К1, К2, ...) — always prefix with group when present
-  const detailNonEmpty = detailRow.filter(c => c);
-  const isDcsCodeRow = detailNonEmpty.length >= 2 && detailNonEmpty.every(c => /^К\d+$/.test(c));
-
+  const detailRow = rows[headerIdx];
   const colNames = [];
-  for (let c = 0; c <= maxCol; c++) {
-    const detail = detailRow[c];
-    const group = groupFilled[c];
-    const sup = superRow ? superRow[c] : '';
-    if (detail) {
-      // Prefer group prefix; fall back to superRow for DCS code columns without sub-group
-      const prefix = group && group !== detail ? group : (isDcsCodeRow && sup ? sup : '');
-      const needPrefix = prefix && (isDcsCodeRow || detailCounts[detail] > 1 || (groupRow && groupRow[c] === ''));
-      colNames.push(needPrefix ? `${prefix} / ${detail}` : detail);
-    } else if (group) {
-      colNames.push(group);
-    } else if (sup) {
-      colNames.push(sup);
-    } else {
-      colNames.push(null);
-    }
-  }
-
-  // Column name → physical column index
+  for (let c = 0; c <= maxCol; c++) colNames.push(detailRow[c] || null);
   const colMap = new Map();
   for (let c = 0; c < colNames.length; c++) {
     if (colNames[c]) colMap.set(colNames[c], c);
   }
 
-  // Classify data rows: separate data indices and totals index
-  const dataRowIndices = []; // indices into rows[] array
+  const dataRowIndices = [];
   let totalsRowIdx = -1;
-  for (let i = firstDataIdx; i < rows.length; i++) {
+  for (let i = headerIdx + 1; i < rows.length; i++) {
     if (!hasNumber(rows[i]) && nonEmpty(rows[i]) === 0) continue;
     const first = rows[i][0]?.trim().toLowerCase();
     if (first === 'итого' || first === 'всего') {
@@ -1146,12 +1215,10 @@ function buildSpreadsheetMapping(allCells) {
     }
   }
 
-  const superRowIdx = superRow ? groupIdx - 1 : -1;
-
   return {
     rows, sortedRows, maxCol, colNames, colMap,
-    headerRowIdx: detailIdx, groupRowIdx: groupIdx, superRowIdx,
-    dataStartIdx: firstDataIdx, dataRowIndices, totalsRowIdx,
+    headerRowIdx: headerIdx, groupRowIdx: -1, superRowIdx: -1,
+    dataStartIdx: headerIdx + 1, dataRowIndices, totalsRowIdx,
     rowMap, hasNumber, nonEmpty,
   };
 }
