@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# skd-compile v1.13 — Compile 1C DCS from JSON
+# skd-compile v1.14 — Compile 1C DCS from JSON
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 import argparse
 import json
@@ -802,12 +802,15 @@ def emit_single_param(lines, p, parsed):
     lines.append('\t<parameter>')
     lines.append(f'\t\t<name>{esc_xml(parsed["name"])}</name>')
 
-    # Title (from parsed first, then from object form)
+    # Title (from parsed first, then from object form; accept `presentation` as
+    # a synonym — 1C UI labels a parameter's caption "Представление").
     title = ''
     if parsed.get('title'):
         title = str(parsed['title'])
     elif p is not None and not isinstance(p, str) and p.get('title'):
         title = str(p['title'])
+    elif p is not None and not isinstance(p, str) and p.get('presentation'):
+        title = str(p['presentation'])
     if title:
         emit_mltext(lines, '\t\t', 'title', title)
 
@@ -852,11 +855,13 @@ def emit_single_param(lines, p, parsed):
                 av_type = 'dcscor:DesignTimeValue'
             lines.append('\t\t<availableValue>')
             lines.append(f'\t\t\t<value xsi:type="{av_type}">{esc_xml(av_val)}</value>')
-            if av.get('presentation'):
+            # `title` accepted as synonym of `presentation` — both map to the same UI label.
+            av_pres = str(av.get('presentation') or av.get('title') or '')
+            if av_pres:
                 lines.append('\t\t\t<presentation xsi:type="v8:LocalStringType">')
                 lines.append('\t\t\t\t<v8:item>')
                 lines.append('\t\t\t\t\t<v8:lang>ru</v8:lang>')
-                lines.append(f'\t\t\t\t\t<v8:content>{esc_xml(str(av["presentation"]))}</v8:content>')
+                lines.append(f'\t\t\t\t\t<v8:content>{esc_xml(av_pres)}</v8:content>')
                 lines.append('\t\t\t\t</v8:item>')
                 lines.append('\t\t\t</presentation>')
             lines.append('\t\t</availableValue>')

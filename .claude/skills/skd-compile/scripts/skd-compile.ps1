@@ -1,4 +1,4 @@
-﻿# skd-compile v1.13 — Compile 1C DCS from JSON
+﻿# skd-compile v1.14 — Compile 1C DCS from JSON
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[string]$DefinitionFile,
@@ -931,12 +931,15 @@ function Emit-SingleParam {
 	X "`t<parameter>"
 	X "`t`t<name>$(Esc-Xml $parsed.name)</name>"
 
-	# Title (from parsed first, then from object form)
+	# Title (from parsed first, then from object form; accept `presentation` as
+	# a synonym — 1C UI labels a parameter's caption "Представление").
 	$title = ""
 	if ($parsed.title) {
 		$title = "$($parsed.title)"
 	} elseif ($p -isnot [string] -and $p.title) {
 		$title = "$($p.title)"
+	} elseif ($p -isnot [string] -and $p.presentation) {
+		$title = "$($p.presentation)"
 	}
 	if ($title) {
 		Emit-MLText -tag "title" -text $title -indent "`t`t"
@@ -988,11 +991,13 @@ function Emit-SingleParam {
 			}
 			X "`t`t<availableValue>"
 			X "`t`t`t<value xsi:type=`"$avType`">$(Esc-Xml $avVal)</value>"
-			if ($av.presentation) {
+			# `title` accepted as synonym of `presentation` — both map to the same UI label.
+			$avPres = if ($av.presentation) { "$($av.presentation)" } elseif ($av.title) { "$($av.title)" } else { "" }
+			if ($avPres) {
 				X "`t`t`t<presentation xsi:type=`"v8:LocalStringType`">"
 				X "`t`t`t`t<v8:item>"
 				X "`t`t`t`t`t<v8:lang>ru</v8:lang>"
-				X "`t`t`t`t`t<v8:content>$(Esc-Xml "$($av.presentation)")</v8:content>"
+				X "`t`t`t`t`t<v8:content>$(Esc-Xml $avPres)</v8:content>"
 				X "`t`t`t`t</v8:item>"
 				X "`t`t`t</presentation>"
 			}
