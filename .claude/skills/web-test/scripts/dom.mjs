@@ -1,4 +1,4 @@
-// web-test dom v1.6 — DOM selectors and semantic mapping for 1C web client
+// web-test dom v1.7 — DOM selectors and semantic mapping for 1C web client
 // Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 /**
  * DOM selectors and semantic mapping for 1C:Enterprise web client.
@@ -79,6 +79,16 @@ const READ_FORM_FN = `function readForm(p) {
     if (document.getElementById(p + name + '_CLR')?.offsetWidth > 0) actions.push('clear');
     if (document.getElementById(p + name + '_CB')?.offsetWidth > 0) actions.push('pick');
     const field = { name, value: el.value || '' };
+    // Multi-value reference fields keep their value in .chipsItem chips, not in input.value
+    if (!field.value) {
+      const labelEl = document.getElementById(p + name);
+      if (labelEl) {
+        const chipTexts = [...labelEl.querySelectorAll('.chipsItem .chipsTitle')]
+          .map(c => nbsp(c.innerText?.trim() || ''))
+          .filter(Boolean);
+        if (chipTexts.length) field.value = chipTexts.join(', ');
+      }
+    }
     if (label && label !== name) field.label = label;
     if (el.readOnly) field.readonly = true;
     if (el.disabled) field.disabled = true;
@@ -367,9 +377,10 @@ const READ_FORM_FN = `function readForm(p) {
       result.reportSettings = dcsEntries.map(([, g]) => {
         const cb = g['Использование'];
         const val = g['Значение'];
-        if (!cb) return null;
-        const label = (val?.label || cb.label || cb.name).replace(/:$/, '').trim();
-        const s = { name: label, enabled: !!cb.value };
+        if (!cb && !val) return null;
+        // No checkbox present (class="staticText" instead of .checkbox) — setting is always enabled
+        const label = (val?.label || cb?.label || val?.name || cb?.name || '').replace(/:$/, '').trim();
+        const s = { name: label, enabled: cb ? !!cb.value : true };
         if (val) {
           s.value = val.value || '';
           if (val.actions && val.actions.length) s.actions = val.actions;
