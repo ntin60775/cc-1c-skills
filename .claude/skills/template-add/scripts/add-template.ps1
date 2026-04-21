@@ -1,4 +1,4 @@
-﻿# template-add v1.3 — Add template to 1C object
+﻿# template-add v1.4 — Add template to 1C object
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[Parameter(Mandatory)]
@@ -35,10 +35,31 @@ $tmpl = $typeMap[$TemplateType]
 
 # --- Проверки ---
 
+$objectTypeFolders = @(
+	"Reports", "DataProcessors", "Documents", "Catalogs",
+	"InformationRegisters", "AccumulationRegisters",
+	"ChartsOfCharacteristicTypes", "ChartsOfAccounts", "ChartsOfCalculationTypes",
+	"BusinessProcesses", "Tasks", "ExchangePlans"
+)
+
 $rootXmlPath = Join-Path $SrcDir "$ObjectName.xml"
 if (-not (Test-Path $rootXmlPath)) {
-	Write-Error "Корневой файл объекта не найден: $rootXmlPath`nОжидается: <SrcDir>/<ObjectName>/<ObjectName>.xml`nПодсказка: SrcDir должен указывать на папку типа объектов (например Reports), а не на корень конфигурации"
-	exit 1
+	$candidates = @()
+	foreach ($folder in $objectTypeFolders) {
+		$probe = Join-Path (Join-Path $SrcDir $folder) "$ObjectName.xml"
+		if (Test-Path $probe) { $candidates += (Join-Path $SrcDir $folder) }
+	}
+	if ($candidates.Count -eq 1) {
+		$SrcDir = $candidates[0]
+		$rootXmlPath = Join-Path $SrcDir "$ObjectName.xml"
+		Write-Host "[INFO] SrcDir расширен до: $SrcDir"
+	} elseif ($candidates.Count -gt 1) {
+		Write-Error "Объект '$ObjectName' найден в нескольких подпапках: $($candidates -join ', ')`nУкажи SrcDir явно"
+		exit 1
+	} else {
+		Write-Error "Корневой файл объекта не найден: $rootXmlPath`nОжидается: <SrcDir>/<ObjectName>.xml`nПодсказка: SrcDir должен указывать на папку типа объектов (например Reports), а не на корень конфигурации"
+		exit 1
+	}
 }
 
 $processorDir = Join-Path $SrcDir $ObjectName

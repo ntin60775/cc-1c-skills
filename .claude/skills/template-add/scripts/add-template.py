@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# add-template v1.3 — Add template to 1C object
+# add-template v1.4 — Add template to 1C object
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 
 import argparse
@@ -80,12 +80,33 @@ def main():
 
     # --- Checks ---
 
+    object_type_folders = [
+        "Reports", "DataProcessors", "Documents", "Catalogs",
+        "InformationRegisters", "AccumulationRegisters",
+        "ChartsOfCharacteristicTypes", "ChartsOfAccounts", "ChartsOfCalculationTypes",
+        "BusinessProcesses", "Tasks", "ExchangePlans",
+    ]
+
     root_xml_path = os.path.join(src_dir, f"{object_name}.xml")
     if not os.path.exists(root_xml_path):
-        print(f"Корневой файл объекта не найден: {root_xml_path}", file=sys.stderr)
-        print(f"Ожидается: <SrcDir>/<ObjectName>/<ObjectName>.xml", file=sys.stderr)
-        print(f"Подсказка: SrcDir должен указывать на папку типа объектов (например Reports), а не на корень конфигурации", file=sys.stderr)
-        sys.exit(1)
+        candidates = []
+        for folder in object_type_folders:
+            probe = os.path.join(src_dir, folder, f"{object_name}.xml")
+            if os.path.exists(probe):
+                candidates.append(os.path.join(src_dir, folder))
+        if len(candidates) == 1:
+            src_dir = candidates[0]
+            root_xml_path = os.path.join(src_dir, f"{object_name}.xml")
+            print(f"[INFO] SrcDir расширен до: {src_dir}")
+        elif len(candidates) > 1:
+            print(f"Объект '{object_name}' найден в нескольких подпапках: {', '.join(candidates)}", file=sys.stderr)
+            print(f"Укажи SrcDir явно", file=sys.stderr)
+            sys.exit(1)
+        else:
+            print(f"Корневой файл объекта не найден: {root_xml_path}", file=sys.stderr)
+            print(f"Ожидается: <SrcDir>/<ObjectName>.xml", file=sys.stderr)
+            print(f"Подсказка: SrcDir должен указывать на папку типа объектов (например Reports), а не на корень конфигурации", file=sys.stderr)
+            sys.exit(1)
 
     processor_dir = os.path.join(src_dir, object_name)
     templates_dir = os.path.join(processor_dir, "Templates")
