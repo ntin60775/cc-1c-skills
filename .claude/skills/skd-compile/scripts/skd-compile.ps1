@@ -1,4 +1,4 @@
-﻿# skd-compile v1.18 — Compile 1C DCS from JSON
+﻿# skd-compile v1.19 — Compile 1C DCS from JSON
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[string]$DefinitionFile,
@@ -259,7 +259,7 @@ function Parse-FieldShorthand {
 
 	$result = @{
 		dataPath = ""; field = ""; title = ""; type = ""
-		roles = @(); restrict = @(); appearance = @{}
+		roles = @(); restrict = @(); appearance = [ordered]@{}
 	}
 
 	# Extract @roles
@@ -600,7 +600,7 @@ function Emit-Field {
 			type = if ($fieldDef.type) { Resolve-TypeStr "$($fieldDef.type)" } else { "" }
 			roles = @()
 			restrict = @()
-			appearance = @{}
+			appearance = [ordered]@{}
 		}
 		# Parse role
 		if ($fieldDef.role) {

@@ -96,6 +96,15 @@ powershell.exe -NoProfile -File .claude/skills/skd-compile/scripts/skd-compile.p
 
 В объектной форме: `"useRestriction": { "field": true, "condition": true, "group": true, "order": true }` или `"restrict": ["noField", "noFilter"]`.
 
+Дополнительные ключи объектной формы:
+- `"presentationExpression": "<выражение>"` — что показывать вместо значения поля. Исходное значение остаётся «под капотом» для перехода/расшифровки.
+- `"appearance": { "<параметр>": "<значение>" }` — оформление колонки по умолчанию (применяется во всех вариантах настроек). Ключи — параметры платформы (`ГоризонтальноеПоложение`, `МинимальнаяШирина`, `Формат`, `Текст` и т.п.).
+
+```json
+{ "field": "Сумма", "title": "Сумма продажи", "type": "decimal(15,2)",
+  "appearance": { "ГоризонтальноеПоложение": "Right", "МинимальнаяШирина": "80" } }
+```
+
 ### Вычисляемые поля (calculatedFields)
 
 Shorthand: `"Имя [Заголовок]: тип = Выражение #noField #noFilter #noGroup #noOrder"` — все части кроме имени опциональны.
