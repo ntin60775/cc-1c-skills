@@ -1,7 +1,7 @@
 ﻿# interface-edit v1.3 — Edit 1C CommandInterface.xml
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
-	[Parameter(Mandatory)][string]$CIPath,
+	[Parameter(Mandatory)][Alias('Path')][string]$CIPath,
 	[string]$DefinitionFile,
 	[ValidateSet("hide","show","place","order","subsystem-order","group-order")]
 	[string]$Operation,

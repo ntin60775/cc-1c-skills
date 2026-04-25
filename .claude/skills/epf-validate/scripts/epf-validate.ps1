@@ -3,6 +3,7 @@
 # Works for both EPF (ExternalDataProcessor) and ERF (ExternalReport) — auto-detects
 param(
 	[Parameter(Mandatory)]
+	[Alias('Path')]
 	[string]$ObjectPath,
 
 	[switch]$Detailed,

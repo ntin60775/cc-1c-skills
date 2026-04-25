@@ -14,7 +14,7 @@ sys.stderr.reconfigure(encoding="utf-8")
 # ── arg parsing ──────────────────────────────────────────────
 
 parser = argparse.ArgumentParser(allow_abbrev=False)
-parser.add_argument("-ObjectPath", required=True)
+parser.add_argument("-ObjectPath", "-Path", required=True)
 parser.add_argument("-Detailed", action="store_true")
 parser.add_argument("-MaxErrors", type=int, default=30)
 parser.add_argument("-OutFile", default="")
@@ -31,7 +31,7 @@ if len(path_list) > 1:
     batch_ok = 0
     batch_fail = 0
     for single_path in path_list:
-        cmd = [sys.executable, __file__, "-ObjectPath", single_path, "-MaxErrors", str(max_errors)]
+        cmd = [sys.executable, __file__, "-ObjectPath", "-Path", single_path, "-MaxErrors", str(max_errors)]
         if detailed:
             cmd.append("-Detailed")
         if out_file:

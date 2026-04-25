@@ -57,7 +57,7 @@ def main():
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="Validate 1C managed form", allow_abbrev=False)
-    parser.add_argument("-FormPath", required=True)
+    parser.add_argument("-FormPath", "-Path", required=True)
     parser.add_argument("-Detailed", action="store_true")
     parser.add_argument("-MaxErrors", type=int, default=30)
     args = parser.parse_args()

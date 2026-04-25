@@ -150,7 +150,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='Validate 1C configuration extension XML structure (CFE)', allow_abbrev=False
     )
-    parser.add_argument('-ExtensionPath', dest='ExtensionPath', required=True)
+    parser.add_argument('-ExtensionPath', '-Path', dest='ExtensionPath', required=True)
     parser.add_argument('-Detailed', action='store_true')
     parser.add_argument('-MaxErrors', dest='MaxErrors', type=int, default=30)
     parser.add_argument('-OutFile', dest='OutFile', default='')

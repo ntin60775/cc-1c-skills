@@ -25,7 +25,7 @@ VALID_OPS = [
 ]
 
 parser = argparse.ArgumentParser(allow_abbrev=False)
-parser.add_argument("-TemplatePath", required=True)
+parser.add_argument("-TemplatePath", "-Path", required=True)
 parser.add_argument("-Operation", required=True, choices=VALID_OPS)
 parser.add_argument("-Value", required=True)
 parser.add_argument("-DataSet", default="")

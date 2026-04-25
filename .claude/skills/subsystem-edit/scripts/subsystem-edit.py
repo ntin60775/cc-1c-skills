@@ -270,7 +270,7 @@ def main():
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="Edit existing 1C subsystem XML", allow_abbrev=False)
-    parser.add_argument("-SubsystemPath", required=True)
+    parser.add_argument("-SubsystemPath", "-Path", required=True)
     parser.add_argument("-DefinitionFile", default=None)
     parser.add_argument("-Operation", default=None, choices=["add-content", "remove-content", "add-child", "remove-child", "set-property"])
     parser.add_argument("-Value", default=None)
@@ -602,7 +602,7 @@ def main():
         if os.path.isfile(validate_script):
             print()
             print("--- Running subsystem-validate ---")
-            subprocess.run([sys.executable, validate_script, "-SubsystemPath", resolved_path])
+            subprocess.run([sys.executable, validate_script, "-SubsystemPath", "-Path", resolved_path])
 
     # --- Summary ---
     print()

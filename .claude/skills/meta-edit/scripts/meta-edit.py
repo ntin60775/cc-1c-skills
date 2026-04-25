@@ -2121,7 +2121,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Edit existing 1C metadata object XML", allow_abbrev=False)
     parser.add_argument("-DefinitionFile", default=None, help="JSON definition file")
-    parser.add_argument("-ObjectPath", required=True, help="Path to object XML or directory")
+    parser.add_argument("-ObjectPath", "-Path", required=True, help="Path to object XML or directory")
     parser.add_argument("-Operation", default=None, choices=valid_operations, help="Inline operation")
     parser.add_argument("-Value", default=None, help="Inline value")
     parser.add_argument("-NoValidate", action="store_true", help="Skip auto-validation")
@@ -2257,7 +2257,7 @@ def main():
             print()
             print("--- Running meta-validate ---")
             python_exe = sys.executable
-            subprocess.run([python_exe, validate_script, "-ObjectPath", resolved_path])
+            subprocess.run([python_exe, validate_script, "-ObjectPath", "-Path", resolved_path])
         else:
             print()
             print(f"[SKIP] meta-validate not found at: {validate_script}")

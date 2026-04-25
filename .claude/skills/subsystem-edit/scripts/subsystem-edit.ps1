@@ -1,7 +1,7 @@
 ﻿# subsystem-edit v1.2 — Edit existing 1C subsystem XML
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
-	[Parameter(Mandatory)][string]$SubsystemPath,
+	[Parameter(Mandatory)][Alias('Path')][string]$SubsystemPath,
 	[string]$DefinitionFile,
 	[ValidateSet("add-content","remove-content","add-child","remove-child","set-property")]
 	[string]$Operation,

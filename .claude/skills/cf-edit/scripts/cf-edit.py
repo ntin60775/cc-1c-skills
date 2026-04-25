@@ -159,7 +159,7 @@ def main():
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="Edit 1C configuration root (Configuration.xml)", allow_abbrev=False)
-    parser.add_argument("-ConfigPath", required=True)
+    parser.add_argument("-ConfigPath", "-Path", required=True)
     parser.add_argument("-DefinitionFile", default=None)
     parser.add_argument("-Operation", default=None, choices=["modify-property", "add-childObject", "remove-childObject", "add-defaultRole", "remove-defaultRole", "set-defaultRoles"])
     parser.add_argument("-Value", default=None)
@@ -538,7 +538,7 @@ def main():
         if os.path.isfile(validate_script):
             print()
             print("--- Running cf-validate ---")
-            subprocess.run([sys.executable, validate_script, "-ConfigPath", resolved_path])
+            subprocess.run([sys.executable, validate_script, "-ConfigPath", "-Path", resolved_path])
 
     # --- Summary ---
     print()

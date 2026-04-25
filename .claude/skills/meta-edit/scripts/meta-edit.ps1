@@ -4,6 +4,7 @@ param(
 	[string]$DefinitionFile,
 
 	[Parameter(Mandatory)]
+	[Alias('Path')]
 	[string]$ObjectPath,
 
 	# Inline mode (alternative to DefinitionFile)

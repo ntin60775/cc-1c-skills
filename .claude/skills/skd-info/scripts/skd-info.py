@@ -269,7 +269,7 @@ def main():
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="Analyze 1C DCS structure", allow_abbrev=False)
-    parser.add_argument("-TemplatePath", required=True)
+    parser.add_argument("-TemplatePath", "-Path", required=True)
     parser.add_argument("-Mode", default="overview",
                         choices=["overview", "query", "fields", "links", "calculated",
                                  "resources", "params", "variant", "trace", "templates", "full"])

@@ -46,7 +46,7 @@ def main():
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="Validate 1C external data processor/report structure", allow_abbrev=False)
-    parser.add_argument("-ObjectPath", required=True)
+    parser.add_argument("-ObjectPath", "-Path", required=True)
     parser.add_argument("-Detailed", action="store_true")
     parser.add_argument("-MaxErrors", type=int, default=30)
     parser.add_argument("-OutFile", default=None)

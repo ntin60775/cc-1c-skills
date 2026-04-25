@@ -2,6 +2,7 @@
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[Parameter(Mandatory=$true)]
+	[Alias('Path')]
 	[string]$TemplatePath,
 	[ValidateSet("overview", "query", "fields", "links", "calculated", "resources", "params", "variant", "trace", "templates", "full")]
 	[string]$Mode = "overview",

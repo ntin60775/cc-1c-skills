@@ -182,7 +182,7 @@ def main():
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="Edit 1C CommandInterface.xml", allow_abbrev=False)
-    parser.add_argument("-CIPath", required=True)
+    parser.add_argument("-CIPath", "-Path", required=True)
     parser.add_argument("-DefinitionFile", default=None)
     parser.add_argument("-Operation", default=None, choices=["hide", "show", "place", "order", "subsystem-order", "group-order"])
     parser.add_argument("-Value", default=None)
@@ -504,7 +504,7 @@ def main():
         if os.path.isfile(validate_script):
             print()
             print("--- Running interface-validate ---")
-            subprocess.run([sys.executable, validate_script, "-CIPath", resolved_path])
+            subprocess.run([sys.executable, validate_script, "-CIPath", "-Path", resolved_path])
 
     # --- Summary ---
     print()
