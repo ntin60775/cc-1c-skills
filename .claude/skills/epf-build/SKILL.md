@@ -1,6 +1,6 @@
 ---
 name: epf-build
-description: Собрать внешнюю обработку 1С (EPF/ERF) из XML-исходников. Используй когда пользователь просит собрать, скомпилировать обработку или получить EPF/ERF файл из исходников
+description: EPF обработка 1С — собрать внешний файл из XML-исходников.
 argument-hint: <ProcessorName>
 allowed-tools:
   - Bash

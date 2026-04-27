@@ -1,6 +1,6 @@
 ---
 name: form-compile
-description: Компиляция управляемой формы 1С из JSON-определения или из метаданных объекта. Используй когда нужно создать форму с нуля по описанию элементов или сгенерировать типовую форму
+description: Форма 1С — скомпилировать Form.xml из JSON-описания или метаданных объекта.
 argument-hint: <JsonPath> <OutputPath> | -FromObject <OutputPath>
 allowed-tools:
   - Bash

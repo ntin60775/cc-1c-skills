@@ -1,6 +1,6 @@
 ---
 name: epf-dump
-description: Разобрать EPF-файл обработки 1С (EPF/ERF) в XML-исходники. Используй когда пользователь просит разобрать, декомпилировать обработку, получить исходники из EPF/ERF файла
+description: EPF обработка 1С — разобрать внешний файл в XML-исходники.
 argument-hint: <EpfFile>
 allowed-tools:
   - Bash

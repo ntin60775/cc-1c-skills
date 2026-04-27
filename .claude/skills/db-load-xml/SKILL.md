@@ -1,6 +1,6 @@
 ---
 name: db-load-xml
-description: Загрузка конфигурации 1С из XML-файлов. Используй когда нужно загрузить конфигурацию из файлов, XML, исходников, LoadConfigFromFiles
+description: База 1С — загрузить XML-исходники конфигурации через LoadConfigFromFiles.
 argument-hint: <configDir> [database]
 allowed-tools:
   - Bash

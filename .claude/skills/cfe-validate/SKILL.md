@@ -1,6 +1,6 @@
 ---
 name: cfe-validate
-description: Валидация расширения конфигурации 1С (CFE). Используй после создания или модификации расширения для проверки корректности
+description: Расширение 1С CFE — проверить XML-исходники после создания или правок.
 argument-hint: <ExtensionPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

@@ -1,6 +1,6 @@
 ---
 name: cf-edit
-description: Точечное редактирование конфигурации 1С. Используй когда нужно изменить свойства конфигурации, добавить или удалить объект из состава, настроить роли по умолчанию
+description: Конфигурация 1С — правка Configuration.xml, ChildObjects, свойств и ролей по умолчанию.
 argument-hint: -ConfigPath <path> -Operation <op> -Value <value>
 allowed-tools:
   - Bash

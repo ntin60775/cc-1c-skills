@@ -1,6 +1,6 @@
 ---
 name: cfe-init
-description: Создать расширение конфигурации 1С (CFE) — scaffold XML-исходников. Используй когда нужно создать новое расширение для исправления, доработки или дополнения конфигурации
+description: Расширение 1С CFE — создать пустой XML scaffold нового расширения.
 argument-hint: <Name> [-ConfigPath <path>] [-Purpose Patch|Customization|AddOn] [-CompatibilityMode Version8_3_24]
 allowed-tools:
   - Bash

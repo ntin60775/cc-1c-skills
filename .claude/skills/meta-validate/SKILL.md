@@ -1,6 +1,6 @@
 ---
 name: meta-validate
-description: Валидация объекта метаданных 1С. Используй после создания или модификации объекта конфигурации для проверки корректности
+description: Метаданные 1С — проверить объект конфигурации после создания или правок.
 argument-hint: <ObjectPath> [-Detailed] [-MaxErrors 30] — pipe-separated paths for batch
 allowed-tools:
   - Bash

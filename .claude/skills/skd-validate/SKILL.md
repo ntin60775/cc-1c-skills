@@ -1,6 +1,6 @@
 ---
 name: skd-validate
-description: Валидация схемы компоновки данных 1С (СКД). Используй после создания или модификации СКД для проверки корректности
+description: СКД 1С — проверить схему компоновки данных после создания или правок.
 argument-hint: <TemplatePath> [-Detailed] [-MaxErrors 20]
 allowed-tools:
   - Bash

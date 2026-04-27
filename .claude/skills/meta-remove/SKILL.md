@@ -1,6 +1,6 @@
 ---
 name: meta-remove
-description: Удалить объект метаданных из конфигурации 1С. Используй когда нужно удалить, убрать объект из конфигурации
+description: Метаданные 1С — удалить объект конфигурации из XML-исходников.
 argument-hint: <ConfigDir> -Object <Type.Name>
 allowed-tools:
   - Bash

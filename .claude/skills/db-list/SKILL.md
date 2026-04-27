@@ -1,6 +1,6 @@
 ---
 name: db-list
-description: Управление реестром баз данных 1С (.v8-project.json). Используй когда нужно работать с реестром баз — список баз, зарегистрировать базу в реестре, какие базы есть
+description: Базы 1С — вести реестр .v8-project.json, список баз, aliases и подключения.
 argument-hint: "[add|remove|show]"
 allowed-tools:
   - Read

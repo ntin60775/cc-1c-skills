@@ -1,6 +1,6 @@
 ---
 name: subsystem-validate
-description: Валидация подсистемы 1С. Используй после создания или модификации подсистемы для проверки корректности
+description: Подсистема 1С — проверить XML-исходники после создания или правок.
 argument-hint: <SubsystemPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

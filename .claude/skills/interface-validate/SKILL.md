@@ -1,6 +1,6 @@
 ---
 name: interface-validate
-description: Валидация командного интерфейса 1С. Используй после настройки командного интерфейса подсистемы для проверки корректности
+description: Интерфейс 1С — проверить командный интерфейс подсистемы после правок.
 argument-hint: <CIPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

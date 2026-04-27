@@ -1,6 +1,6 @@
 ---
 name: db-create
-description: Создание информационной базы 1С. Используй когда нужно создать базу, новую ИБ, пустую базу
+description: База 1С — создать новую информационную базу или пустую ИБ.
 argument-hint: <path|name>
 allowed-tools:
   - Bash

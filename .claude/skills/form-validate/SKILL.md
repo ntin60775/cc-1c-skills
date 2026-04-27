@@ -1,6 +1,6 @@
 ---
 name: form-validate
-description: Валидация управляемой формы 1С. Используй после создания или модификации формы для проверки корректности. При наличии BaseForm автоматически проверяет callType и ID расширений
+description: Форма 1С — проверить Form.xml, BaseForm, callType и ID расширений.
 argument-hint: <FormPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

@@ -1,6 +1,6 @@
 ---
 name: subsystem-compile
-description: Создать подсистему 1С — XML-исходники из JSON-определения. Используй когда нужно добавить подсистему (раздел) в конфигурацию
+description: Подсистема 1С — создать XML-исходники раздела из JSON-описания.
 argument-hint: "[-DefinitionFile <json> | -Value <json-string>] -OutputDir <ConfigDir> [-Parent <path>]"
 allowed-tools:
   - Bash

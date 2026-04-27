@@ -1,6 +1,6 @@
 ---
 name: role-compile
-description: Создание роли 1С из описания прав. Используй когда нужно создать новую роль с набором прав на объекты
+description: Роль 1С — создать Rights.xml из описания прав на объекты.
 argument-hint: <JsonPath> <OutputDir>
 allowed-tools:
   - Bash

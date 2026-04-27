@@ -1,6 +1,6 @@
 ---
 name: db-dump-cf
-description: Выгрузка конфигурации 1С в CF-файл. Используй когда нужно выгрузить конфигурацию в CF, сохранить конфигурацию, сделать бэкап CF
+description: База 1С — выгрузить конфигурацию в CF-файл или сделать CF-бэкап.
 argument-hint: "[database] [output.cf]"
 allowed-tools:
   - Bash

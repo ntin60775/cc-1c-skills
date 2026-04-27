@@ -1,6 +1,6 @@
 ---
 name: cfe-patch-method
-description: Генерация перехватчика метода в расширении 1С (CFE). Используй когда нужно перехватить метод заимствованного объекта — вставить код до, после или вместо оригинального
+description: Расширение 1С CFE — создать перехватчик метода до, после или вместо оригинала.
 argument-hint: -ExtensionPath <path> -ModulePath "Catalog.X.ObjectModule" -MethodName "ПриЗаписи" -InterceptorType Before
 allowed-tools:
   - Bash

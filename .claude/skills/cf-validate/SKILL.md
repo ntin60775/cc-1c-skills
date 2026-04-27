@@ -1,6 +1,6 @@
 ---
 name: cf-validate
-description: Валидация конфигурации 1С. Используй после создания или модификации конфигурации для проверки корректности
+description: Конфигурация 1С — проверить XML-исходники после создания или правок.
 argument-hint: <ConfigPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

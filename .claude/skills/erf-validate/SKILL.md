@@ -1,6 +1,6 @@
 ---
 name: erf-validate
-description: Валидация внешнего отчёта 1С (ERF). Используй после создания или модификации отчёта для проверки корректности
+description: ERF отчёт 1С — проверить XML-исходники после создания или правок.
 argument-hint: <ObjectPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

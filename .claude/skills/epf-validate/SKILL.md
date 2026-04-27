@@ -1,6 +1,6 @@
 ---
 name: epf-validate
-description: Валидация внешней обработки 1С (EPF). Используй после создания или модификации обработки для проверки корректности
+description: EPF обработка 1С — проверить XML-исходники после создания или правок.
 argument-hint: <ObjectPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

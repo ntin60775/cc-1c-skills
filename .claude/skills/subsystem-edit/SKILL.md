@@ -1,6 +1,6 @@
 ---
 name: subsystem-edit
-description: Точечное редактирование подсистемы 1С. Используй когда нужно добавить или удалить объекты из подсистемы, управлять дочерними подсистемами или изменить свойства
+description: Подсистема 1С — править состав объектов, дочерние подсистемы и свойства.
 argument-hint: -SubsystemPath <path> -Operation <op> -Value <value>
 allowed-tools:
   - Bash

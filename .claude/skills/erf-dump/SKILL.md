@@ -1,6 +1,6 @@
 ---
 name: erf-dump
-description: Разобрать ERF-файл отчёта 1С в XML-исходники. Используй когда пользователь просит разобрать, декомпилировать отчёт, получить исходники из ERF файла
+description: ERF отчёт 1С — разобрать внешний отчёт в XML-исходники.
 argument-hint: <ErfFile>
 allowed-tools:
   - Bash

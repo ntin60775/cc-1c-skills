@@ -1,6 +1,6 @@
 ---
 name: form-remove
-description: Удалить форму из объекта 1С (обработка, отчёт, справочник, документ и др.)
+description: Форма 1С — удалить форму из объекта конфигурации.
 argument-hint: <ObjectName> <FormName>
 disable-model-invocation: true
 allowed-tools:

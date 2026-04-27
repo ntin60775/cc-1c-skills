@@ -1,6 +1,6 @@
 ---
 name: cf-info
-description: Анализ структуры конфигурации 1С — свойства, состав, счётчики объектов. Используй для обзора конфигурации — какие объекты есть, сколько их, какие настройки
+description: Конфигурация 1С — обзор Configuration.xml, состава объектов, свойств и счётчиков.
 argument-hint: <ConfigPath> [-Mode overview|brief|full]
 allowed-tools:
   - Bash
