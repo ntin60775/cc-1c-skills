@@ -1,0 +1,43 @@
+name: Синхронизация upstream
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Синхронизировать main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Получить fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Настроить git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Получить upstream
+        run: |
+          git remote add upstream https://github.com/Nikolay-Shirokov/cc-1c-skills.git
+          git fetch upstream main
+
+      - name: Слить upstream/main
+        run: |
+          git checkout main
+          git merge --no-edit upstream/main
+
+      - name: Отправить main в fork
+        run: git push origin main
