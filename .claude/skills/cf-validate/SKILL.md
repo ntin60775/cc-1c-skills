@@ -1,6 +1,6 @@
 ---
 name: cf-validate
-description: Конфигурация 1С — проверить XML-исходники после создания или правок.
+description: 1C config - validate XML sources after create/edit.
 argument-hint: <ConfigPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

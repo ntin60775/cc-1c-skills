@@ -1,6 +1,6 @@
 ---
 name: web-info
-description: Web 1С — проверить Apache, опубликованные базы, web-клиент и ошибки публикаций.
+description: 1C web - check Apache, publications, web client, publication errors.
 argument-hint: ""
 allowed-tools:
   - Bash

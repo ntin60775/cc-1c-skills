@@ -1,6 +1,6 @@
 ---
 name: epf-dump
-description: EPF обработка 1С — разобрать внешний файл в XML-исходники.
+description: 1C EPF - dump external processor to XML sources.
 argument-hint: <EpfFile>
 allowed-tools:
   - Bash

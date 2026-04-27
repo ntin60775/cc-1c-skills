@@ -1,6 +1,6 @@
 ---
 name: meta-compile
-description: Метаданные 1С — создать объект конфигурации, справочник, документ, регистр, модуль или отчёт.
+description: 1C metadata - create config object, catalog, document, register, module, report.
 argument-hint: <JsonPath> <OutputDir>
 allowed-tools:
   - Bash

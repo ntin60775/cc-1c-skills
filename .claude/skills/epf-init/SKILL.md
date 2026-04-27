@@ -1,6 +1,6 @@
 ---
 name: epf-init
-description: EPF обработка 1С — создать пустой XML scaffold внешней обработки.
+description: 1C EPF - create empty XML scaffold for external processor.
 argument-hint: <Name> [Synonym]
 allowed-tools:
   - Bash

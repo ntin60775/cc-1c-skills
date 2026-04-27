@@ -1,6 +1,6 @@
 ---
 name: role-validate
-description: Роль 1С — проверить Rights.xml после создания или правок.
+description: 1C role - validate Rights.xml after create/edit.
 argument-hint: <RightsPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

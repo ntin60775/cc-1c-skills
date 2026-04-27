@@ -1,6 +1,6 @@
 ---
 name: template-remove
-description: Макет 1С — удалить template из объекта конфигурации.
+description: 1C template - remove template from a config object.
 argument-hint: <ObjectName> <TemplateName>
 disable-model-invocation: true
 allowed-tools:

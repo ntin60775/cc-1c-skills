@@ -1,6 +1,6 @@
 ---
 name: mxl-validate
-description: MXL макет 1С — проверить табличный документ после создания или правок.
+description: 1C MXL layout - validate tabular document after create/edit.
 argument-hint: <TemplatePath> [-Detailed] [-MaxErrors 20]
 allowed-tools:
   - Bash

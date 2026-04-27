@@ -1,6 +1,6 @@
 ---
 name: skd-info
-description: СКД 1С — анализ наборов данных, полей, параметров, вариантов и запроса.
+description: 1C SKD/DCS - inspect datasets, fields, params, variants, query.
 argument-hint: <TemplatePath> [-Mode overview|query|fields|links|calculated|resources|params|variant|templates|trace|full] [-Name <dataset|variant|field|group>]
 allowed-tools:
   - Bash

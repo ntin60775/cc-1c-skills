@@ -1,6 +1,6 @@
 ---
 name: form-info
-description: Форма 1С — анализ Form.xml, элементов, реквизитов, команд и событий.
+description: 1C form - inspect Form.xml, attributes, commands, events.
 argument-hint: <FormPath>
 allowed-tools:
   - Bash

@@ -1,6 +1,6 @@
 ---
 name: meta-validate
-description: Метаданные 1С — проверить объект конфигурации после создания или правок.
+description: 1C metadata - validate config object after create/edit.
 argument-hint: <ObjectPath> [-Detailed] [-MaxErrors 30] — pipe-separated paths for batch
 allowed-tools:
   - Bash

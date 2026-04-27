@@ -1,6 +1,6 @@
 ---
 name: role-compile
-description: Роль 1С — создать Rights.xml из описания прав на объекты.
+description: 1C role - create Rights.xml from object rights spec.
 argument-hint: <JsonPath> <OutputDir>
 allowed-tools:
   - Bash

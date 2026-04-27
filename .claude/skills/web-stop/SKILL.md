@@ -1,6 +1,6 @@
 ---
 name: web-stop
-description: Web 1С — остановить Apache HTTP Server и веб-публикации.
+description: 1C web - stop Apache HTTP Server and publications.
 argument-hint: ""
 allowed-tools:
   - Bash

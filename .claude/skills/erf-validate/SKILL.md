@@ -1,6 +1,6 @@
 ---
 name: erf-validate
-description: ERF отчёт 1С — проверить XML-исходники после создания или правок.
+description: 1C ERF - validate XML sources after create/edit.
 argument-hint: <ObjectPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

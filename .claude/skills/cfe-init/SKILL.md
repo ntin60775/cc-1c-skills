@@ -1,6 +1,6 @@
 ---
 name: cfe-init
-description: Расширение 1С CFE — создать пустой XML scaffold нового расширения.
+description: 1C CFE extension - create an empty XML scaffold.
 argument-hint: <Name> [-ConfigPath <path>] [-Purpose Patch|Customization|AddOn] [-CompatibilityMode Version8_3_24]
 allowed-tools:
   - Bash

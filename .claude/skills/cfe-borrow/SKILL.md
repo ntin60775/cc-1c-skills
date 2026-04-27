@@ -1,6 +1,6 @@
 ---
 name: cfe-borrow
-description: Расширение 1С CFE — заимствовать объект конфигурации для перехвата метода, формы или реквизита.
+description: 1C CFE extension - borrow config object for method, form, or attribute interception.
 argument-hint: -ExtensionPath <path> -ConfigPath <path> -Object "Catalog.Контрагенты.Form.ФормаЭлемента" -BorrowMainAttribute
 allowed-tools:
   - Bash

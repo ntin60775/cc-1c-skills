@@ -1,6 +1,6 @@
 ---
 name: cfe-validate
-description: Расширение 1С CFE — проверить XML-исходники после создания или правок.
+description: 1C CFE extension - validate XML sources after create/edit.
 argument-hint: <ExtensionPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

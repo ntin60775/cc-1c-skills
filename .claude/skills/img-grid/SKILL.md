@@ -1,6 +1,6 @@
 ---
 name: img-grid
-description: Изображение — наложить сетку на скриншот макета, печатной формы или табличного документа.
+description: Image - overlay a grid on screenshots, print forms, or tabular docs.
 argument-hint: <ImagePath> [-c COLS]
 allowed-tools:
   - Bash

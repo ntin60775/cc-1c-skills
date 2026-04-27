@@ -1,6 +1,6 @@
 ---
 name: db-run
-description: База 1С — запустить 1С:Предприятие и открыть выбранную ИБ.
+description: 1C DB - launch 1C Enterprise and open an infobase.
 argument-hint: "[database]"
 allowed-tools:
   - Bash

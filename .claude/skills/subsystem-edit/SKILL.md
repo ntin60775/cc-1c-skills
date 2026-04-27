@@ -1,6 +1,6 @@
 ---
 name: subsystem-edit
-description: Подсистема 1С — править состав объектов, дочерние подсистемы и свойства.
+description: 1C subsystem - edit object membership, child subsystems, properties.
 argument-hint: -SubsystemPath <path> -Operation <op> -Value <value>
 allowed-tools:
   - Bash

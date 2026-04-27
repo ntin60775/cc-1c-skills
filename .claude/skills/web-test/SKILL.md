@@ -1,6 +1,6 @@
 ---
 name: web-test
-description: Web 1С — тестировать web-клиент через браузерную автоматизацию.
+description: 1C web - test web client with browser automation.
 argument-hint: "сценарий на естественном языке"
 allowed-tools:
   - Bash

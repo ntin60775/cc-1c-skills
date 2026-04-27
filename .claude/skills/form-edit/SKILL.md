@@ -1,6 +1,6 @@
 ---
 name: form-edit
-description: Форма 1С — править существующий Form.xml, элементы, реквизиты, команды и события.
+description: 1C form - edit Form.xml elements, attributes, commands, events.
 argument-hint: <FormPath> <JsonPath>
 allowed-tools:
   - Bash

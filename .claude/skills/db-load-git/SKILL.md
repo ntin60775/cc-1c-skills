@@ -1,6 +1,6 @@
 ---
 name: db-load-git
-description: База 1С — загрузить изменения из Git, staged/commit range или partial load в ИБ.
+description: 1C DB - load Git, staged, range, or partial changes into infobase.
 argument-hint: "[database] [source]"
 allowed-tools:
   - Bash

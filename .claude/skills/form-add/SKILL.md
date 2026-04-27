@@ -1,6 +1,6 @@
 ---
 name: form-add
-description: Форма 1С — добавить пустую управляемую форму к объекту конфигурации.
+description: 1C form - add an empty managed form to a config object.
 argument-hint: <ObjectPath> <FormName> [Purpose] [--set-default]
 allowed-tools:
   - Bash

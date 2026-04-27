@@ -1,6 +1,6 @@
 ---
 name: epf-validate
-description: EPF обработка 1С — проверить XML-исходники после создания или правок.
+description: 1C EPF - validate XML sources after create/edit.
 argument-hint: <ObjectPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

@@ -1,6 +1,6 @@
 ---
 name: cfe-patch-method
-description: Расширение 1С CFE — создать перехватчик метода до, после или вместо оригинала.
+description: 1C CFE extension - create before, after, or instead method handlers.
 argument-hint: -ExtensionPath <path> -ModulePath "Catalog.X.ObjectModule" -MethodName "ПриЗаписи" -InterceptorType Before
 allowed-tools:
   - Bash

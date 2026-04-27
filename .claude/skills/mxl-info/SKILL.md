@@ -1,6 +1,6 @@
 ---
 name: mxl-info
-description: MXL макет 1С — анализ областей, параметров и наборов колонок печатной формы.
+description: 1C MXL layout - inspect print-form areas, parameters, column sets.
 argument-hint: <TemplatePath> или <ProcessorName> <TemplateName>
 allowed-tools:
   - Bash

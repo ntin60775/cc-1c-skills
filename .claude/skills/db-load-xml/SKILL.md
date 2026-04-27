@@ -1,6 +1,6 @@
 ---
 name: db-load-xml
-description: База 1С — загрузить XML-исходники конфигурации через LoadConfigFromFiles.
+description: 1C DB - load config XML with LoadConfigFromFiles.
 argument-hint: <configDir> [database]
 allowed-tools:
   - Bash
