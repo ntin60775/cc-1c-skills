@@ -1,6 +1,6 @@
 ---
 name: form-compile
-description: Форма 1С — скомпилировать Form.xml из JSON-описания или метаданных объекта.
+description: Форма 1С — скомпилировать типовой Form.xml из JSON-описания или метаданных объекта.
 argument-hint: <JsonPath> <OutputPath> | -FromObject <OutputPath>
 allowed-tools:
   - Bash

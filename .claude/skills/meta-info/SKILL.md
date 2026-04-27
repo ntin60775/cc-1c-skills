@@ -1,6 +1,6 @@
 ---
 name: meta-info
-description: Метаданные 1С — анализ XML-объекта, реквизитов, табличных частей, форм, движений и типов.
+description: Метаданные 1С — анализ XML-объекта, реквизитов, табличных частей, форм, движений и типов для запросов.
 argument-hint: <ObjectPath> [-Mode overview|brief|full] [-Name <элемент>]
 allowed-tools:
   - Bash
