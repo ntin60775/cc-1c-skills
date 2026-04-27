@@ -1,6 +1,6 @@
 ---
 name: db-load-cf
-description: База 1С — загрузить конфигурацию из CF-файла или восстановить CF-бэкап.
+description: 1C DB - load config from CF or restore a CF backup.
 argument-hint: <input.cf> [database]
 allowed-tools:
   - Bash

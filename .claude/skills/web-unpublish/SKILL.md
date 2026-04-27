@@ -1,6 +1,6 @@
 ---
 name: web-unpublish
-description: Web 1С — удалить публикацию ИБ из Apache и закрыть веб-доступ.
+description: 1C web - remove Apache publication and close web access.
 argument-hint: "<appname | --all>"
 allowed-tools:
   - Bash

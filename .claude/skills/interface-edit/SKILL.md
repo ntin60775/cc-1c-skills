@@ -1,6 +1,6 @@
 ---
 name: interface-edit
-description: Интерфейс 1С — настроить команды подсистемы, видимость, группы и порядок.
+description: 1C interface - set subsystem commands, visibility, groups, order.
 argument-hint: <CIPath> <Operation> <Value>
 allowed-tools:
   - Bash

@@ -1,6 +1,6 @@
 ---
 name: form-patterns
-description: Формы 1С — подобрать паттерн компоновки, архетип формы или UI-конвенцию.
+description: 1C forms - choose layout patterns, archetypes, UI conventions.
 argument-hint: (no arguments)
 allowed-tools: []
 ---

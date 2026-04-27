@@ -1,6 +1,6 @@
 ---
 name: web-publish
-description: Web 1С — опубликовать ИБ или сервисы через Apache для web-клиента.
+description: 1C web - publish infobase or services through Apache.
 argument-hint: "[database]"
 allowed-tools:
   - Bash

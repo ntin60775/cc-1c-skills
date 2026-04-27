@@ -1,6 +1,6 @@
 ---
 name: epf-bsp-add-command
-description: EPF БСП — добавить команду в СведенияОВнешнейОбработке для формы, метода или заполнения объекта.
+description: BSP EPF - add command registration for form, method, or object fill.
 argument-hint: <ProcessorName> <Идентификатор> [ТипКоманды] [Представление]
 allowed-tools:
   - Read

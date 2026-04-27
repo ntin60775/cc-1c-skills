@@ -1,6 +1,6 @@
 ---
 name: epf-build
-description: EPF обработка 1С — собрать внешний файл из XML-исходников.
+description: 1C EPF - build external processor from XML sources.
 argument-hint: <ProcessorName>
 allowed-tools:
   - Bash

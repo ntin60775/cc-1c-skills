@@ -1,6 +1,6 @@
 ---
 name: subsystem-info
-description: Подсистема 1С — анализ состава, дочерних подсистем, интерфейса и иерархии.
+description: 1C subsystem - inspect content, children, interface, hierarchy.
 argument-hint: <SubsystemPath> [-Mode overview|content|ci|tree|full] [-Name <элемент>]
 allowed-tools:
   - Bash

@@ -1,6 +1,6 @@
 ---
 name: skd-validate
-description: СКД 1С — проверить схему компоновки данных после создания или правок.
+description: 1C SKD/DCS - validate data composition schema after create/edit.
 argument-hint: <TemplatePath> [-Detailed] [-MaxErrors 20]
 allowed-tools:
   - Bash

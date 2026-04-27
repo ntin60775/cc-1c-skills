@@ -1,6 +1,6 @@
 ---
 name: db-list
-description: Базы 1С — вести реестр .v8-project.json, список баз, aliases и подключения.
+description: 1C DBs - manage .v8-project.json registry, aliases, connections.
 argument-hint: "[add|remove|show]"
 allowed-tools:
   - Read

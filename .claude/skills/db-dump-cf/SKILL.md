@@ -1,6 +1,6 @@
 ---
 name: db-dump-cf
-description: База 1С — выгрузить конфигурацию в CF-файл или сделать CF-бэкап.
+description: 1C DB - dump config to CF or create a CF backup.
 argument-hint: "[database] [output.cf]"
 allowed-tools:
   - Bash

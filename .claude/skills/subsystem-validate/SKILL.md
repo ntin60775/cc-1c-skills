@@ -1,6 +1,6 @@
 ---
 name: subsystem-validate
-description: Подсистема 1С — проверить XML-исходники после создания или правок.
+description: 1C subsystem - validate XML sources after create/edit.
 argument-hint: <SubsystemPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

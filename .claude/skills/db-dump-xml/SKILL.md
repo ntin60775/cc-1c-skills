@@ -1,6 +1,6 @@
 ---
 name: db-dump-xml
-description: База 1С — выгрузить конфигурацию в XML-исходники через DumpConfigToFiles.
+description: 1C DB - dump config XML with DumpConfigToFiles.
 argument-hint: "[database] [outputDir]"
 allowed-tools:
   - Bash

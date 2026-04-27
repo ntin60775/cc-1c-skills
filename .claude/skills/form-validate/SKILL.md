@@ -1,6 +1,6 @@
 ---
 name: form-validate
-description: Форма 1С — проверить Form.xml, BaseForm, callType и ID расширений.
+description: 1C form - validate Form.xml, BaseForm, callType, extension IDs.
 argument-hint: <FormPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

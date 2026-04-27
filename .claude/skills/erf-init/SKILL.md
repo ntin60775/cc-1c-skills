@@ -1,6 +1,6 @@
 ---
 name: erf-init
-description: ERF отчёт 1С — создать пустой XML scaffold внешнего отчёта.
+description: 1C ERF - create empty report XML scaffold.
 argument-hint: <Name> [Synonym] [--with-skd]
 allowed-tools:
   - Bash

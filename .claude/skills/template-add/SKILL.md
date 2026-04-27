@@ -1,6 +1,6 @@
 ---
 name: template-add
-description: Макет 1С — добавить пустой template к объекту конфигурации.
+description: 1C template - add empty template to a config object.
 argument-hint: <ObjectName> <TemplateName> <TemplateType>
 allowed-tools:
   - Bash

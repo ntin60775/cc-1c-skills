@@ -1,6 +1,6 @@
 ---
 name: erf-build
-description: ERF отчёт 1С — собрать внешний отчёт из XML-исходников.
+description: 1C ERF - build external report from XML sources.
 argument-hint: <ReportName>
 allowed-tools:
   - Bash

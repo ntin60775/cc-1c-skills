@@ -1,6 +1,6 @@
 ---
 name: db-update
-description: База 1С — применить конфигурацию к ИБ через UpdateDBCfg.
+description: 1C DB - apply config with UpdateDBCfg.
 argument-hint: "[database]"
 allowed-tools:
   - Bash

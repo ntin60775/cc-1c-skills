@@ -1,6 +1,6 @@
 ---
 name: help-add
-description: Справка 1С — добавить встроенную help-страницу к объекту конфигурации.
+description: 1C help - add embedded help page to a config object.
 argument-hint: <ObjectName>
 allowed-tools:
   - Bash

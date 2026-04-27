@@ -1,6 +1,6 @@
 ---
 name: cfe-diff
-description: Расширение 1С CFE — анализ состава, заимствований, перехватчиков и переноса правок.
+description: 1C CFE extension - analyze objects, borrowed items, handlers, and changes.
 argument-hint: -ExtensionPath <path> -ConfigPath <path> [-Mode A|B]
 allowed-tools:
   - Bash

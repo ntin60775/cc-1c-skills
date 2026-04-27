@@ -1,6 +1,6 @@
 ---
 name: epf-bsp-init
-description: EPF БСП — создать функцию СведенияОВнешнейОбработке для дополнительных отчётов и обработок.
+description: BSP EPF - create external report/processor registration function.
 argument-hint: <ProcessorName> <Вид>
 allowed-tools:
   - Read

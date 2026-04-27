@@ -1,6 +1,6 @@
 ---
 name: role-info
-description: Роль 1С — аудит Rights.xml, прав объектов, RLS и шаблонов ограничений.
+description: 1C role - audit Rights.xml, object rights, RLS, restrictions.
 argument-hint: <RightsPath>
 allowed-tools:
   - Bash

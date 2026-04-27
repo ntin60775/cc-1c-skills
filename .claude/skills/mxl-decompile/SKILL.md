@@ -1,6 +1,6 @@
 ---
 name: mxl-decompile
-description: MXL макет 1С — декомпилировать табличный документ в JSON-описание.
+description: 1C MXL layout - decompile tabular document to JSON.
 argument-hint: <TemplatePath> [OutputPath]
 allowed-tools:
   - Bash

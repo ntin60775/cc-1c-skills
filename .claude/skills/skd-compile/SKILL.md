@@ -1,6 +1,6 @@
 ---
 name: skd-compile
-description: СКД 1С — скомпилировать схему компоновки данных из JSON-описания.
+description: 1C SKD/DCS - compile data composition schema from JSON.
 argument-hint: "[-DefinitionFile <json> | -Value <json-string>] -OutputPath <Template.xml>"
 allowed-tools:
   - Bash

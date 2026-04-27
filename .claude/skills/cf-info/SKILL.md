@@ -1,6 +1,6 @@
 ---
 name: cf-info
-description: Конфигурация 1С — обзор Configuration.xml, состава объектов, свойств и счётчиков.
+description: 1C config - inspect Configuration.xml, objects, properties, counters.
 argument-hint: <ConfigPath> [-Mode overview|brief|full]
 allowed-tools:
   - Bash

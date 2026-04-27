@@ -1,6 +1,6 @@
 ---
 name: skd-edit
-description: СКД 1С — править поля, итоги, фильтры, параметры и текст запроса.
+description: 1C SKD/DCS - edit fields, totals, filters, params, query text.
 argument-hint: <TemplatePath> -Operation <op> -Value <value>
 allowed-tools:
   - Bash

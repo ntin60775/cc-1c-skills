@@ -1,6 +1,6 @@
 ---
 name: form-remove
-description: Форма 1С — удалить форму из объекта конфигурации.
+description: 1C form - remove a form from a config object.
 argument-hint: <ObjectName> <FormName>
 disable-model-invocation: true
 allowed-tools:

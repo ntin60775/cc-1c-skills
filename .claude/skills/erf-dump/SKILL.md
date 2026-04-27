@@ -1,6 +1,6 @@
 ---
 name: erf-dump
-description: ERF отчёт 1С — разобрать внешний отчёт в XML-исходники.
+description: 1C ERF - dump external report to XML sources.
 argument-hint: <ErfFile>
 allowed-tools:
   - Bash

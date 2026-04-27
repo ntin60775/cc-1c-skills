@@ -1,6 +1,6 @@
 ---
 name: cf-edit
-description: Конфигурация 1С — редактировать Configuration.xml, ChildObjects, свойства и роли по умолчанию.
+description: 1C config - edit Configuration.xml, ChildObjects, properties, default roles.
 argument-hint: -ConfigPath <path> -Operation <op> -Value <value>
 allowed-tools:
   - Bash

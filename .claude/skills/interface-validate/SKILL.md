@@ -1,6 +1,6 @@
 ---
 name: interface-validate
-description: Интерфейс 1С — проверить командный интерфейс подсистемы после правок.
+description: 1C interface - validate subsystem command interface after edits.
 argument-hint: <CIPath> [-Detailed] [-MaxErrors 30]
 allowed-tools:
   - Bash

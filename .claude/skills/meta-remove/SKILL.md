@@ -1,6 +1,6 @@
 ---
 name: meta-remove
-description: Метаданные 1С — удалить объект конфигурации из XML-исходников.
+description: 1C metadata - remove a config object from XML sources.
 argument-hint: <ConfigDir> -Object <Type.Name>
 allowed-tools:
   - Bash

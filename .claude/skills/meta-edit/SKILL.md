@@ -1,6 +1,6 @@
 ---
 name: meta-edit
-description: Метаданные 1С — править объект, реквизиты, табличные части, измерения, ресурсы и свойства.
+description: 1C metadata - edit object attrs, tabular sections, dimensions, resources, properties.
 argument-hint: <ObjectPath> -Operation <op> -Value "<val>" | -DefinitionFile <json> [-NoValidate]
 allowed-tools:
   - Bash
