@@ -1,6 +1,6 @@
 ---
 name: form-patterns
-description: Формы 1С — справочник паттернов компоновки, архетипов и UI-конвенций.
+description: Формы 1С — подобрать паттерн компоновки, архетип формы или UI-конвенцию.
 argument-hint: (no arguments)
 allowed-tools: []
 ---
