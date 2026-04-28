@@ -41,6 +41,7 @@ __pycache__/
 .augment/
 .cline/
 .codex/
+.codex
 .cursor/
 .gemini/
 .github/skills/
