@@ -1,4 +1,4 @@
-﻿# form-compile v1.8 — Compile 1C managed form from JSON or object metadata
+﻿# form-compile v1.9 — Compile 1C managed form from JSON or object metadata
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[string]$JsonPath,
@@ -2826,7 +2826,7 @@ if ($def.excludedCommands -and $def.excludedCommands.Count -gt 0) {
 # 12d. AutoCommandBar (always present, id=-1)
 $acbAutofill = Compute-MainAcbAutofill
 $acbName = "ФормаКоманднаяПанель"
-$acbHAlign = "Right"
+$acbHAlign = $null
 if ($script:mainAcbDef) {
 	if ($null -ne $script:mainAcbDef.PSObject.Properties["autoCmdBar"] -and "$($script:mainAcbDef.autoCmdBar)" -ne "") {
 		$acbName = "$($script:mainAcbDef.autoCmdBar)"

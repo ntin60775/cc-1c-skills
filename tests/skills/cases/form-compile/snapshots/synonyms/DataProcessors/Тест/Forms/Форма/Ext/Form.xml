@@ -7,7 +7,6 @@
 		</v8:item>
 	</Title>
 	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
-		<HorizontalAlign>Right</HorizontalAlign>
 		<ChildItems>
 			<Button name="Кн1" id="1">
 				<CommandName>Form.Command.Кн1</CommandName>

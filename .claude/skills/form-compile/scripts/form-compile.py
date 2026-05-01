@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# form-compile v1.8 — Compile 1C managed form from JSON or object metadata
+# form-compile v1.9 — Compile 1C managed form from JSON or object metadata
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 import argparse
 import copy
@@ -2691,7 +2691,7 @@ def main():
     # AutoCommandBar (always present, id=-1)
     acb_autofill = _compute_main_acb_autofill()
     acb_name = '\u0424\u043e\u0440\u043c\u0430\u041a\u043e\u043c\u0430\u043d\u0434\u043d\u0430\u044f\u041f\u0430\u043d\u0435\u043b\u044c'
-    acb_halign = 'Right'
+    acb_halign = None
     if main_acb_def is not None:
         v = main_acb_def.get('autoCmdBar')
         if v:
