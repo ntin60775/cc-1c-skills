@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# cf-edit v1.2 — Edit 1C configuration root (Configuration.xml)
+# cf-edit v1.3 — Edit 1C configuration root (Configuration.xml)
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 
 import argparse
@@ -495,6 +495,7 @@ def main():
         info(f"Set DefaultRoles: {len(items)} roles")
 
     # --- set-panels (writes Ext/ClientApplicationInterface.xml from scratch) ---
+    # Canonical English aliases — preferred form, used in docs and error messages.
     PANEL_UUIDS = {
         "sections":  "b553047f-c9aa-4157-978d-448ecad24248",
         "open":      "cbab57f2-a0f3-4f0a-89ea-4cb19570ab75",
@@ -502,15 +503,26 @@ def main():
         "history":   "c933ac92-92cd-459d-81cc-e0c8a83ced99",
         "functions": "b2735bd3-d822-4430-ba59-c9e869693b24",
     }
+    # Russian synonyms — silently accepted (cf-info displays Russian names;
+    # users may copy them straight into cf-edit value).
+    PANEL_SYNONYMS = {
+        "разделов": "sections",   "разделы":   "sections",
+        "открытых": "open",       "открытые":  "open",
+        "избранного": "favorites","избранное": "favorites",
+        "истории":  "history",    "история":   "history",
+        "функций":  "functions",  "функции":   "functions",
+    }
 
     def build_panel_entry_xml(entry, indent):
         if isinstance(entry, str):
-            if entry not in PANEL_UUIDS:
+            key = entry.lower()
+            key = PANEL_SYNONYMS.get(key, key)
+            if key not in PANEL_UUIDS:
                 allowed = ", ".join(sorted(PANEL_UUIDS.keys()))
                 print(f"Unknown panel alias '{entry}'. Allowed: {allowed}", file=sys.stderr)
                 sys.exit(1)
             inst = str(_uuid.uuid4())
-            return f'{indent}<panel id="{inst}">\r\n{indent}\t<uuid>{PANEL_UUIDS[entry]}</uuid>\r\n{indent}</panel>'
+            return f'{indent}<panel id="{inst}">\r\n{indent}\t<uuid>{PANEL_UUIDS[key]}</uuid>\r\n{indent}</panel>'
         if isinstance(entry, dict) and "group" in entry:
             children = entry["group"]
             if not children:

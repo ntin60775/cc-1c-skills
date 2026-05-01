@@ -1,4 +1,4 @@
-﻿# cf-edit v1.2 — Edit 1C configuration root (Configuration.xml)
+﻿# cf-edit v1.3 — Edit 1C configuration root (Configuration.xml)
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[Parameter(Mandatory)][Alias('Path')][string]$ConfigPath,
@@ -445,6 +445,7 @@ function Do-RemoveDefaultRole([string]$batchVal) {
 }
 
 # --- Operation: set-panels ---
+# Canonical English aliases — preferred form, used in docs and error messages.
 $script:panelUuids = @{
 	"sections"  = "b553047f-c9aa-4157-978d-448ecad24248"
 	"open"      = "cbab57f2-a0f3-4f0a-89ea-4cb19570ab75"
@@ -452,15 +453,26 @@ $script:panelUuids = @{
 	"history"   = "c933ac92-92cd-459d-81cc-e0c8a83ced99"
 	"functions" = "b2735bd3-d822-4430-ba59-c9e869693b24"
 }
+# Russian synonyms — silently accepted (cf-info displays Russian names; users
+# may copy them straight into cf-edit value).
+$script:panelSynonyms = @{
+	"разделов"   = "sections"; "разделы"   = "sections"
+	"открытых"   = "open";     "открытые"  = "open"
+	"избранного" = "favorites";"избранное" = "favorites"
+	"истории"    = "history";  "история"   = "history"
+	"функций"    = "functions";"функции"   = "functions"
+}
 
 function Build-PanelEntryXml($entry, [string]$indent) {
 	# String alias -> <panel><uuid>...</uuid></panel>
 	if ($entry -is [string]) {
-		if (-not $script:panelUuids.ContainsKey($entry)) {
+		$key = $entry.ToLowerInvariant()
+		if ($script:panelSynonyms.ContainsKey($key)) { $key = $script:panelSynonyms[$key] }
+		if (-not $script:panelUuids.ContainsKey($key)) {
 			Write-Error "Unknown panel alias '$entry'. Allowed: $(($script:panelUuids.Keys | Sort-Object) -join ', ')"
 			exit 1
 		}
-		$u = $script:panelUuids[$entry]
+		$u = $script:panelUuids[$key]
 		$instId = [guid]::NewGuid().ToString()
 		return "$indent<panel id=`"$instId`">`r`n$indent`t<uuid>$u</uuid>`r`n$indent</panel>"
 	}
