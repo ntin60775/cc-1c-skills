@@ -228,7 +228,7 @@ powershell.exe -NoProfile -File .claude/skills/form-compile/scripts/form-compile
 | `command` | Имя команды формы → `Form.Command.Имя` |
 | `stdCommand` | Стандартная команда: `"Close"` → `Form.StandardCommand.Close`; с точкой: `"Товары.Add"` → `Form.Item.Товары.StandardCommand.Add` |
 | `defaultButton: true` | Кнопка по умолчанию |
-| `type` | `"usual"`, `"hyperlink"`, `"commandBar"` |
+| `type` | `"usual"`, `"hyperlink"`. По умолчанию `"usual"`. Конкретный XML-вид (UsualButton/Hyperlink/CommandBarButton/CommandBarHyperlink) подставляется автоматически по контексту |
 | `picture` | Картинка кнопки |
 | `representation` | `"Auto"`, `"Text"`, `"Picture"`, `"PictureAndText"` |
 | `locationInCommandBar` | `"Auto"`, `"InCommandBar"`, `"InAdditionalSubmenu"` |
@@ -258,6 +258,8 @@ powershell.exe -NoProfile -File .claude/skills/form-compile/scripts/form-compile
      "locationInCommandBar": "InAdditionalSubmenu" }
 ]}
 ```
+
+Кнопки основных действий формы и подменю размещают здесь, а не в отдельной группе на форме. Отдельной кнопкой в layout — только если она логически привязана к конкретному полю или группе.
 
 ### Выпадающее меню (popup)
 
@@ -401,9 +403,9 @@ powershell.exe -NoProfile -File .claude/skills/form-compile/scripts/form-compile
       { "check": "ПерваяСтрокаЗаголовок", "path": "ПерваяСтрокаЗаголовок" }
     ]},
     { "input": "Результат", "path": "Результат", "multiLine": true, "height": 8, "readOnly": true, "title": "Лог" },
-    { "group": "horizontal", "name": "ГруппаКнопок", "children": [
+    { "autoCmdBar": "ФормаКоманднаяПанель", "children": [
       { "button": "Загрузить", "command": "Загрузить", "defaultButton": true },
-      { "button": "Закрыть", "stdCommand": "Close" }
+      { "button": "Закрыть",   "stdCommand": "Close" }
     ]}
   ],
   "attributes": [

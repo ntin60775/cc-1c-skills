@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# form-compile v1.16 — Compile 1C managed form from JSON or object metadata
+# form-compile v1.17 — Compile 1C managed form from JSON or object metadata
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 import argparse
 import copy
@@ -1760,7 +1760,7 @@ def emit_type(lines, type_str, indent):
 
 # --- Element emitters ---
 
-def emit_element(lines, el, indent):
+def emit_element(lines, el, indent, in_cmd_bar=False):
     # Silent synonyms: model often writes XML name or Russian (ПолеПереключателя/RadioButtonField → radio)
     for src, dst in ELEMENT_TYPE_SYNONYMS.items():
         if src in el and dst not in el:
@@ -1804,7 +1804,10 @@ def emit_element(lines, el, indent):
 
     emitter = emitters.get(type_key)
     if emitter:
-        emitter(lines, el, name, eid, indent)
+        if type_key == 'button':
+            emitter(lines, el, name, eid, indent, in_cmd_bar=in_cmd_bar)
+        else:
+            emitter(lines, el, name, eid, indent)
 
 
 def emit_group(lines, el, name, eid, indent):
@@ -2188,14 +2191,42 @@ def emit_page(lines, el, name, eid, indent):
     lines.append(f'{indent}</Page>')
 
 
-def emit_button(lines, el, name, eid, indent):
+def emit_button(lines, el, name, eid, indent, in_cmd_bar=False):
     lines.append(f'{indent}<Button name="{name}" id="{eid}">')
     inner = f'{indent}\t'
 
-    # Type
+    # Type — context-aware. Inside command bars (cmdBar/autoCmdBar/popup) only
+    # CommandBarButton/CommandBarHyperlink are valid; UsualButton/Hyperlink would be ignored.
+    # Forgiving resolver: any "ordinary button" hint resolves to UsualButton/CommandBarButton,
+    # any "hyperlink" hint resolves to Hyperlink/CommandBarHyperlink — depending on context.
+    btn_type = None
     if el.get('type'):
-        btn_type_map = {'usual': 'UsualButton', 'hyperlink': 'Hyperlink', 'commandBar': 'CommandBarButton'}
-        btn_type = btn_type_map.get(str(el['type']), str(el['type']))
+        raw = str(el['type'])
+        if in_cmd_bar:
+            cmd_bar_map = {
+                'usual': 'CommandBarButton',
+                'UsualButton': 'CommandBarButton',
+                'commandBar': 'CommandBarButton',
+                'CommandBarButton': 'CommandBarButton',
+                'hyperlink': 'CommandBarHyperlink',
+                'Hyperlink': 'CommandBarHyperlink',
+                'CommandBarHyperlink': 'CommandBarHyperlink',
+            }
+            btn_type = cmd_bar_map.get(raw, raw)
+        else:
+            normal_map = {
+                'usual': 'UsualButton',
+                'UsualButton': 'UsualButton',
+                'commandBar': 'UsualButton',
+                'CommandBarButton': 'UsualButton',
+                'hyperlink': 'Hyperlink',
+                'Hyperlink': 'Hyperlink',
+                'CommandBarHyperlink': 'Hyperlink',
+            }
+            btn_type = normal_map.get(raw, raw)
+    elif in_cmd_bar:
+        btn_type = 'CommandBarButton'
+    if btn_type:
         lines.append(f'{inner}<Type>{btn_type}</Type>')
 
     # CommandName
@@ -2322,7 +2353,7 @@ def emit_command_bar(lines, el, name, eid, indent):
     if el.get('children') and len(el['children']) > 0:
         lines.append(f'{inner}<ChildItems>')
         for child in el['children']:
-            emit_element(lines, child, f'{inner}\t')
+            emit_element(lines, child, f'{inner}\t', in_cmd_bar=True)
         lines.append(f'{inner}</ChildItems>')
 
     lines.append(f'{indent}</CommandBar>')
@@ -2348,7 +2379,7 @@ def emit_popup(lines, el, name, eid, indent):
     if el.get('children') and len(el['children']) > 0:
         lines.append(f'{inner}<ChildItems>')
         for child in el['children']:
-            emit_element(lines, child, f'{inner}\t')
+            emit_element(lines, child, f'{inner}\t', in_cmd_bar=True)
         lines.append(f'{inner}</ChildItems>')
 
     lines.append(f'{indent}</Popup>')
@@ -2957,7 +2988,7 @@ def main():
         if has_acb_children:
             lines.append('\t\t<ChildItems>')
             for child in main_acb_def['children']:
-                emit_element(lines, child, '\t\t\t')
+                emit_element(lines, child, '\t\t\t', in_cmd_bar=True)
             lines.append('\t\t</ChildItems>')
         lines.append('\t</AutoCommandBar>')
     else:

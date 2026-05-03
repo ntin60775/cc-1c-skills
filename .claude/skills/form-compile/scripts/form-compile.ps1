@@ -1,4 +1,4 @@
-﻿# form-compile v1.16 — Compile 1C managed form from JSON or object metadata
+﻿# form-compile v1.17 — Compile 1C managed form from JSON or object metadata
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[string]$JsonPath,
@@ -1825,7 +1825,7 @@ function Emit-Companion {
 }
 
 function Emit-Element {
-	param($el, [string]$indent)
+	param($el, [string]$indent, [bool]$inCmdBar = $false)
 
 	# Silent synonyms: model often writes XML name or Russian (ПолеПереключателя/RadioButtonField → radio).
 	# Maps any synonym to canonical short DSL key.
@@ -1946,7 +1946,7 @@ function Emit-Element {
 		"table"    { Emit-Table -el $el -name $name -id $id -indent $indent }
 		"pages"    { Emit-Pages -el $el -name $name -id $id -indent $indent }
 		"page"     { Emit-Page -el $el -name $name -id $id -indent $indent }
-		"button"   { Emit-Button -el $el -name $name -id $id -indent $indent }
+		"button"   { Emit-Button -el $el -name $name -id $id -indent $indent -inCmdBar $inCmdBar }
 		"picture"  { Emit-PictureDecoration -el $el -name $name -id $id -indent $indent }
 		"picField" { Emit-PictureField -el $el -name $name -id $id -indent $indent }
 		"calendar" { Emit-Calendar -el $el -name $name -id $id -indent $indent }
@@ -2538,19 +2538,48 @@ function Emit-Page {
 }
 
 function Emit-Button {
-	param($el, [string]$name, [int]$id, [string]$indent)
+	param($el, [string]$name, [int]$id, [string]$indent, [bool]$inCmdBar = $false)
 
 	X "$indent<Button name=`"$name`" id=`"$id`">"
 	$inner = "$indent`t"
 
-	# Type
+	# Type — context-aware:
+	# Inside command bar (cmdBar/autoCmdBar/popup) only CommandBarButton/CommandBarHyperlink are valid.
+	# UsualButton/Hyperlink would be silently ignored by 1C.
+	$btnType = $null
 	if ($el.type) {
-		$btnType = switch ("$($el.type)") {
-			"usual"      { "UsualButton" }
-			"hyperlink"  { "Hyperlink" }
-			"commandBar" { "CommandBarButton" }
-			default      { "$($el.type)" }
+		$rawType = "$($el.type)"
+		if ($inCmdBar) {
+			# Be forgiving: any "ordinary button" hint resolves to CommandBarButton,
+			# any "hyperlink" hint resolves to CommandBarHyperlink. The model can pass
+			# either DSL ("usual"/"hyperlink") or XML names — all map to the right kind.
+			switch ($rawType) {
+				"usual"                { $btnType = "CommandBarButton" }
+				"UsualButton"          { $btnType = "CommandBarButton" }
+				"commandBar"           { $btnType = "CommandBarButton" }
+				"CommandBarButton"     { $btnType = "CommandBarButton" }
+				"hyperlink"            { $btnType = "CommandBarHyperlink" }
+				"Hyperlink"            { $btnType = "CommandBarHyperlink" }
+				"CommandBarHyperlink"  { $btnType = "CommandBarHyperlink" }
+				default                { $btnType = $rawType }
+			}
+		} else {
+			# Symmetric: any "ordinary button" hint → UsualButton, any "hyperlink" → Hyperlink.
+			switch ($rawType) {
+				"usual"                { $btnType = "UsualButton" }
+				"UsualButton"          { $btnType = "UsualButton" }
+				"commandBar"           { $btnType = "UsualButton" }
+				"CommandBarButton"     { $btnType = "UsualButton" }
+				"hyperlink"            { $btnType = "Hyperlink" }
+				"Hyperlink"            { $btnType = "Hyperlink" }
+				"CommandBarHyperlink"  { $btnType = "Hyperlink" }
+				default                { $btnType = $rawType }
+			}
 		}
+	} elseif ($inCmdBar) {
+		$btnType = "CommandBarButton"
+	}
+	if ($btnType) {
 		X "$inner<Type>$btnType</Type>"
 	}
 
@@ -2684,7 +2713,7 @@ function Emit-CommandBar {
 	if ($el.children -and $el.children.Count -gt 0) {
 		X "$inner<ChildItems>"
 		foreach ($child in $el.children) {
-			Emit-Element -el $child -indent "$inner`t"
+			Emit-Element -el $child -indent "$inner`t" -inCmdBar $true
 		}
 		X "$inner</ChildItems>"
 	}
@@ -2716,7 +2745,7 @@ function Emit-Popup {
 	if ($el.children -and $el.children.Count -gt 0) {
 		X "$inner<ChildItems>"
 		foreach ($child in $el.children) {
-			Emit-Element -el $child -indent "$inner`t"
+			Emit-Element -el $child -indent "$inner`t" -inCmdBar $true
 		}
 		X "$inner</ChildItems>"
 	}
@@ -3164,7 +3193,7 @@ if ($acbHasInner) {
 	if ($hasAcbChildren) {
 		X "`t`t<ChildItems>"
 		foreach ($child in $script:mainAcbDef.children) {
-			Emit-Element -el $child -indent "`t`t`t"
+			Emit-Element -el $child -indent "`t`t`t" -inCmdBar $true
 		}
 		X "`t`t</ChildItems>"
 	}
