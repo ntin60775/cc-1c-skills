@@ -33,6 +33,38 @@ python tools/cc-1c-skills/scripts/switch.py
 
 Не обязательно запоминать команды и параметры — просто опишите задачу своими словами, Claude сам подберёт нужные навыки. Слеш-команды (например `/epf-init МояОбработка`) тоже работают — для точного контроля.
 
+## Работа с форком (сохранение обновлений от upstream)
+
+Если вы планируете сильно модифицировать этот репозиторий, но при этом получать обновления от исходного автора, используйте веточный workflow:
+
+```bash
+# 1. Добавить upstream (один раз)
+git remote add upstream https://github.com/Nikolay-Shirokov/cc-1c-skills.git
+
+# 2. Создать рабочую ветку для своих изменений
+git checkout -b custom
+```
+
+**Правило:** `main` — всегда чистая копия upstream, все свои правки — в `custom`.
+
+**Синхронизация с upstream:**
+
+```bash
+# Вручную
+git fetch upstream
+git checkout main
+git reset --hard upstream/main
+git push origin main --force-with-lease
+git checkout custom
+git merge main          # или: git rebase main
+
+# Через скрипт
+./scripts/sync-upstream.sh        # merge-стратегия
+./scripts/sync-upstream.sh rebase # rebase-стратегия
+```
+
+> 💡 Включите `git config --global rerere.enabled true` — Git запомнит ваши разрешения конфликтов и автоматически применит их при следующем rebase/merge.
+
 ## Группы навыков
 
 | Группа | Навыки | Описание | Гайд |
