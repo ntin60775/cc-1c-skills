@@ -35,35 +35,21 @@ python tools/cc-1c-skills/scripts/switch.py
 
 ## Работа с форком (сохранение обновлений от upstream)
 
-Если вы планируете сильно модифицировать этот репозиторий, но при этом получать обновления от исходного автора, используйте веточный workflow:
+Этот репозиторий — форк [Nikolay-Shirokov/cc-1c-skills](https://github.com/Nikolay-Shirokov/cc-1c-skills). Все доработки изолированы в этом форке; в исходный репозиторий ничего не отправляется.
+
+**Правило:** обновления от upstream подтягиваются только вручную через скрипт с качественным разрешением конфликтов.
 
 ```bash
 # 1. Добавить upstream (один раз)
 git remote add upstream https://github.com/Nikolay-Shirokov/cc-1c-skills.git
 
-# 2. Создать рабочую ветку для своих изменений
-git checkout -b custom
+# 2. Синхронизация только через скрипт
+./scripts/sync-upstream.sh
 ```
 
-**Правило:** `main` — всегда чистая копия upstream, все свои правки — в `custom`.
+Скрипт выполнит: `fetch upstream → merge upstream/main → push origin main`. Push в upstream заблокирован (`NO_PUSH_TO_UPSTREAM`).
 
-**Синхронизация с upstream:**
-
-```bash
-# Вручную
-git fetch upstream
-git checkout main
-git reset --hard upstream/main
-git push origin main --force-with-lease
-git checkout custom
-git merge main          # или: git rebase main
-
-# Через скрипт
-./scripts/sync-upstream.sh        # merge-стратегия
-./scripts/sync-upstream.sh rebase # rebase-стратегия
-```
-
-> 💡 Включите `git config --global rerere.enabled true` — Git запомнит ваши разрешения конфликтов и автоматически применит их при следующем rebase/merge.
+> 💡 Включите `git config --global rerere.enabled true` — Git запомнит ваши разрешения конфликтов и автоматически применит их при следующем merge.
 
 ## Группы навыков
 
