@@ -23,6 +23,13 @@ if ! git remote | grep -q "^upstream$"; then
     exit 1
 fi
 
+# Защита от случайного push в upstream
+UPSTREAM_PUSH_URL="$(git remote get-url --push upstream 2>/dev/null || echo "")"
+if [[ "$UPSTREAM_PUSH_URL" != "NO_PUSH_TO_UPSTREAM" ]]; then
+    echo "🔒 Отключаю push в upstream для безопасности..."
+    git remote set-url --push upstream "NO_PUSH_TO_UPSTREAM"
+fi
+
 # Сохранение текущей ветки
 CURRENT_BRANCH="$(git branch --show-current)"
 
