@@ -1,23 +1,20 @@
 #!/bin/bash
 # Синхронизация форка с upstream-репозиторием.
-#
-# Workflow:
-#   1. main   — чистая копия upstream (не редактировать вручную)
-#   2. custom — твои модификации (работай здесь)
+# 
+# Workflow (main = рабочая ветка с доработками):
+#   main — содержит все наши изменения + upstream через merge
+#   upstream/main — отслеживаем, подтягиваем обновления через merge
 #
 # Использование:
-#   ./scripts/sync-upstream.sh        # merge-стратегия (по умолчанию)
-#   ./scripts/sync-upstream.sh rebase # rebase-стратегия
+#   ./scripts/sync-upstream.sh
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/.."
 
-STRATEGY="${1:-merge}"
 UPSTREAM_BRANCH="main"
 LOCAL_MAIN="main"
-LOCAL_CUSTOM="custom"
 
 # Проверка наличия upstream remote
 if ! git remote | grep -q "^upstream$"; then
@@ -40,20 +37,11 @@ trap cleanup EXIT
 echo "🔄 Fetch upstream..."
 git fetch upstream
 
-echo "🔄 Синхронизация $LOCAL_MAIN с upstream/$UPSTREAM_BRANCH..."
+echo "🔄 Merge upstream/$UPSTREAM_BRANCH в $LOCAL_MAIN..."
 git checkout "$LOCAL_MAIN"
-git reset --hard "upstream/$UPSTREAM_BRANCH"
+git merge "upstream/$UPSTREAM_BRANCH" --no-edit
 
 echo "🚀 Push $LOCAL_MAIN в origin..."
-git push origin "$LOCAL_MAIN" --force-with-lease
+git push origin "$LOCAL_MAIN"
 
-echo "🔀 Переключение на $LOCAL_CUSTOM и применение $STRATEGY..."
-git checkout "$LOCAL_CUSTOM"
-
-if [[ "$STRATEGY" == "rebase" ]]; then
-    git rebase "$LOCAL_MAIN"
-else
-    git merge "$LOCAL_MAIN" --no-edit
-fi
-
-echo "✅ Готово. Ветка '$LOCAL_CUSTOM' синхронизирована с upstream."
+echo "✅ Готово. $LOCAL_MAIN синхронизирован с upstream и запушен в origin."
