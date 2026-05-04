@@ -18,3 +18,4 @@
 
 | ID | Parent ID | Статус | Приоритет | Ветка | Каталог | Краткое описание |
 |----|-----------|--------|-----------|-------|---------|------------------|
+| TASK-2026-0001 | — | в работе | высокий | task/TASK-2026-0001-kimi-adaptation | [knowledge/tasks/TASK-2026-0001-kimi-adaptation](knowledge/tasks/TASK-2026-0001-kimi-adaptation) | Полная адаптация навыков cc-1c-skills под Kimi Code CLI с переходом на Python-рантайм |
