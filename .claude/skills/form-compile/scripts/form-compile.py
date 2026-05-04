@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# form-compile v1.6 — Compile 1C managed form from JSON or object metadata
+# form-compile v1.20 — Compile 1C managed form from JSON or object metadata
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 import argparse
 import copy
@@ -625,6 +625,7 @@ def generate_document_list_dsl(meta, p):
 
     table_el = OrderedDict([
         ('table', '\u0421\u043f\u0438\u0441\u043e\u043a'), ('path', '\u0421\u043f\u0438\u0441\u043e\u043a'),
+        ('rowPictureDataPath', '\u0421\u043f\u0438\u0441\u043e\u043a.DefaultPicture'),
         ('commandBarLocation', 'None'),
         ('tableAutofill', False),
         ('columns', columns),
@@ -938,6 +939,7 @@ def generate_information_register_list_dsl(meta, p):
     table_el = OrderedDict([
         ('table', '\u0421\u043f\u0438\u0441\u043e\u043a'),
         ('path', '\u0421\u043f\u0438\u0441\u043e\u043a'),
+        ('rowPictureDataPath', '\u0421\u043f\u0438\u0441\u043e\u043a.DefaultPicture'),
         ('commandBarLocation', 'None'),
         ('tableAutofill', False),
         ('columns', columns_list),
@@ -996,6 +998,7 @@ def generate_accumulation_register_list_dsl(meta, p):
     table_el = OrderedDict([
         ('table', '\u0421\u043f\u0438\u0441\u043e\u043a'),
         ('path', '\u0421\u043f\u0438\u0441\u043e\u043a'),
+        ('rowPictureDataPath', '\u0421\u043f\u0438\u0441\u043e\u043a.DefaultPicture'),
         ('commandBarLocation', 'None'),
         ('tableAutofill', False),
         ('columns', columns_list),
@@ -1311,6 +1314,7 @@ EVENT_SUFFIX_MAP = {
 KNOWN_EVENTS = {
     "input": ["OnChange", "StartChoice", "ChoiceProcessing", "AutoComplete", "TextEditEnd", "Clearing", "Creating", "EditTextChange"],
     "check": ["OnChange"],
+    "radio": ["OnChange"],
     "label": ["Click", "URLProcessing"],
     "labelField": ["OnChange", "StartChoice", "ChoiceProcessing", "Click", "URLProcessing", "Clearing"],
     "table": ["Selection", "BeforeAddRow", "AfterDeleteRow", "BeforeDeleteRow", "OnActivateRow", "OnEditEnd", "OnStartEdit", "BeforeRowChange", "BeforeEditEnd", "ValueChoice", "OnActivateCell", "OnActivateField", "Drag", "DragStart", "DragCheck", "DragEnd", "OnGetDataAtServer", "BeforeLoadUserSettingsAtServer", "OnUpdateUserSettingSetAtServer", "OnChange"],
@@ -1334,17 +1338,20 @@ KNOWN_FORM_EVENTS = [
 ]
 
 KNOWN_KEYS = {
-    "group", "input", "check", "label", "labelField", "table", "pages", "page",
+    "group", "columnGroup", "input", "check", "radio", "label", "labelField", "table", "pages", "page",
     "button", "picture", "picField", "calendar", "cmdBar", "popup",
+    "showInHeader",
+    "radioButtonType", "choiceList", "columnsCount",
     "name", "path", "title",
     "visible", "hidden", "enabled", "disabled", "readOnly", "userVisible",
     "on", "handlers",
     "titleLocation", "representation", "width", "height",
     "horizontalStretch", "verticalStretch", "autoMaxWidth", "autoMaxHeight",
+    "maxWidth", "maxHeight",
     "multiLine", "passwordMode", "choiceButton", "clearButton",
     "spinButton", "dropListButton", "markIncomplete", "skipOnInput", "inputHint",
     "hyperlink",
-    "showTitle", "united",
+    "showTitle", "united", "collapsed",
     "children", "columns",
     "changeRowSet", "changeRowOrder", "header", "footer",
     "commandBarLocation", "searchStringLocation",
@@ -1356,8 +1363,146 @@ KNOWN_KEYS = {
     "rowPictureDataPath", "tableAutofill",
 }
 
-TYPE_KEYS = ["group", "input", "check", "label", "labelField", "table", "pages", "page",
+TYPE_KEYS = ["columnGroup", "group", "input", "check", "radio", "label", "labelField", "table", "pages", "page",
              "button", "picture", "picField", "calendar", "cmdBar", "popup"]
+
+# Synonyms: model often writes XML name or Russian (ПолеПереключателя/RadioButtonField → radio)
+ELEMENT_TYPE_SYNONYMS = {
+    "commandBar": "cmdBar",
+    "autoCommandBar": "autoCmdBar",
+    "КоманднаяПанель": "cmdBar",
+    "InputField": "input",
+    "ПолеВвода": "input",
+    "CheckBoxField": "check",
+    "ПолеФлажка": "check",
+    "RadioButtonField": "radio",
+    "ПолеПереключателя": "radio",
+    "radioButton": "radio",
+    "PictureField": "picField",
+    "ПолеКартинки": "picField",
+    "LabelField": "labelField",
+    "ПолеНадписи": "labelField",
+    "CalendarField": "calendar",
+    "ПолеКалендаря": "calendar",
+    "LabelDecoration": "label",
+    "Надпись": "label",
+    "PictureDecoration": "picture",
+    "Картинка": "picture",
+    "UsualGroup": "group",
+    "Группа": "group",
+    "ОбычнаяГруппа": "group",
+    "ColumnGroup": "columnGroup",
+    "ГруппаКолонок": "columnGroup",
+    "Pages": "pages",
+    "ГруппаСтраниц": "pages",
+    "Page": "page",
+    "Страница": "page",
+    "Table": "table",
+    "Таблица": "table",
+    "Button": "button",
+    "Кнопка": "button",
+    "Popup": "popup",
+    "ВсплывающееМеню": "popup",
+}
+
+# Maps Russian/English root of typed reference path to canonical English root
+REF_ROOT_SYNONYMS = {
+    "Перечисление": "Enum",
+    "Справочник": "Catalog",
+    "Документ": "Document",
+    "ПланСчетов": "ChartOfAccounts",
+    "ПланВидовХарактеристик": "ChartOfCharacteristicTypes",
+    "ПланВидовРасчета": "ChartOfCalculationTypes",
+    "ПланВидовРасчёта": "ChartOfCalculationTypes",
+    "ПланОбмена": "ExchangePlan",
+    "БизнесПроцесс": "BusinessProcess",
+    "Задача": "Task",
+    "РегистрСведений": "InformationRegister",
+    "РегистрНакопления": "AccumulationRegister",
+    "РегистрБухгалтерии": "AccountingRegister",
+    "РегистрРасчета": "CalculationRegister",
+    "РегистрРасчёта": "CalculationRegister",
+}
+ENUM_VALUE_SYNONYMS = {"EnumValue", "ЗначениеПеречисления"}
+
+
+def normalize_choice_value(value):
+    """Returns dict {xsi_type, text} for a choiceList item value."""
+    if isinstance(value, bool):
+        return {"xsi_type": "xs:boolean", "text": "true" if value else "false"}
+    if isinstance(value, (int, float)):
+        return {"xsi_type": "xs:decimal", "text": str(value)}
+
+    s = "" if value is None else str(value)
+    if not s:
+        return {"xsi_type": "xs:string", "text": ""}
+
+    parts = s.split(".")
+    if len(parts) >= 2:
+        root = parts[0]
+        canon_root = None
+        if root in REF_ROOT_SYNONYMS:
+            canon_root = REF_ROOT_SYNONYMS[root]
+        elif root in REF_ROOT_SYNONYMS.values():
+            canon_root = root
+
+        if canon_root:
+            type_name = parts[1]
+            normalized = None
+            if canon_root == "Enum":
+                if len(parts) == 3:
+                    normalized = f"Enum.{type_name}.EnumValue.{parts[2]}"
+                elif len(parts) >= 4:
+                    member = parts[2]
+                    if member in ENUM_VALUE_SYNONYMS:
+                        rest = ".".join(parts[3:])
+                    else:
+                        rest = ".".join(parts[2:])
+                    normalized = f"Enum.{type_name}.EnumValue.{rest}"
+            else:
+                if len(parts) >= 3:
+                    tail = ".".join(parts[1:])
+                    normalized = f"{canon_root}.{tail}"
+
+            if normalized:
+                return {"xsi_type": "xr:DesignTimeRef", "text": normalized}
+
+    return {"xsi_type": "xs:string", "text": s}
+
+
+def emit_choice_presentation(lines, pres, indent):
+    """Accepts None/empty → <Presentation/>; str → ru only; dict → multi-lang."""
+    if pres is None or (isinstance(pres, str) and pres == ""):
+        lines.append(f"{indent}<Presentation/>")
+        return
+
+    if isinstance(pres, str):
+        pairs = [("ru", pres)]
+    elif isinstance(pres, dict):
+        pairs = [(str(k), str(v)) for k, v in pres.items()]
+    else:
+        pairs = [("ru", str(pres))]
+
+    lines.append(f"{indent}<Presentation>")
+    for lang, content in pairs:
+        lines.append(f"{indent}\t<v8:item>")
+        lines.append(f"{indent}\t\t<v8:lang>{lang}</v8:lang>")
+        lines.append(f"{indent}\t\t<v8:content>{esc_xml(content)}</v8:content>")
+        lines.append(f"{indent}\t</v8:item>")
+    lines.append(f"{indent}</Presentation>")
+
+
+def normalize_radio_button_type(raw):
+    if not raw:
+        return "Auto"
+    s = str(raw).strip().lower()
+    if s in ("auto", "авто"):
+        return "Auto"
+    if s in ("radiobutton", "radiobuttons", "переключатель", "радио"):
+        return "RadioButtons"
+    if s in ("tumbler", "тумблер"):
+        return "Tumbler"
+    return str(raw).strip()
 
 
 def get_handler_name(element_name, event_name):
@@ -1414,9 +1559,27 @@ def emit_common_flags(lines, el, indent):
         lines.append(f"{indent}<ReadOnly>true</ReadOnly>")
 
 
-def emit_title(lines, el, name, indent):
-    if el.get('title'):
-        emit_mltext(lines, indent, 'Title', str(el['title']))
+def title_from_name(name):
+    """СуммаДокумента → 'Сумма документа'. НДСВключен → 'НДС включен'."""
+    if not name:
+        return ''
+    s = re.sub(r'([А-ЯA-Z])([А-ЯA-Z][а-яa-z])', r'\1 \2', name)
+    s = re.sub(r'([а-яa-z0-9])([А-ЯA-Z])', r'\1 \2', s)
+    parts = s.split(' ')
+    if not parts:
+        return s
+    out = [parts[0]]
+    for p in parts[1:]:
+        out.append(p if (len(p) > 1 and p.isupper()) else p.lower())
+    return ' '.join(out)
+
+
+def emit_title(lines, el, name, indent, auto=False):
+    title = el.get('title')
+    if not title and auto and name:
+        title = title_from_name(name)
+    if title:
+        emit_mltext(lines, indent, 'Title', str(title))
 
 
 # --- Type emitter ---
@@ -1455,7 +1618,7 @@ CFG_REF_PATTERN = re.compile(
 )
 
 KNOWN_INVALID_TYPES = {
-    'FormDataStructure': 'Runtime type. Use cfg:*Object.XXX (e.g. CatalogObject.XXX)',
+    'FormDataStructure': 'Runtime type. Use object type without cfg: prefix (e.g. CatalogObject.Контрагенты, DocumentObject.Приход)',
     'FormDataCollection': 'Runtime type. Use ValueTable',
     'FormDataTree': 'Runtime type. Use ValueTree',
     'FormDataTreeItem': 'Runtime type, not valid in XML',
@@ -1489,6 +1652,9 @@ _FORM_TYPE_SYNONYMS = {
 def resolve_type_str(type_str):
     if not type_str:
         return type_str
+    # Lenient: strip leading cfg: prefix if user passed it (canonical form is without prefix)
+    if type_str.startswith('cfg:'):
+        type_str = type_str[4:]
     m = re.match(r'^([^(]+)\((.+)\)$', type_str)
     if m:
         base, params = m.group(1).strip(), m.group(2)
@@ -1598,7 +1764,12 @@ def emit_type(lines, type_str, indent):
 
 # --- Element emitters ---
 
-def emit_element(lines, el, indent):
+def emit_element(lines, el, indent, in_cmd_bar=False):
+    # Silent synonyms: model often writes XML name or Russian (ПолеПереключателя/RadioButtonField → radio)
+    for src, dst in ELEMENT_TYPE_SYNONYMS.items():
+        if src in el and dst not in el:
+            el[dst] = el.pop(src)
+
     type_key = None
     for key in TYPE_KEYS:
         if el.get(key) is not None:
@@ -1619,8 +1790,10 @@ def emit_element(lines, el, indent):
 
     emitters = {
         'group': emit_group,
+        'columnGroup': emit_column_group,
         'input': emit_input,
         'check': emit_check,
+        'radio': emit_radio_button_field,
         'label': emit_label,
         'labelField': emit_label_field,
         'table': emit_table,
@@ -1636,7 +1809,10 @@ def emit_element(lines, el, indent):
 
     emitter = emitters.get(type_key)
     if emitter:
-        emitter(lines, el, name, eid, indent)
+        if type_key == 'button':
+            emitter(lines, el, name, eid, indent, in_cmd_bar=in_cmd_bar)
+        else:
+            emitter(lines, el, name, eid, indent)
 
 
 def emit_group(lines, el, name, eid, indent):
@@ -1661,6 +1837,8 @@ def emit_group(lines, el, name, eid, indent):
     if group_val == 'collapsible':
         lines.append(f'{inner}<Group>Vertical</Group>')
         lines.append(f'{inner}<Behavior>Collapsible</Behavior>')
+        if el.get('collapsed') is True:
+            lines.append(f'{inner}<Collapsed>true</Collapsed>')
 
     # Representation
     if el.get('representation'):
@@ -1696,6 +1874,43 @@ def emit_group(lines, el, name, eid, indent):
     lines.append(f'{indent}</UsualGroup>')
 
 
+def emit_column_group(lines, el, name, eid, indent):
+    lines.append(f'{indent}<ColumnGroup name="{name}" id="{eid}">')
+    inner = f'{indent}\t'
+
+    emit_title(lines, el, name, inner)
+
+    group_val = str(el.get('columnGroup', ''))
+    orientation_map = {
+        'horizontal': 'Horizontal',
+        'vertical': 'Vertical',
+        'inCell': 'InCell',
+    }
+    orientation = orientation_map.get(group_val)
+    if orientation:
+        lines.append(f'{inner}<Group>{orientation}</Group>')
+
+    if el.get('showTitle') is False:
+        lines.append(f'{inner}<ShowTitle>false</ShowTitle>')
+    if el.get('showInHeader') is not None:
+        sh_val = 'true' if el['showInHeader'] else 'false'
+        lines.append(f'{inner}<ShowInHeader>{sh_val}</ShowInHeader>')
+    if el.get('width'):
+        lines.append(f'{inner}<Width>{el["width"]}</Width>')
+
+    emit_common_flags(lines, el, inner)
+
+    emit_companion(lines, 'ExtendedTooltip', f'{name}РасширеннаяПодсказка', inner)
+
+    if el.get('children') and len(el['children']) > 0:
+        lines.append(f'{inner}<ChildItems>')
+        for child in el['children']:
+            emit_element(lines, child, f'{inner}\t')
+        lines.append(f'{inner}</ChildItems>')
+
+    lines.append(f'{indent}</ColumnGroup>')
+
+
 def emit_input(lines, el, name, eid, indent):
     lines.append(f'{indent}<InputField name="{name}" id="{eid}">')
     inner = f'{indent}\t'
@@ -1703,7 +1918,7 @@ def emit_input(lines, el, name, eid, indent):
     if el.get('path'):
         lines.append(f'{inner}<DataPath>{el["path"]}</DataPath>')
 
-    emit_title(lines, el, name, inner)
+    emit_title(lines, el, name, inner, auto=not el.get('path'))
     emit_common_flags(lines, el, inner)
 
     if el.get('titleLocation'):
@@ -1727,10 +1942,17 @@ def emit_input(lines, el, name, eid, indent):
         lines.append(f'{inner}<AutoMarkIncomplete>true</AutoMarkIncomplete>')
     if el.get('skipOnInput') is True:
         lines.append(f'{inner}<SkipOnInput>true</SkipOnInput>')
-    if el.get('autoMaxWidth') is False:
+    if 'autoMaxWidth' in el:
+        if el['autoMaxWidth'] is False:
+            lines.append(f'{inner}<AutoMaxWidth>false</AutoMaxWidth>')
+    elif el.get('multiLine') is True:
         lines.append(f'{inner}<AutoMaxWidth>false</AutoMaxWidth>')
+    if el.get('maxWidth') is not None:
+        lines.append(f'{inner}<MaxWidth>{el["maxWidth"]}</MaxWidth>')
     if el.get('autoMaxHeight') is False:
         lines.append(f'{inner}<AutoMaxHeight>false</AutoMaxHeight>')
+    if el.get('maxHeight') is not None:
+        lines.append(f'{inner}<MaxHeight>{el["maxHeight"]}</MaxHeight>')
     if el.get('width'):
         lines.append(f'{inner}<Width>{el["width"]}</Width>')
     if el.get('height'):
@@ -1759,11 +1981,11 @@ def emit_check(lines, el, name, eid, indent):
     if el.get('path'):
         lines.append(f'{inner}<DataPath>{el["path"]}</DataPath>')
 
-    emit_title(lines, el, name, inner)
+    emit_title(lines, el, name, inner, auto=not el.get('path'))
     emit_common_flags(lines, el, inner)
 
-    if el.get('titleLocation'):
-        lines.append(f'{inner}<TitleLocation>{el["titleLocation"]}</TitleLocation>')
+    tl = el.get('titleLocation') or 'Right'
+    lines.append(f'{inner}<TitleLocation>{tl}</TitleLocation>')
 
     # Companions
     emit_companion(lines, 'ContextMenu', f'{name}\u041a\u043e\u043d\u0442\u0435\u043a\u0441\u0442\u043d\u043e\u0435\u041c\u0435\u043d\u044e', inner)
@@ -1774,16 +1996,80 @@ def emit_check(lines, el, name, eid, indent):
     lines.append(f'{indent}</CheckBoxField>')
 
 
+def emit_radio_button_field(lines, el, name, eid, indent):
+    lines.append(f'{indent}<RadioButtonField name="{name}" id="{eid}">')
+    inner = f'{indent}\t'
+
+    if el.get('path'):
+        lines.append(f'{inner}<DataPath>{el["path"]}</DataPath>')
+
+    emit_title(lines, el, name, inner, auto=not el.get('path'))
+    emit_common_flags(lines, el, inner)
+
+    tl_raw = el.get('titleLocation')
+    if tl_raw:
+        loc_map = {'none': 'None', 'left': 'Left', 'right': 'Right', 'top': 'Top', 'bottom': 'Bottom'}
+        tl = loc_map.get(str(tl_raw), str(tl_raw))
+    else:
+        tl = 'None'
+    lines.append(f'{inner}<TitleLocation>{tl}</TitleLocation>')
+
+    rbt = normalize_radio_button_type(el.get('radioButtonType'))
+    lines.append(f'{inner}<RadioButtonType>{rbt}</RadioButtonType>')
+
+    if el.get('columnsCount') is not None:
+        lines.append(f'{inner}<ColumnsCount>{el["columnsCount"]}</ColumnsCount>')
+
+    choice_list = el.get('choiceList') or []
+    if choice_list:
+        lines.append(f'{inner}<ChoiceList>')
+        item_indent = f'{inner}\t'
+        for item in choice_list:
+            if not isinstance(item, dict):
+                continue
+            val_raw = item.get('value', item.get('значение'))
+            has_pres = any(k in item for k in ('presentation', 'представление', 'title'))
+            pres_raw = item.get('presentation', item.get('представление', item.get('title')))
+
+            norm = normalize_choice_value(val_raw)
+
+            if not has_pres:
+                if norm['xsi_type'] == 'xr:DesignTimeRef':
+                    tail = norm['text'].split('.')[-1]
+                    pres_raw = title_from_name(tail)
+                else:
+                    pres_raw = norm['text']
+
+            lines.append(f'{item_indent}<xr:Item>')
+            val_indent = f'{item_indent}\t'
+            lines.append(f'{val_indent}<xr:Presentation/>')
+            lines.append(f'{val_indent}<xr:CheckState>0</xr:CheckState>')
+            lines.append(f'{val_indent}<xr:Value xsi:type="FormChoiceListDesTimeValue">')
+            emit_choice_presentation(lines, pres_raw, f'{val_indent}\t')
+            lines.append(f'{val_indent}\t<Value xsi:type="{norm["xsi_type"]}">{esc_xml(norm["text"])}</Value>')
+            lines.append(f'{val_indent}</xr:Value>')
+            lines.append(f'{item_indent}</xr:Item>')
+        lines.append(f'{inner}</ChoiceList>')
+
+    emit_companion(lines, 'ContextMenu', f'{name}КонтекстноеМеню', inner)
+    emit_companion(lines, 'ExtendedTooltip', f'{name}РасширеннаяПодсказка', inner)
+
+    emit_events(lines, el, name, inner, 'radio')
+
+    lines.append(f'{indent}</RadioButtonField>')
+
+
 def emit_label(lines, el, name, eid, indent):
     lines.append(f'{indent}<LabelDecoration name="{name}" id="{eid}">')
     inner = f'{indent}\t'
 
-    if el.get('title'):
+    label_title = el.get('title') or title_from_name(name)
+    if label_title:
         formatted = 'true' if el.get('hyperlink') is True else 'false'
         lines.append(f'{inner}<Title formatted="{formatted}">')
         lines.append(f'{inner}\t<v8:item>')
         lines.append(f'{inner}\t\t<v8:lang>ru</v8:lang>')
-        lines.append(f'{inner}\t\t<v8:content>{esc_xml(str(el["title"]))}</v8:content>')
+        lines.append(f'{inner}\t\t<v8:content>{esc_xml(str(label_title))}</v8:content>')
         lines.append(f'{inner}\t</v8:item>')
         lines.append(f'{inner}</Title>')
 
@@ -1793,8 +2079,12 @@ def emit_label(lines, el, name, eid, indent):
         lines.append(f'{inner}<Hyperlink>true</Hyperlink>')
     if el.get('autoMaxWidth') is False:
         lines.append(f'{inner}<AutoMaxWidth>false</AutoMaxWidth>')
+    if el.get('maxWidth') is not None:
+        lines.append(f'{inner}<MaxWidth>{el["maxWidth"]}</MaxWidth>')
     if el.get('autoMaxHeight') is False:
         lines.append(f'{inner}<AutoMaxHeight>false</AutoMaxHeight>')
+    if el.get('maxHeight') is not None:
+        lines.append(f'{inner}<MaxHeight>{el["maxHeight"]}</MaxHeight>')
     if el.get('width'):
         lines.append(f'{inner}<Width>{el["width"]}</Width>')
     if el.get('height'):
@@ -1816,7 +2106,7 @@ def emit_label_field(lines, el, name, eid, indent):
     if el.get('path'):
         lines.append(f'{inner}<DataPath>{el["path"]}</DataPath>')
 
-    emit_title(lines, el, name, inner)
+    emit_title(lines, el, name, inner, auto=not el.get('path'))
     emit_common_flags(lines, el, inner)
 
     if el.get('hyperlink') is True:
@@ -1838,7 +2128,7 @@ def emit_table(lines, el, name, eid, indent):
     if el.get('path'):
         lines.append(f'{inner}<DataPath>{el["path"]}</DataPath>')
 
-    emit_title(lines, el, name, inner)
+    emit_title(lines, el, name, inner, auto=not el.get('path'))
     emit_common_flags(lines, el, inner)
 
     if el.get('representation'):
@@ -1926,7 +2216,7 @@ def emit_page(lines, el, name, eid, indent):
     lines.append(f'{indent}<Page name="{name}" id="{eid}">')
     inner = f'{indent}\t'
 
-    emit_title(lines, el, name, inner)
+    emit_title(lines, el, name, inner, auto=True)
     emit_common_flags(lines, el, inner)
 
     if el.get('group'):
@@ -1953,14 +2243,42 @@ def emit_page(lines, el, name, eid, indent):
     lines.append(f'{indent}</Page>')
 
 
-def emit_button(lines, el, name, eid, indent):
+def emit_button(lines, el, name, eid, indent, in_cmd_bar=False):
     lines.append(f'{indent}<Button name="{name}" id="{eid}">')
     inner = f'{indent}\t'
 
-    # Type
+    # Type — context-aware. Inside command bars (cmdBar/autoCmdBar/popup) only
+    # CommandBarButton/CommandBarHyperlink are valid; UsualButton/Hyperlink would be ignored.
+    # Forgiving resolver: any "ordinary button" hint resolves to UsualButton/CommandBarButton,
+    # any "hyperlink" hint resolves to Hyperlink/CommandBarHyperlink — depending on context.
+    btn_type = None
     if el.get('type'):
-        btn_type_map = {'usual': 'UsualButton', 'hyperlink': 'Hyperlink', 'commandBar': 'CommandBarButton'}
-        btn_type = btn_type_map.get(str(el['type']), str(el['type']))
+        raw = str(el['type'])
+        if in_cmd_bar:
+            cmd_bar_map = {
+                'usual': 'CommandBarButton',
+                'UsualButton': 'CommandBarButton',
+                'commandBar': 'CommandBarButton',
+                'CommandBarButton': 'CommandBarButton',
+                'hyperlink': 'CommandBarHyperlink',
+                'Hyperlink': 'CommandBarHyperlink',
+                'CommandBarHyperlink': 'CommandBarHyperlink',
+            }
+            btn_type = cmd_bar_map.get(raw, raw)
+        else:
+            normal_map = {
+                'usual': 'UsualButton',
+                'UsualButton': 'UsualButton',
+                'commandBar': 'UsualButton',
+                'CommandBarButton': 'UsualButton',
+                'hyperlink': 'Hyperlink',
+                'Hyperlink': 'Hyperlink',
+                'CommandBarHyperlink': 'Hyperlink',
+            }
+            btn_type = normal_map.get(raw, raw)
+    elif in_cmd_bar:
+        btn_type = 'CommandBarButton'
+    if btn_type:
         lines.append(f'{inner}<Type>{btn_type}</Type>')
 
     # CommandName
@@ -1974,7 +2292,7 @@ def emit_button(lines, el, name, eid, indent):
         else:
             lines.append(f'{inner}<CommandName>Form.StandardCommand.{sc}</CommandName>')
 
-    emit_title(lines, el, name, inner)
+    emit_title(lines, el, name, inner, auto=not (el.get('command') or el.get('stdCommand')))
     emit_common_flags(lines, el, inner)
 
     if el.get('defaultButton') is True:
@@ -2062,7 +2380,7 @@ def emit_calendar(lines, el, name, eid, indent):
     if el.get('path'):
         lines.append(f'{inner}<DataPath>{el["path"]}</DataPath>')
 
-    emit_title(lines, el, name, inner)
+    emit_title(lines, el, name, inner, auto=not el.get('path'))
     emit_common_flags(lines, el, inner)
 
     # Companions
@@ -2087,7 +2405,7 @@ def emit_command_bar(lines, el, name, eid, indent):
     if el.get('children') and len(el['children']) > 0:
         lines.append(f'{inner}<ChildItems>')
         for child in el['children']:
-            emit_element(lines, child, f'{inner}\t')
+            emit_element(lines, child, f'{inner}\t', in_cmd_bar=True)
         lines.append(f'{inner}</ChildItems>')
 
     lines.append(f'{indent}</CommandBar>')
@@ -2097,7 +2415,7 @@ def emit_popup(lines, el, name, eid, indent):
     lines.append(f'{indent}<Popup name="{name}" id="{eid}">')
     inner = f'{indent}\t'
 
-    emit_title(lines, el, name, inner)
+    emit_title(lines, el, name, inner, auto=True)
     emit_common_flags(lines, el, inner)
 
     if el.get('picture'):
@@ -2113,7 +2431,7 @@ def emit_popup(lines, el, name, eid, indent):
     if el.get('children') and len(el['children']) > 0:
         lines.append(f'{inner}<ChildItems>')
         for child in el['children']:
-            emit_element(lines, child, f'{inner}\t')
+            emit_element(lines, child, f'{inner}\t', in_cmd_bar=True)
         lines.append(f'{inner}</ChildItems>')
 
     lines.append(f'{indent}</Popup>')
@@ -2133,8 +2451,11 @@ def emit_attributes(lines, attrs, indent):
         lines.append(f'{indent}\t<Attribute name="{attr_name}" id="{attr_id}">')
         inner = f'{indent}\t\t'
 
-        if attr.get('title'):
-            emit_mltext(lines, inner, 'Title', str(attr['title']))
+        attr_title = attr.get('title')
+        if not attr_title and attr.get('main') is not True:
+            attr_title = title_from_name(attr_name)
+        if attr_title:
+            emit_mltext(lines, inner, 'Title', str(attr_title))
 
         # Type
         if attr.get('type'):
@@ -2144,7 +2465,11 @@ def emit_attributes(lines, attrs, indent):
 
         if attr.get('main') is True:
             lines.append(f'{inner}<MainAttribute>true</MainAttribute>')
-        if attr.get('savedData') is True:
+        main_saved = False
+        if attr.get('main') is True and attr.get('type'):
+            t = str(attr['type'])
+            main_saved = bool(re.match(r'^(CatalogObject|DocumentObject|ChartOfAccountsObject|ChartOfCalculationTypesObject|ChartOfCharacteristicTypesObject|ExchangePlanObject|BusinessProcessObject|TaskObject)\.', t)) or ('RecordManager.' in t)
+        if attr.get('savedData') is True or main_saved:
             lines.append(f'{inner}<SavedData>true</SavedData>')
         if attr.get('fillChecking'):
             lines.append(f'{inner}<FillChecking>{attr["fillChecking"]}</FillChecking>')
@@ -2210,8 +2535,9 @@ def emit_commands(lines, cmds, indent):
         lines.append(f'{indent}\t<Command name="{cmd["name"]}" id="{cmd_id}">')
         inner = f'{indent}\t\t'
 
-        if cmd.get('title'):
-            emit_mltext(lines, inner, 'Title', str(cmd['title']))
+        cmd_title = cmd.get('title') or title_from_name(str(cmd['name']))
+        if cmd_title:
+            emit_mltext(lines, inner, 'Title', str(cmd_title))
 
         if cmd.get('action'):
             lines.append(f'{inner}<Action>{cmd["action"]}</Action>')
@@ -2533,6 +2859,131 @@ def main():
         with open(json_path, 'r', encoding='utf-8-sig') as f:
             defn = json.load(f)
 
+    # --- 1b. Pre-pass: synonyms, main attribute inference, heuristics, autoCmdBar extraction ---
+    def _normalize_synonyms(el):
+        if not isinstance(el, dict):
+            return
+        synonyms = {'commandBar': 'cmdBar', 'autoCommandBar': 'autoCmdBar'}
+        for src, dst in synonyms.items():
+            if src in el and dst not in el:
+                el[dst] = el.pop(src)
+        if isinstance(el.get('children'), list):
+            for child in el['children']:
+                _normalize_synonyms(child)
+        if isinstance(el.get('columns'), list):
+            for child in el['columns']:
+                _normalize_synonyms(child)
+
+    def _has_cmd_bar_recursive(el):
+        if not isinstance(el, dict):
+            return False
+        if el.get('cmdBar') is not None:
+            return True
+        if isinstance(el.get('children'), list):
+            for child in el['children']:
+                if _has_cmd_bar_recursive(child):
+                    return True
+        if isinstance(el.get('columns'), list):
+            for child in el['columns']:
+                if _has_cmd_bar_recursive(child):
+                    return True
+        return False
+
+    def _apply_dlist_table_heuristic(el, list_name, has_main_table):
+        if not isinstance(el, dict):
+            return
+        if el.get('table') is not None and str(el.get('path', '')) == list_name:
+            if 'tableAutofill' not in el:
+                el['tableAutofill'] = False
+            if 'commandBarLocation' not in el:
+                el['commandBarLocation'] = 'None'
+            # DefaultPicture доступен только если у DynamicList есть основная таблица
+            if has_main_table and not el.get('rowPictureDataPath'):
+                el['rowPictureDataPath'] = f'{list_name}.DefaultPicture'
+        if isinstance(el.get('children'), list):
+            for child in el['children']:
+                _apply_dlist_table_heuristic(child, list_name, has_main_table)
+
+    def _is_object_like_type(t):
+        if not t:
+            return False
+        if t == 'DynamicList' or t == 'ConstantsSet':
+            return True
+        object_suffixes = (
+            'CatalogObject', 'DocumentObject', 'DataProcessorObject', 'ReportObject',
+            'ExternalDataProcessorObject', 'ExternalReportObject', 'BusinessProcessObject',
+            'TaskObject', 'ChartOfAccountsObject', 'ChartOfCharacteristicTypesObject',
+            'ChartOfCalculationTypesObject', 'ExchangePlanObject',
+        )
+        record_set_prefixes = (
+            'InformationRegisterRecordSet', 'AccumulationRegisterRecordSet',
+            'AccountingRegisterRecordSet', 'CalculationRegisterRecordSet',
+            'InformationRegisterRecordManager',
+        )
+        for s in object_suffixes:
+            if t.startswith(s + '.'):
+                return True
+        for s in record_set_prefixes:
+            if t.startswith(s + '.'):
+                return True
+        return False
+
+    # 1b.1: Normalize synonyms recursively
+    if isinstance(defn.get('elements'), list):
+        for el in defn['elements']:
+            _normalize_synonyms(el)
+
+    # 1b.2: Extract autoCmdBar element from defn['elements']
+    main_acb_def = None
+    if isinstance(defn.get('elements'), list):
+        auto_bars = [el for el in defn['elements'] if isinstance(el, dict) and el.get('autoCmdBar') is not None]
+        if len(auto_bars) > 1:
+            print(f"form-compile: more than one autoCmdBar in def.elements (found {len(auto_bars)}); only one allowed.", file=sys.stderr)
+            sys.exit(1)
+        if len(auto_bars) == 1:
+            main_acb_def = auto_bars[0]
+            defn['elements'] = [el for el in defn['elements'] if el is not main_acb_def]
+
+    # 1b.3: Infer main attribute
+    if isinstance(defn.get('attributes'), list):
+        has_explicit_main = any(a.get('main') is True for a in defn['attributes'] if isinstance(a, dict))
+        if not has_explicit_main:
+            candidates = []
+            for a in defn['attributes']:
+                if not isinstance(a, dict):
+                    continue
+                if 'main' in a and a.get('main') is False:
+                    continue
+                if _is_object_like_type(str(a.get('type', ''))):
+                    candidates.append(a)
+            if len(candidates) == 1:
+                candidates[0]['main'] = True
+                print(f"[INFO] Inferred main attribute: {candidates[0].get('name')} ({candidates[0].get('type')})")
+            elif len(candidates) > 1:
+                names = ', '.join(c.get('name', '') for c in candidates)
+                print(f"[WARN] Multiple main-attribute candidates: {names}; specify \"main\": true explicitly")
+
+    # 1b.4: DynamicList → table heuristic
+    if isinstance(defn.get('attributes'), list) and isinstance(defn.get('elements'), list):
+        main_attr = next((a for a in defn['attributes'] if isinstance(a, dict) and a.get('main') is True), None)
+        if main_attr and str(main_attr.get('type', '')) == 'DynamicList':
+            settings = main_attr.get('settings') or {}
+            has_mt = bool(isinstance(settings, dict) and settings.get('mainTable'))
+            for el in defn['elements']:
+                _apply_dlist_table_heuristic(el, main_attr.get('name', ''), has_mt)
+
+    # 1b.5: Compute main AutoCommandBar Autofill (B3)
+    def _compute_main_acb_autofill():
+        if main_acb_def is not None:
+            if 'autofill' in main_acb_def:
+                return bool(main_acb_def.get('autofill'))
+            return True
+        if isinstance(defn.get('elements'), list):
+            for el in defn['elements']:
+                if _has_cmd_bar_recursive(el):
+                    return False
+        return True
+
     # --- 2. Main compilation ---
     _next_id = 0
     lines = []
@@ -2548,9 +2999,16 @@ def main():
         emit_mltext(lines, '\t', 'Title', str(form_title))
 
     # Properties (skip 'title' — handled above)
-    if defn.get('properties'):
-        props_clone = {k: v for k, v in defn['properties'].items() if k != 'title'}
-        emit_properties(lines, props_clone, '\t')
+    # When form-level Title is set, default autoTitle=false (≈95% of ERP forms do this;
+    # otherwise platform appends synonym → "Title: Synonym" double-titles).
+    props_src = defn.get('properties') or {}
+    props_clone = OrderedDict()
+    if form_title and 'autoTitle' not in props_src:
+        props_clone['autoTitle'] = False
+    for k, v in props_src.items():
+        if k != 'title':
+            props_clone[k] = v
+    emit_properties(lines, props_clone, '\t')
 
     # CommandSet (excluded commands)
     if defn.get('excludedCommands') and len(defn['excludedCommands']) > 0:
@@ -2560,10 +3018,33 @@ def main():
         lines.append('\t</CommandSet>')
 
     # AutoCommandBar (always present, id=-1)
-    lines.append('\t<AutoCommandBar name="\u0424\u043e\u0440\u043c\u0430\u041a\u043e\u043c\u0430\u043d\u0434\u043d\u0430\u044f\u041f\u0430\u043d\u0435\u043b\u044c" id="-1">')
-    lines.append('\t\t<HorizontalAlign>Right</HorizontalAlign>')
-    lines.append('\t\t<Autofill>false</Autofill>')
-    lines.append('\t</AutoCommandBar>')
+    acb_autofill = _compute_main_acb_autofill()
+    acb_name = '\u0424\u043e\u0440\u043c\u0430\u041a\u043e\u043c\u0430\u043d\u0434\u043d\u0430\u044f\u041f\u0430\u043d\u0435\u043b\u044c'
+    acb_halign = None
+    if main_acb_def is not None:
+        v = main_acb_def.get('autoCmdBar')
+        if v:
+            acb_name = str(v)
+        if main_acb_def.get('name'):
+            acb_name = str(main_acb_def['name'])
+        if main_acb_def.get('horizontalAlign'):
+            acb_halign = str(main_acb_def['horizontalAlign'])
+    has_acb_children = bool(main_acb_def and isinstance(main_acb_def.get('children'), list) and len(main_acb_def['children']) > 0)
+    has_inner = bool(acb_halign) or (not acb_autofill) or has_acb_children
+    if has_inner:
+        lines.append(f'\t<AutoCommandBar name="{acb_name}" id="-1">')
+        if acb_halign:
+            lines.append(f'\t\t<HorizontalAlign>{acb_halign}</HorizontalAlign>')
+        if not acb_autofill:
+            lines.append('\t\t<Autofill>false</Autofill>')
+        if has_acb_children:
+            lines.append('\t\t<ChildItems>')
+            for child in main_acb_def['children']:
+                emit_element(lines, child, '\t\t\t', in_cmd_bar=True)
+            lines.append('\t\t</ChildItems>')
+        lines.append('\t</AutoCommandBar>')
+    else:
+        lines.append(f'\t<AutoCommandBar name="{acb_name}" id="-1"/>')
 
     # Events
     if defn.get('events'):

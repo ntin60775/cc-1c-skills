@@ -18,6 +18,7 @@ allowed-tools:
 |----------|----------|
 | `ConfigPath` | Путь к Configuration.xml или каталогу выгрузки |
 | `Mode` | Режим: `overview` (default), `brief`, `full` |
+| `Section` | Drill-down по разделу (alias: `Name`). Сейчас: `home-page` |
 | `Limit` / `Offset` | Пагинация (по умолчанию 150 строк) |
 | `OutFile` | Записать результат в файл (UTF-8 BOM) |
 
@@ -37,14 +38,17 @@ powershell.exe -NoProfile -File .claude/skills/cf-info/scripts/cf-info.ps1 -Conf
 
 ```powershell
 # Обзор пустой конфигурации
-... -ConfigPath upload/cfempty
+... -ConfigPath src
 
 # Краткая сводка реальной конфигурации
-... -ConfigPath upload/acc_8.3.24 -Mode brief
+... -ConfigPath src -Mode brief
 
 # Полная информация
-... -ConfigPath upload/acc_8.3.24 -Mode full
+... -ConfigPath src -Mode full
 
 # С пагинацией
-... -ConfigPath upload/acc_8.3.24 -Mode full -Limit 50 -Offset 100
+... -ConfigPath src -Mode full -Limit 50 -Offset 100
+
+# Drill-down: только начальная страница (раскладка форм с ролями)
+... -ConfigPath src -Section home-page
 ```
