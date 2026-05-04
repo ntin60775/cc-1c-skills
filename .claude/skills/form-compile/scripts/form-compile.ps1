@@ -1,4 +1,4 @@
-﻿# form-compile v1.6 — Compile 1C managed form from JSON or object metadata
+﻿# form-compile v1.20 — Compile 1C managed form from JSON or object metadata
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 param(
 	[string]$JsonPath,
@@ -668,6 +668,7 @@ function Generate-DocumentListDSL($meta, [hashtable]$p) {
 
 	$tableEl = [ordered]@{
 		table = "Список"; path = "Список"
+		rowPictureDataPath = "Список.DefaultPicture"
 		commandBarLocation = "None"
 		tableAutofill = $false
 		columns = $columns
@@ -1003,6 +1004,7 @@ function Generate-InformationRegisterListDSL($meta, [hashtable]$p) {
 
 	$tableEl = [ordered]@{
 		table = "Список"; path = "Список"
+		rowPictureDataPath = "Список.DefaultPicture"
 		commandBarLocation = "None"
 		tableAutofill = $false
 		columns = $columns
@@ -1060,6 +1062,7 @@ function Generate-AccumulationRegisterListDSL($meta, [hashtable]$p) {
 
 	$tableEl = [ordered]@{
 		table = "Список"; path = "Список"
+		rowPictureDataPath = "Список.DefaultPicture"
 		commandBarLocation = "None"
 		tableAutofill = $false
 		columns = $columns
@@ -1554,7 +1557,7 @@ $script:formTypeSynonyms["определяемыйтип"]             = "Define
 
 # Known invalid types (runtime/UI types that don't exist in XDTO schema)
 $script:knownInvalidTypes = @{
-	"FormDataStructure"     = "Runtime type. Use cfg:*Object.XXX (e.g. CatalogObject.XXX)"
+	"FormDataStructure"     = "Runtime type. Use object type without cfg: prefix (e.g. CatalogObject.Контрагенты, DocumentObject.Приход)"
 	"FormDataCollection"    = "Runtime type. Use ValueTable"
 	"FormDataTree"          = "Runtime type. Use ValueTree"
 	"FormDataTreeItem"      = "Runtime type, not valid in XML"
@@ -1569,6 +1572,8 @@ $script:knownInvalidTypes = @{
 function Resolve-TypeStr {
 	param([string]$typeStr)
 	if (-not $typeStr) { return $typeStr }
+	# Lenient: strip leading cfg: prefix if user passed it (canonical form is without prefix)
+	if ($typeStr -match '^cfg:(.+)$') { $typeStr = $Matches[1] }
 	if ($typeStr -match '^([^(]+)\((.+)\)$') {
 		$base = $Matches[1].Trim(); $params = $Matches[2]
 		$r = $script:formTypeSynonyms[$base.ToLower()]
@@ -1769,6 +1774,7 @@ function Get-ElementName {
 $script:knownEvents = @{
 	"input"     = @("OnChange","StartChoice","ChoiceProcessing","AutoComplete","TextEditEnd","Clearing","Creating","EditTextChange")
 	"check"     = @("OnChange")
+	"radio"     = @("OnChange")
 	"label"     = @("Click","URLProcessing")
 	"labelField"= @("OnChange","StartChoice","ChoiceProcessing","Click","URLProcessing","Clearing")
 	"table"     = @("Selection","BeforeAddRow","AfterDeleteRow","BeforeDeleteRow","OnActivateRow","OnEditEnd","OnStartEdit","BeforeRowChange","BeforeEditEnd","ValueChoice","OnActivateCell","OnActivateField","Drag","DragStart","DragCheck","DragEnd","OnGetDataAtServer","BeforeLoadUserSettingsAtServer","OnUpdateUserSettingSetAtServer","OnChange")
@@ -1819,13 +1825,60 @@ function Emit-Companion {
 }
 
 function Emit-Element {
-	param($el, [string]$indent)
+	param($el, [string]$indent, [bool]$inCmdBar = $false)
+
+	# Silent synonyms: model often writes XML name or Russian (ПолеПереключателя/RadioButtonField → radio).
+	# Maps any synonym to canonical short DSL key.
+	$synonyms = @{
+		"commandBar"        = "cmdBar"
+		"autoCommandBar"    = "autoCmdBar"
+		"КоманднаяПанель"   = "cmdBar"
+		"InputField"        = "input"
+		"ПолеВвода"         = "input"
+		"CheckBoxField"     = "check"
+		"ПолеФлажка"        = "check"
+		"RadioButtonField"  = "radio"
+		"ПолеПереключателя" = "radio"
+		"radioButton"       = "radio"
+		"PictureField"      = "picField"
+		"ПолеКартинки"      = "picField"
+		"LabelField"        = "labelField"
+		"ПолеНадписи"       = "labelField"
+		"CalendarField"     = "calendar"
+		"ПолеКалендаря"     = "calendar"
+		"LabelDecoration"   = "label"
+		"Надпись"           = "label"
+		"PictureDecoration" = "picture"
+		"Картинка"          = "picture"
+		"UsualGroup"        = "group"
+		"Группа"            = "group"
+		"ОбычнаяГруппа"     = "group"
+		"ColumnGroup"       = "columnGroup"
+		"ГруппаКолонок"     = "columnGroup"
+		"Pages"             = "pages"
+		"ГруппаСтраниц"     = "pages"
+		"Page"              = "page"
+		"Страница"          = "page"
+		"Table"             = "table"
+		"Таблица"           = "table"
+		"Button"            = "button"
+		"Кнопка"            = "button"
+		"Popup"             = "popup"
+		"ВсплывающееМеню"   = "popup"
+	}
+	foreach ($pair in $synonyms.GetEnumerator()) {
+		if ($null -ne $el.PSObject.Properties[$pair.Key] -and $null -eq $el.PSObject.Properties[$pair.Value]) {
+			$val = $el.($pair.Key)
+			$el.PSObject.Properties.Remove($pair.Key) | Out-Null
+			$el | Add-Member -NotePropertyName $pair.Value -NotePropertyValue $val -Force
+		}
+	}
 
 	# Determine element type from key
 	$typeKey = $null
 	$xmlTag = $null
 
-	foreach ($key in @("group","input","check","label","labelField","table","pages","page","button","picture","picField","calendar","cmdBar","popup")) {
+	foreach ($key in @("columnGroup","group","input","check","radio","label","labelField","table","pages","page","button","picture","picField","calendar","cmdBar","popup")) {
 		if ($el.$key -ne $null) {
 			$typeKey = $key
 			break
@@ -1840,8 +1893,12 @@ function Emit-Element {
 	# Validate known keys — warn about typos and unknown properties
 	$knownKeys = @{
 		# type keys
-		"group"=1;"input"=1;"check"=1;"label"=1;"labelField"=1;"table"=1;"pages"=1;"page"=1
+		"group"=1;"columnGroup"=1;"input"=1;"check"=1;"radio"=1;"label"=1;"labelField"=1;"table"=1;"pages"=1;"page"=1
 		"button"=1;"picture"=1;"picField"=1;"calendar"=1;"cmdBar"=1;"popup"=1
+		# columnGroup-specific
+		"showInHeader"=1
+		# radio-specific
+		"radioButtonType"=1;"choiceList"=1;"columnsCount"=1
 		# naming & binding
 		"name"=1;"path"=1;"title"=1
 		# visibility & state
@@ -1851,13 +1908,14 @@ function Emit-Element {
 		# layout
 		"titleLocation"=1;"representation"=1;"width"=1;"height"=1
 		"horizontalStretch"=1;"verticalStretch"=1;"autoMaxWidth"=1;"autoMaxHeight"=1
+		"maxWidth"=1;"maxHeight"=1
 		# input-specific
 		"multiLine"=1;"passwordMode"=1;"choiceButton"=1;"clearButton"=1
 		"spinButton"=1;"dropListButton"=1;"markIncomplete"=1;"skipOnInput"=1;"inputHint"=1
 		# label/hyperlink
 		"hyperlink"=1
 		# group-specific
-		"showTitle"=1;"united"=1
+		"showTitle"=1;"united"=1;"collapsed"=1
 		# hierarchy
 		"children"=1;"columns"=1
 		# table-specific
@@ -1885,14 +1943,16 @@ function Emit-Element {
 
 	switch ($typeKey) {
 		"group"    { Emit-Group -el $el -name $name -id $id -indent $indent }
+		"columnGroup" { Emit-ColumnGroup -el $el -name $name -id $id -indent $indent }
 		"input"    { Emit-Input -el $el -name $name -id $id -indent $indent }
 		"check"    { Emit-Check -el $el -name $name -id $id -indent $indent }
+		"radio"    { Emit-Radio -el $el -name $name -id $id -indent $indent }
 		"label"    { Emit-Label -el $el -name $name -id $id -indent $indent }
 		"labelField" { Emit-LabelField -el $el -name $name -id $id -indent $indent }
 		"table"    { Emit-Table -el $el -name $name -id $id -indent $indent }
 		"pages"    { Emit-Pages -el $el -name $name -id $id -indent $indent }
 		"page"     { Emit-Page -el $el -name $name -id $id -indent $indent }
-		"button"   { Emit-Button -el $el -name $name -id $id -indent $indent }
+		"button"   { Emit-Button -el $el -name $name -id $id -indent $indent -inCmdBar $inCmdBar }
 		"picture"  { Emit-PictureDecoration -el $el -name $name -id $id -indent $indent }
 		"picField" { Emit-PictureField -el $el -name $name -id $id -indent $indent }
 		"calendar" { Emit-Calendar -el $el -name $name -id $id -indent $indent }
@@ -1913,10 +1973,34 @@ function Emit-CommonFlags {
 	if ($el.readOnly -eq $true) { X "$indent<ReadOnly>true</ReadOnly>" }
 }
 
+function Title-FromName {
+	param([string]$name)
+	if (-not $name) { return '' }
+	$s = [regex]::Replace($name, '([А-ЯA-Z])([А-ЯA-Z][а-яa-z])', '$1 $2')
+	$s = [regex]::Replace($s, '([а-яa-z0-9])([А-ЯA-Z])', '$1 $2')
+	$parts = $s -split ' '
+	if ($parts.Count -eq 0) { return $s }
+	$out = New-Object System.Collections.ArrayList
+	[void]$out.Add($parts[0])
+	for ($i = 1; $i -lt $parts.Count; $i++) {
+		$p = $parts[$i]
+		if ($p.Length -gt 1 -and $p -ceq $p.ToUpper()) {
+			[void]$out.Add($p)
+		} else {
+			[void]$out.Add($p.ToLower())
+		}
+	}
+	return ($out -join ' ')
+}
+
 function Emit-Title {
-	param($el, [string]$name, [string]$indent)
-	if ($el.title) {
-		Emit-MLText -tag "Title" -text "$($el.title)" -indent $indent
+	param($el, [string]$name, [string]$indent, [switch]$auto)
+	$title = $el.title
+	if (-not $title -and $auto -and $name) {
+		$title = Title-FromName -name $name
+	}
+	if ($title) {
+		Emit-MLText -tag "Title" -text "$title" -indent $indent
 	}
 }
 
@@ -1943,6 +2027,7 @@ function Emit-Group {
 	if ($groupVal -eq "collapsible") {
 		X "$inner<Group>Vertical</Group>"
 		X "$inner<Behavior>Collapsible</Behavior>"
+		if ($el.collapsed -eq $true) { X "$inner<Collapsed>true</Collapsed>" }
 	}
 
 	# Representation
@@ -1980,6 +2065,48 @@ function Emit-Group {
 	X "$indent</UsualGroup>"
 }
 
+function Emit-ColumnGroup {
+	param($el, [string]$name, [int]$id, [string]$indent)
+
+	X "$indent<ColumnGroup name=`"$name`" id=`"$id`">"
+	$inner = "$indent`t"
+
+	Emit-Title -el $el -name $name -indent $inner
+
+	# Group orientation (horizontal / vertical / inCell — последнее только здесь)
+	$groupVal = "$($el.columnGroup)"
+	$orientation = switch ($groupVal) {
+		"horizontal" { "Horizontal" }
+		"vertical"   { "Vertical" }
+		"inCell"     { "InCell" }
+		default      { $null }
+	}
+	if ($orientation) { X "$inner<Group>$orientation</Group>" }
+
+	if ($el.showTitle -eq $false) { X "$inner<ShowTitle>false</ShowTitle>" }
+	if ($null -ne $el.showInHeader) {
+		$shVal = if ($el.showInHeader) { "true" } else { "false" }
+		X "$inner<ShowInHeader>$shVal</ShowInHeader>"
+	}
+	if ($el.width) { X "$inner<Width>$($el.width)</Width>" }
+
+	Emit-CommonFlags -el $el -indent $inner
+
+	# Companion: ExtendedTooltip
+	Emit-Companion -tag "ExtendedTooltip" -name "${name}РасширеннаяПодсказка" -indent $inner
+
+	# Children
+	if ($el.children -and $el.children.Count -gt 0) {
+		X "$inner<ChildItems>"
+		foreach ($child in $el.children) {
+			Emit-Element -el $child -indent "$inner`t"
+		}
+		X "$inner</ChildItems>"
+	}
+
+	X "$indent</ColumnGroup>"
+}
+
 function Emit-Input {
 	param($el, [string]$name, [int]$id, [string]$indent)
 
@@ -1988,7 +2115,7 @@ function Emit-Input {
 
 	if ($el.path) { X "$inner<DataPath>$($el.path)</DataPath>" }
 
-	Emit-Title -el $el -name $name -indent $inner
+	Emit-Title -el $el -name $name -indent $inner -auto:(-not $el.path)
 	Emit-CommonFlags -el $el -indent $inner
 
 	if ($el.titleLocation) {
@@ -2011,8 +2138,15 @@ function Emit-Input {
 	if ($el.dropListButton -eq $true) { X "$inner<DropListButton>true</DropListButton>" }
 	if ($el.markIncomplete -eq $true) { X "$inner<AutoMarkIncomplete>true</AutoMarkIncomplete>" }
 	if ($el.skipOnInput -eq $true) { X "$inner<SkipOnInput>true</SkipOnInput>" }
-	if ($el.autoMaxWidth -eq $false) { X "$inner<AutoMaxWidth>false</AutoMaxWidth>" }
+	$hasAmw = $el.PSObject.Properties.Name -contains 'autoMaxWidth'
+	if ($hasAmw) {
+		if ($el.autoMaxWidth -eq $false) { X "$inner<AutoMaxWidth>false</AutoMaxWidth>" }
+	} elseif ($el.multiLine -eq $true) {
+		X "$inner<AutoMaxWidth>false</AutoMaxWidth>"
+	}
+	if ($null -ne $el.maxWidth) { X "$inner<MaxWidth>$($el.maxWidth)</MaxWidth>" }
 	if ($el.autoMaxHeight -eq $false) { X "$inner<AutoMaxHeight>false</AutoMaxHeight>" }
+	if ($null -ne $el.maxHeight) { X "$inner<MaxHeight>$($el.maxHeight)</MaxHeight>" }
 	if ($el.width) { X "$inner<Width>$($el.width)</Width>" }
 	if ($el.height) { X "$inner<Height>$($el.height)</Height>" }
 	if ($el.horizontalStretch -eq $true) { X "$inner<HorizontalStretch>true</HorizontalStretch>" }
@@ -2039,12 +2173,11 @@ function Emit-Check {
 
 	if ($el.path) { X "$inner<DataPath>$($el.path)</DataPath>" }
 
-	Emit-Title -el $el -name $name -indent $inner
+	Emit-Title -el $el -name $name -indent $inner -auto:(-not $el.path)
 	Emit-CommonFlags -el $el -indent $inner
 
-	if ($el.titleLocation) {
-		X "$inner<TitleLocation>$($el.titleLocation)</TitleLocation>"
-	}
+	$tl = if ($el.titleLocation) { "$($el.titleLocation)" } else { "Right" }
+	X "$inner<TitleLocation>$tl</TitleLocation>"
 
 	# Companions
 	Emit-Companion -tag "ContextMenu" -name "${name}КонтекстноеМеню" -indent $inner
@@ -2055,18 +2188,237 @@ function Emit-Check {
 	X "$indent</CheckBoxField>"
 }
 
+# Maps Russian/English root of a typed reference path to canonical English root.
+# Used to normalize ChoiceList values like "Перечисление.X.Y" → "Enum.X.EnumValue.Y".
+$script:refRootSynonyms = @{
+	"Перечисление"            = "Enum"
+	"Справочник"              = "Catalog"
+	"Документ"                = "Document"
+	"ПланСчетов"              = "ChartOfAccounts"
+	"ПланВидовХарактеристик"  = "ChartOfCharacteristicTypes"
+	"ПланВидовРасчета"        = "ChartOfCalculationTypes"
+	"ПланВидовРасчёта"        = "ChartOfCalculationTypes"
+	"ПланОбмена"              = "ExchangePlan"
+	"БизнесПроцесс"           = "BusinessProcess"
+	"Задача"                  = "Task"
+	"РегистрСведений"         = "InformationRegister"
+	"РегистрНакопления"       = "AccumulationRegister"
+	"РегистрБухгалтерии"      = "AccountingRegister"
+	"РегистрРасчета"          = "CalculationRegister"
+	"РегистрРасчёта"          = "CalculationRegister"
+}
+$script:enumValueSynonyms = @("EnumValue","ЗначениеПеречисления")
+
+# Normalize a choiceList item value: returns @{ XsiType = "..."; Text = "..." }
+function Normalize-ChoiceValue {
+	param($value)
+
+	# Booleans
+	if ($value -is [bool]) {
+		return @{ XsiType = "xs:boolean"; Text = if ($value) { "true" } else { "false" } }
+	}
+	# Numbers (int / decimal / double)
+	if ($value -is [int] -or $value -is [long] -or $value -is [double] -or $value -is [decimal]) {
+		return @{ XsiType = "xs:decimal"; Text = "$value" }
+	}
+
+	$s = "$value"
+	if ([string]::IsNullOrEmpty($s)) {
+		return @{ XsiType = "xs:string"; Text = "" }
+	}
+
+	# Try to detect typed reference path: "<Root>.<Type>[.<Member>.<Value>]"
+	$parts = $s -split '\.'
+	if ($parts.Count -ge 2) {
+		$root = $parts[0]
+		$canonRoot = $null
+		if ($script:refRootSynonyms.ContainsKey($root)) { $canonRoot = $script:refRootSynonyms[$root] }
+		elseif ($script:refRootSynonyms.Values -contains $root) { $canonRoot = $root }
+
+		if ($canonRoot) {
+			$typeName = $parts[1]
+			$normalized = $null
+
+			if ($canonRoot -eq "Enum") {
+				if ($parts.Count -eq 2) {
+					# "Enum.X" alone — not a value, treat as string
+				} elseif ($parts.Count -eq 3) {
+					# "Enum.X.Y" — insert .EnumValue.
+					$normalized = "Enum.$typeName.EnumValue.$($parts[2])"
+				} else {
+					# "Enum.X.<member>.Y..."  — replace member with EnumValue (handles ЗначениеПеречисления too)
+					$member = $parts[2]
+					if ($script:enumValueSynonyms -contains $member) {
+						$rest = $parts[3..($parts.Count-1)] -join '.'
+						$normalized = "Enum.$typeName.EnumValue.$rest"
+					} else {
+						$rest = $parts[2..($parts.Count-1)] -join '.'
+						$normalized = "Enum.$typeName.EnumValue.$rest"
+					}
+				}
+			} else {
+				# Other ref roots: just translate root, keep tail as-is
+				if ($parts.Count -ge 3) {
+					$tail = $parts[1..($parts.Count-1)] -join '.'
+					$normalized = "$canonRoot.$tail"
+				}
+			}
+
+			if ($normalized) {
+				return @{ XsiType = "xr:DesignTimeRef"; Text = $normalized }
+			}
+		}
+	}
+
+	return @{ XsiType = "xs:string"; Text = $s }
+}
+
+# Emit Presentation block for a choiceList item.
+# Accepts string (ru only), or hashtable/PSCustomObject {ru, en, ...}.
+# Empty/null → emits empty <Presentation/>.
+function Emit-ChoicePresentation {
+	param($pres, [string]$indent)
+	if ($null -eq $pres -or ($pres -is [string] -and [string]::IsNullOrEmpty($pres))) {
+		X "$indent<Presentation/>"
+		return
+	}
+
+	$pairs = @()
+	if ($pres -is [string]) {
+		$pairs += ,@("ru", $pres)
+	} elseif ($pres -is [hashtable] -or $pres -is [System.Collections.IDictionary]) {
+		foreach ($k in $pres.Keys) { $pairs += ,@("$k", "$($pres[$k])") }
+	} elseif ($pres.PSObject -and $pres.PSObject.Properties) {
+		foreach ($p in $pres.PSObject.Properties) { $pairs += ,@("$($p.Name)", "$($p.Value)") }
+	} else {
+		$pairs += ,@("ru", "$pres")
+	}
+
+	X "$indent<Presentation>"
+	foreach ($pair in $pairs) {
+		X "$indent`t<v8:item>"
+		X "$indent`t`t<v8:lang>$($pair[0])</v8:lang>"
+		X "$indent`t`t<v8:content>$(Esc-Xml $pair[1])</v8:content>"
+		X "$indent`t</v8:item>"
+	}
+	X "$indent</Presentation>"
+}
+
+function Emit-Radio {
+	param($el, [string]$name, [int]$id, [string]$indent)
+
+	X "$indent<RadioButtonField name=`"$name`" id=`"$id`">"
+	$inner = "$indent`t"
+
+	if ($el.path) { X "$inner<DataPath>$($el.path)</DataPath>" }
+
+	Emit-Title -el $el -name $name -indent $inner -auto:(-not $el.path)
+	Emit-CommonFlags -el $el -indent $inner
+
+	# TitleLocation default is None for radio (matches typical configurator behavior)
+	$tl = if ($el.titleLocation) {
+		switch ("$($el.titleLocation)") {
+			"none"   { "None" }
+			"left"   { "Left" }
+			"right"  { "Right" }
+			"top"    { "Top" }
+			"bottom" { "Bottom" }
+			default  { "$($el.titleLocation)" }
+		}
+	} else { "None" }
+	X "$inner<TitleLocation>$tl</TitleLocation>"
+
+	# RadioButtonType: Auto | RadioButtons | Tumbler. Accept synonyms.
+	$rbtRaw = if ($el.radioButtonType) { "$($el.radioButtonType)".Trim() } else { "Auto" }
+	$rbt = switch -Regex ($rbtRaw.ToLower()) {
+		'^(auto|авто)$'                        { "Auto"; break }
+		'^(radiobuttons?|переключатель|радио)$' { "RadioButtons"; break }
+		'^(tumbler|тумблер)$'                  { "Tumbler"; break }
+		default                                { $rbtRaw }
+	}
+	X "$inner<RadioButtonType>$rbt</RadioButtonType>"
+
+	if ($null -ne $el.columnsCount) {
+		X "$inner<ColumnsCount>$($el.columnsCount)</ColumnsCount>"
+	}
+
+	# ChoiceList
+	if ($el.choiceList -and $el.choiceList.Count -gt 0) {
+		X "$inner<ChoiceList>"
+		$itemIndent = "$inner`t"
+		foreach ($item in $el.choiceList) {
+			# Pull value (and tolerate Russian synonym "значение")
+			$valRaw = $null
+			if ($item -is [hashtable] -or $item -is [System.Collections.IDictionary]) {
+				if ($item.Contains("value")) { $valRaw = $item["value"] }
+				elseif ($item.Contains("значение")) { $valRaw = $item["значение"] }
+			} else {
+				if ($item.PSObject.Properties["value"])    { $valRaw = $item.value }
+				elseif ($item.PSObject.Properties["значение"]) { $valRaw = $item."значение" }
+			}
+
+			# Pull presentation (presentation OR title synonym)
+			$presRaw = $null
+			$hasPres = $false
+			if ($item -is [hashtable] -or $item -is [System.Collections.IDictionary]) {
+				if ($item.Contains("presentation")) { $presRaw = $item["presentation"]; $hasPres = $true }
+				elseif ($item.Contains("представление")) { $presRaw = $item["представление"]; $hasPres = $true }
+				elseif ($item.Contains("title")) { $presRaw = $item["title"]; $hasPres = $true }
+			} else {
+				if ($item.PSObject.Properties["presentation"]) { $presRaw = $item.presentation; $hasPres = $true }
+				elseif ($item.PSObject.Properties["представление"]) { $presRaw = $item."представление"; $hasPres = $true }
+				elseif ($item.PSObject.Properties["title"]) { $presRaw = $item.title; $hasPres = $true }
+			}
+
+			$norm = Normalize-ChoiceValue -value $valRaw
+
+			# Auto-derive presentation if missing
+			if (-not $hasPres) {
+				if ($norm.XsiType -eq "xr:DesignTimeRef") {
+					$tail = ($norm.Text -split '\.')[-1]
+					$presRaw = Title-FromName -name $tail
+				} elseif ($norm.XsiType -eq "xs:string") {
+					$presRaw = $norm.Text
+				} else {
+					$presRaw = $norm.Text
+				}
+			}
+
+			X "$itemIndent<xr:Item>"
+			$valIndent = "$itemIndent`t"
+			X "$valIndent<xr:Presentation/>"
+			X "$valIndent<xr:CheckState>0</xr:CheckState>"
+			X "$valIndent<xr:Value xsi:type=`"FormChoiceListDesTimeValue`">"
+			Emit-ChoicePresentation -pres $presRaw -indent "$valIndent`t"
+			X "$valIndent`t<Value xsi:type=`"$($norm.XsiType)`">$(Esc-Xml $norm.Text)</Value>"
+			X "$valIndent</xr:Value>"
+			X "$itemIndent</xr:Item>"
+		}
+		X "$inner</ChoiceList>"
+	}
+
+	# Companions
+	Emit-Companion -tag "ContextMenu" -name "${name}КонтекстноеМеню" -indent $inner
+	Emit-Companion -tag "ExtendedTooltip" -name "${name}РасширеннаяПодсказка" -indent $inner
+
+	Emit-Events -el $el -elementName $name -indent $inner -typeKey "radio"
+
+	X "$indent</RadioButtonField>"
+}
+
 function Emit-Label {
 	param($el, [string]$name, [int]$id, [string]$indent)
 
 	X "$indent<LabelDecoration name=`"$name`" id=`"$id`">"
 	$inner = "$indent`t"
 
-	if ($el.title) {
+	$labelTitle = if ($el.title) { "$($el.title)" } else { Title-FromName -name $name }
+	if ($labelTitle) {
 		$formatted = if ($el.hyperlink -eq $true) { "true" } else { "false" }
 		X "$inner<Title formatted=`"$formatted`">"
 		X "$inner`t<v8:item>"
 		X "$inner`t`t<v8:lang>ru</v8:lang>"
-		X "$inner`t`t<v8:content>$(Esc-Xml "$($el.title)")</v8:content>"
+		X "$inner`t`t<v8:content>$(Esc-Xml "$labelTitle")</v8:content>"
 		X "$inner`t</v8:item>"
 		X "$inner</Title>"
 	}
@@ -2075,7 +2427,9 @@ function Emit-Label {
 
 	if ($el.hyperlink -eq $true) { X "$inner<Hyperlink>true</Hyperlink>" }
 	if ($el.autoMaxWidth -eq $false) { X "$inner<AutoMaxWidth>false</AutoMaxWidth>" }
+	if ($null -ne $el.maxWidth) { X "$inner<MaxWidth>$($el.maxWidth)</MaxWidth>" }
 	if ($el.autoMaxHeight -eq $false) { X "$inner<AutoMaxHeight>false</AutoMaxHeight>" }
+	if ($null -ne $el.maxHeight) { X "$inner<MaxHeight>$($el.maxHeight)</MaxHeight>" }
 	if ($el.width) { X "$inner<Width>$($el.width)</Width>" }
 	if ($el.height) { X "$inner<Height>$($el.height)</Height>" }
 
@@ -2096,7 +2450,7 @@ function Emit-LabelField {
 
 	if ($el.path) { X "$inner<DataPath>$($el.path)</DataPath>" }
 
-	Emit-Title -el $el -name $name -indent $inner
+	Emit-Title -el $el -name $name -indent $inner -auto:(-not $el.path)
 	Emit-CommonFlags -el $el -indent $inner
 
 	if ($el.hyperlink -eq $true) { X "$inner<Hyperlink>true</Hyperlink>" }
@@ -2118,7 +2472,7 @@ function Emit-Table {
 
 	if ($el.path) { X "$inner<DataPath>$($el.path)</DataPath>" }
 
-	Emit-Title -el $el -name $name -indent $inner
+	Emit-Title -el $el -name $name -indent $inner -auto:(-not $el.path)
 	Emit-CommonFlags -el $el -indent $inner
 
 	if ($el.representation) {
@@ -2207,7 +2561,7 @@ function Emit-Page {
 	X "$indent<Page name=`"$name`" id=`"$id`">"
 	$inner = "$indent`t"
 
-	Emit-Title -el $el -name $name -indent $inner
+	Emit-Title -el $el -name $name -indent $inner -auto
 	Emit-CommonFlags -el $el -indent $inner
 
 	if ($el.group) {
@@ -2237,19 +2591,48 @@ function Emit-Page {
 }
 
 function Emit-Button {
-	param($el, [string]$name, [int]$id, [string]$indent)
+	param($el, [string]$name, [int]$id, [string]$indent, [bool]$inCmdBar = $false)
 
 	X "$indent<Button name=`"$name`" id=`"$id`">"
 	$inner = "$indent`t"
 
-	# Type
+	# Type — context-aware:
+	# Inside command bar (cmdBar/autoCmdBar/popup) only CommandBarButton/CommandBarHyperlink are valid.
+	# UsualButton/Hyperlink would be silently ignored by 1C.
+	$btnType = $null
 	if ($el.type) {
-		$btnType = switch ("$($el.type)") {
-			"usual"      { "UsualButton" }
-			"hyperlink"  { "Hyperlink" }
-			"commandBar" { "CommandBarButton" }
-			default      { "$($el.type)" }
+		$rawType = "$($el.type)"
+		if ($inCmdBar) {
+			# Be forgiving: any "ordinary button" hint resolves to CommandBarButton,
+			# any "hyperlink" hint resolves to CommandBarHyperlink. The model can pass
+			# either DSL ("usual"/"hyperlink") or XML names — all map to the right kind.
+			switch ($rawType) {
+				"usual"                { $btnType = "CommandBarButton" }
+				"UsualButton"          { $btnType = "CommandBarButton" }
+				"commandBar"           { $btnType = "CommandBarButton" }
+				"CommandBarButton"     { $btnType = "CommandBarButton" }
+				"hyperlink"            { $btnType = "CommandBarHyperlink" }
+				"Hyperlink"            { $btnType = "CommandBarHyperlink" }
+				"CommandBarHyperlink"  { $btnType = "CommandBarHyperlink" }
+				default                { $btnType = $rawType }
+			}
+		} else {
+			# Symmetric: any "ordinary button" hint → UsualButton, any "hyperlink" → Hyperlink.
+			switch ($rawType) {
+				"usual"                { $btnType = "UsualButton" }
+				"UsualButton"          { $btnType = "UsualButton" }
+				"commandBar"           { $btnType = "UsualButton" }
+				"CommandBarButton"     { $btnType = "UsualButton" }
+				"hyperlink"            { $btnType = "Hyperlink" }
+				"Hyperlink"            { $btnType = "Hyperlink" }
+				"CommandBarHyperlink"  { $btnType = "Hyperlink" }
+				default                { $btnType = $rawType }
+			}
 		}
+	} elseif ($inCmdBar) {
+		$btnType = "CommandBarButton"
+	}
+	if ($btnType) {
 		X "$inner<Type>$btnType</Type>"
 	}
 
@@ -2266,7 +2649,8 @@ function Emit-Button {
 		}
 	}
 
-	Emit-Title -el $el -name $name -indent $inner
+	$btnAuto = -not ($el.command -or $el.stdCommand)
+	Emit-Title -el $el -name $name -indent $inner -auto:$btnAuto
 	Emit-CommonFlags -el $el -indent $inner
 
 	if ($el.defaultButton -eq $true) { X "$inner<DefaultButton>true</DefaultButton>" }
@@ -2356,7 +2740,7 @@ function Emit-Calendar {
 
 	if ($el.path) { X "$inner<DataPath>$($el.path)</DataPath>" }
 
-	Emit-Title -el $el -name $name -indent $inner
+	Emit-Title -el $el -name $name -indent $inner -auto:(-not $el.path)
 	Emit-CommonFlags -el $el -indent $inner
 
 	# Companions
@@ -2382,7 +2766,7 @@ function Emit-CommandBar {
 	if ($el.children -and $el.children.Count -gt 0) {
 		X "$inner<ChildItems>"
 		foreach ($child in $el.children) {
-			Emit-Element -el $child -indent "$inner`t"
+			Emit-Element -el $child -indent "$inner`t" -inCmdBar $true
 		}
 		X "$inner</ChildItems>"
 	}
@@ -2396,7 +2780,7 @@ function Emit-Popup {
 	X "$indent<Popup name=`"$name`" id=`"$id`">"
 	$inner = "$indent`t"
 
-	Emit-Title -el $el -name $name -indent $inner
+	Emit-Title -el $el -name $name -indent $inner -auto
 	Emit-CommonFlags -el $el -indent $inner
 
 	if ($el.picture) {
@@ -2414,7 +2798,7 @@ function Emit-Popup {
 	if ($el.children -and $el.children.Count -gt 0) {
 		X "$inner<ChildItems>"
 		foreach ($child in $el.children) {
-			Emit-Element -el $child -indent "$inner`t"
+			Emit-Element -el $child -indent "$inner`t" -inCmdBar $true
 		}
 		X "$inner</ChildItems>"
 	}
@@ -2437,8 +2821,9 @@ function Emit-Attributes {
 		X "$indent`t<Attribute name=`"$attrName`" id=`"$attrId`">"
 		$inner = "$indent`t`t"
 
-		if ($attr.title) {
-			Emit-MLText -tag "Title" -text "$($attr.title)" -indent $inner
+		$attrTitle = if ($attr.title) { "$($attr.title)" } elseif ($attr.main -ne $true) { Title-FromName -name $attrName } else { '' }
+		if ($attrTitle) {
+			Emit-MLText -tag "Title" -text "$attrTitle" -indent $inner
 		}
 
 		# Type
@@ -2451,7 +2836,11 @@ function Emit-Attributes {
 		if ($attr.main -eq $true) {
 			X "$inner<MainAttribute>true</MainAttribute>"
 		}
-		if ($attr.savedData -eq $true) {
+		$mainSaved = $false
+		if ($attr.main -eq $true -and $attr.type) {
+			$mainSaved = ("$($attr.type)") -match '^(CatalogObject|DocumentObject|ChartOfAccountsObject|ChartOfCalculationTypesObject|ChartOfCharacteristicTypesObject|ExchangePlanObject|BusinessProcessObject|TaskObject)\.' -or ("$($attr.type)") -match 'RecordManager\.'
+		}
+		if ($attr.savedData -eq $true -or $mainSaved) {
 			X "$inner<SavedData>true</SavedData>"
 		}
 		if ($attr.fillChecking) {
@@ -2526,8 +2915,9 @@ function Emit-Commands {
 		X "$indent`t<Command name=`"$($cmd.name)`" id=`"$cmdId`">"
 		$inner = "$indent`t`t"
 
-		if ($cmd.title) {
-			Emit-MLText -tag "Title" -text "$($cmd.title)" -indent $inner
+		$cmdTitle = if ($cmd.title) { "$($cmd.title)" } else { Title-FromName -name "$($cmd.name)" }
+		if ($cmdTitle) {
+			Emit-MLText -tag "Title" -text "$cmdTitle" -indent $inner
 		}
 
 		if ($cmd.action) {
@@ -2601,6 +2991,176 @@ function Emit-Properties {
 	}
 }
 
+# --- 11b. Pre-pass: synonyms, main attribute inference, heuristics, autoCmdBar extraction ---
+
+function Normalize-ElementSynonyms {
+	param($el)
+	if ($null -eq $el) { return }
+	$synonyms = @{ "commandBar" = "cmdBar"; "autoCommandBar" = "autoCmdBar" }
+	foreach ($pair in $synonyms.GetEnumerator()) {
+		if ($null -ne $el.PSObject.Properties[$pair.Key] -and $null -eq $el.PSObject.Properties[$pair.Value]) {
+			$val = $el.($pair.Key)
+			$el.PSObject.Properties.Remove($pair.Key) | Out-Null
+			$el | Add-Member -NotePropertyName $pair.Value -NotePropertyValue $val -Force
+		}
+	}
+	if ($el.PSObject.Properties["children"] -and $el.children) {
+		foreach ($child in $el.children) { Normalize-ElementSynonyms $child }
+	}
+	if ($el.PSObject.Properties["columns"] -and $el.columns) {
+		foreach ($child in $el.columns) { Normalize-ElementSynonyms $child }
+	}
+}
+
+function HasCmdBarRecursive {
+	param($el)
+	if ($null -eq $el) { return $false }
+	if ($el.PSObject.Properties["cmdBar"] -and $null -ne $el.cmdBar) { return $true }
+	if ($el.PSObject.Properties["children"] -and $el.children) {
+		foreach ($child in $el.children) { if (HasCmdBarRecursive $child) { return $true } }
+	}
+	if ($el.PSObject.Properties["columns"] -and $el.columns) {
+		foreach ($child in $el.columns) { if (HasCmdBarRecursive $child) { return $true } }
+	}
+	return $false
+}
+
+function ApplyDynamicListTableHeuristic {
+	param($el, [string]$listName, [bool]$hasMainTable)
+	if ($null -eq $el) { return }
+	if ($el.PSObject.Properties["table"] -and $null -ne $el.table -and "$($el.path)" -eq $listName) {
+		if ($null -eq $el.PSObject.Properties["tableAutofill"]) {
+			$el | Add-Member -NotePropertyName "tableAutofill" -NotePropertyValue $false -Force
+		}
+		if ($null -eq $el.PSObject.Properties["commandBarLocation"]) {
+			$el | Add-Member -NotePropertyName "commandBarLocation" -NotePropertyValue "None" -Force
+		}
+		# DefaultPicture доступен только если у DynamicList есть основная таблица
+		if ($hasMainTable -and ($null -eq $el.PSObject.Properties["rowPictureDataPath"] -or [string]::IsNullOrEmpty("$($el.rowPictureDataPath)"))) {
+			$el | Add-Member -NotePropertyName "rowPictureDataPath" -NotePropertyValue "$listName.DefaultPicture" -Force
+		}
+	}
+	if ($el.PSObject.Properties["children"] -and $el.children) {
+		foreach ($child in $el.children) { ApplyDynamicListTableHeuristic $child $listName $hasMainTable }
+	}
+}
+
+function Test-IsObjectLikeType {
+	param([string]$type)
+	if ([string]::IsNullOrEmpty($type)) { return $false }
+	if ($type -eq "DynamicList" -or $type -eq "ConstantsSet") { return $true }
+	$objectSuffixes = @(
+		"CatalogObject", "DocumentObject", "DataProcessorObject", "ReportObject",
+		"ExternalDataProcessorObject", "ExternalReportObject", "BusinessProcessObject",
+		"TaskObject", "ChartOfAccountsObject", "ChartOfCharacteristicTypesObject",
+		"ChartOfCalculationTypesObject", "ExchangePlanObject"
+	)
+	$recordSetPrefixes = @(
+		"InformationRegisterRecordSet", "AccumulationRegisterRecordSet",
+		"AccountingRegisterRecordSet", "CalculationRegisterRecordSet",
+		"InformationRegisterRecordManager"
+	)
+	foreach ($suffix in $objectSuffixes) {
+		if ($type -like "$suffix.*") { return $true }
+	}
+	foreach ($prefix in $recordSetPrefixes) {
+		if ($type -like "$prefix.*") { return $true }
+	}
+	return $false
+}
+
+# 11b.1: Normalize synonyms recursively
+if ($def.elements) {
+	foreach ($el in $def.elements) { Normalize-ElementSynonyms $el }
+}
+
+# 11b.2: Extract autoCmdBar element from def.elements
+$script:mainAcbDef = $null
+if ($def.elements) {
+	$autoBars = @()
+	$rest = @()
+	foreach ($el in $def.elements) {
+		if ($null -ne $el.PSObject.Properties["autoCmdBar"] -and $null -ne $el.autoCmdBar) {
+			$autoBars += $el
+		} else {
+			$rest += $el
+		}
+	}
+	if ($autoBars.Count -gt 1) {
+		Write-Error "form-compile: more than one autoCmdBar in def.elements (found $($autoBars.Count)); only one allowed."
+		exit 1
+	}
+	if ($autoBars.Count -eq 1) {
+		$script:mainAcbDef = $autoBars[0]
+		# Replace def.elements with the filtered list
+		$def.PSObject.Properties.Remove("elements") | Out-Null
+		$def | Add-Member -NotePropertyName "elements" -NotePropertyValue $rest -Force
+	}
+}
+
+# 11b.3: Infer main attribute (only if no attribute has main:true)
+if ($def.attributes) {
+	$hasExplicitMain = $false
+	foreach ($attr in $def.attributes) {
+		if ($attr.main -eq $true) { $hasExplicitMain = $true; break }
+	}
+	if (-not $hasExplicitMain) {
+		$candidates = @()
+		foreach ($attr in $def.attributes) {
+			# Skip if user explicitly opted out via main:false
+			if ($null -ne $attr.PSObject.Properties["main"] -and $attr.main -eq $false) { continue }
+			if (Test-IsObjectLikeType "$($attr.type)") {
+				$candidates += $attr
+			}
+		}
+		if ($candidates.Count -eq 1) {
+			$candidates[0] | Add-Member -NotePropertyName "main" -NotePropertyValue $true -Force
+			Write-Host "[INFO] Inferred main attribute: $($candidates[0].name) ($($candidates[0].type))"
+		} elseif ($candidates.Count -gt 1) {
+			$names = ($candidates | ForEach-Object { $_.name }) -join ", "
+			Write-Host "[WARN] Multiple main-attribute candidates: $names; specify ""main"": true explicitly"
+		}
+	}
+}
+
+# 11b.4: DynamicList → table heuristic
+if ($def.attributes -and $def.elements) {
+	$mainAttr = $null
+	foreach ($attr in $def.attributes) {
+		if ($attr.main -eq $true) { $mainAttr = $attr; break }
+	}
+	if ($mainAttr -and "$($mainAttr.type)" -eq "DynamicList") {
+		$mt = $null
+		if ($mainAttr.PSObject.Properties["settings"] -and $null -ne $mainAttr.settings) {
+			if ($mainAttr.settings -is [hashtable]) {
+				if ($mainAttr.settings.ContainsKey("mainTable")) { $mt = $mainAttr.settings["mainTable"] }
+			} elseif ($mainAttr.settings.PSObject.Properties["mainTable"]) {
+				$mt = $mainAttr.settings.mainTable
+			}
+		}
+		$hasMt = -not [string]::IsNullOrEmpty("$mt")
+		foreach ($el in $def.elements) {
+			ApplyDynamicListTableHeuristic $el $mainAttr.name $hasMt
+		}
+	}
+}
+
+# 11b.5: Compute main AutoCommandBar Autofill via heuristic B3
+function Compute-MainAcbAutofill {
+	if ($script:mainAcbDef) {
+		if ($null -ne $script:mainAcbDef.PSObject.Properties["autofill"]) {
+			return [bool]$script:mainAcbDef.autofill
+		}
+		return $true
+	}
+	if ($def.elements) {
+		foreach ($el in $def.elements) {
+			if (HasCmdBarRecursive $el) { return $false }
+		}
+	}
+	return $true
+}
+
 # --- 12. Main compilation ---
 
 # Title
@@ -2632,17 +3192,26 @@ if ($formTitle) {
 }
 
 # 12b. Properties (skip 'title' — handled above as multilingual)
+# When form-level Title is set, default autoTitle=false (≈95% of ERP forms do this;
+# otherwise platform appends synonym → "Title: Synonym" double-titles).
+$propsClone = New-Object PSObject
+$hasAutoTitle = $false
 if ($def.properties) {
-	$propsClone = New-Object PSObject
+	foreach ($p in $def.properties.PSObject.Properties) {
+		if ($p.Name -eq "autoTitle") { $hasAutoTitle = $true }
+	}
+}
+if ($formTitle -and -not $hasAutoTitle) {
+	$propsClone | Add-Member -NotePropertyName "autoTitle" -NotePropertyValue $false
+}
+if ($def.properties) {
 	foreach ($p in $def.properties.PSObject.Properties) {
 		if ($p.Name -ne "title") {
 			$propsClone | Add-Member -NotePropertyName $p.Name -NotePropertyValue $p.Value
 		}
 	}
-	Emit-Properties -props $propsClone -indent "`t"
-} else {
-	Emit-Properties -props $null -indent "`t"
 }
+Emit-Properties -props $propsClone -indent "`t"
 
 # 12c. CommandSet (excluded commands)
 if ($def.excludedCommands -and $def.excludedCommands.Count -gt 0) {
@@ -2654,10 +3223,37 @@ if ($def.excludedCommands -and $def.excludedCommands.Count -gt 0) {
 }
 
 # 12d. AutoCommandBar (always present, id=-1)
-X "`t<AutoCommandBar name=`"ФормаКоманднаяПанель`" id=`"-1`">"
-X "`t`t<HorizontalAlign>Right</HorizontalAlign>"
-X "`t`t<Autofill>false</Autofill>"
-X "`t</AutoCommandBar>"
+$acbAutofill = Compute-MainAcbAutofill
+$acbName = "ФормаКоманднаяПанель"
+$acbHAlign = $null
+if ($script:mainAcbDef) {
+	if ($null -ne $script:mainAcbDef.PSObject.Properties["autoCmdBar"] -and "$($script:mainAcbDef.autoCmdBar)" -ne "") {
+		$acbName = "$($script:mainAcbDef.autoCmdBar)"
+	}
+	if ($null -ne $script:mainAcbDef.PSObject.Properties["name"] -and "$($script:mainAcbDef.name)" -ne "") {
+		$acbName = "$($script:mainAcbDef.name)"
+	}
+	if ($null -ne $script:mainAcbDef.PSObject.Properties["horizontalAlign"] -and "$($script:mainAcbDef.horizontalAlign)" -ne "") {
+		$acbHAlign = "$($script:mainAcbDef.horizontalAlign)"
+	}
+}
+$hasAcbChildren = ($script:mainAcbDef -and $script:mainAcbDef.children -and $script:mainAcbDef.children.Count -gt 0)
+$acbHasInner = ($acbHAlign -or (-not $acbAutofill) -or $hasAcbChildren)
+if ($acbHasInner) {
+	X "`t<AutoCommandBar name=`"$acbName`" id=`"-1`">"
+	if ($acbHAlign) { X "`t`t<HorizontalAlign>$acbHAlign</HorizontalAlign>" }
+	if (-not $acbAutofill) { X "`t`t<Autofill>false</Autofill>" }
+	if ($hasAcbChildren) {
+		X "`t`t<ChildItems>"
+		foreach ($child in $script:mainAcbDef.children) {
+			Emit-Element -el $child -indent "`t`t`t" -inCmdBar $true
+		}
+		X "`t`t</ChildItems>"
+	}
+	X "`t</AutoCommandBar>"
+} else {
+	X "`t<AutoCommandBar name=`"$acbName`" id=`"-1`"/>"
+}
 
 # 12e. Events
 if ($def.events) {

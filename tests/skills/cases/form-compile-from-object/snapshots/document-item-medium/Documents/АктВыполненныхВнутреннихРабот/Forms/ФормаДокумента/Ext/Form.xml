@@ -7,10 +7,7 @@
 		</v8:item>
 	</Title>
 	<AutoTitle>false</AutoTitle>
-	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
-		<HorizontalAlign>Right</HorizontalAlign>
-		<Autofill>false</Autofill>
-	</AutoCommandBar>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
 	<ChildItems>
 		<Pages name="ГруппаСтраницы" id="1">
 			<ExtendedTooltip name="ГруппаСтраницыРасширеннаяПодсказка" id="2"/>
@@ -114,6 +111,7 @@
 										</InputField>
 										<CheckBoxField name="Исправление" id="46">
 											<DataPath>Объект.Исправление</DataPath>
+											<TitleLocation>Right</TitleLocation>
 											<ContextMenu name="ИсправлениеКонтекстноеМеню" id="47"/>
 											<ExtendedTooltip name="ИсправлениеРасширеннаяПодсказка" id="48"/>
 										</CheckBoxField>
@@ -245,6 +243,7 @@
 				<v8:Type>cfg:DocumentObject.АктВыполненныхВнутреннихРабот</v8:Type>
 			</Type>
 			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
 		</Attribute>
 	</Attributes>
 </Form>

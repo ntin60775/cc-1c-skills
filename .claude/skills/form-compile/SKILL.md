@@ -62,8 +62,10 @@ powershell.exe -NoProfile -File .claude/skills/form-compile/scripts/form-compile
 | DSL ключ     | XML элемент       | Значение ключа                                    |
 |--------------|-------------------|---------------------------------------------------|
 | `"group"`    | UsualGroup        | `"horizontal"` / `"vertical"` / `"alwaysHorizontal"` / `"alwaysVertical"` / `"collapsible"` |
+| `"columnGroup"` | ColumnGroup    | `"horizontal"` / `"vertical"` / `"inCell"` — только внутри `columns` таблицы |
 | `"input"`    | InputField        | имя элемента                                      |
 | `"check"`    | CheckBoxField     | имя                                               |
+| `"radio"`    | RadioButtonField  | имя                                               |
 | `"label"`    | LabelDecoration   | имя (текст задаётся через `title`)                |
 | `"labelField"` | LabelField      | имя                                               |
 | `"table"`    | Table             | имя                                               |
@@ -74,6 +76,7 @@ powershell.exe -NoProfile -File .claude/skills/form-compile/scripts/form-compile
 | `"picField"` | PictureField      | имя                                               |
 | `"calendar"` | CalendarField     | имя                                               |
 | `"cmdBar"`   | CommandBar        | имя                                               |
+| `"autoCmdBar"` | AutoCommandBar формы | имя — наполняет главную АКП формы (id=-1), не попадает в `<ChildItems>` |
 | `"popup"`    | Popup             | имя                                               |
 
 ### Общие свойства (все типы элементов)
@@ -96,7 +99,7 @@ powershell.exe -NoProfile -File .claude/skills/form-compile/scripts/form-compile
 
 **input / picField**: `OnChange`, `StartChoice`, `ChoiceProcessing`, `AutoComplete`, `TextEditEnd`, `Clearing`, `Creating`, `EditTextChange`
 
-**check**: `OnChange`
+**check / radio**: `OnChange`
 
 **table**: `OnStartEdit`, `OnEditEnd`, `OnChange`, `Selection`, `ValueChoice`, `BeforeAddRow`, `BeforeDeleteRow`, `AfterDeleteRow`, `BeforeRowChange`, `BeforeEditEnd`, `OnActivateRow`, `OnActivateCell`, `Drag`, `DragStart`, `DragCheck`, `DragEnd`
 
@@ -124,7 +127,8 @@ powershell.exe -NoProfile -File .claude/skills/form-compile/scripts/form-compile
 | `skipOnInput: true` | Пропускать при обходе Tab | |
 | `inputHint` | Подсказка в пустом поле | `"Введите наименование..."` |
 | `width` / `height` | Размер | числа |
-| `autoMaxWidth: false` | Отключить авто-ширину | для фиксированных полей |
+| `autoMaxWidth: false` | Снять авто-ограничение ширины (поле растянется) | |
+| `maxWidth` / `maxHeight` | Жёсткое ограничение размера | числа; обычно вместе с `autoMaxWidth: false` |
 | `horizontalStretch: true` | Растягивать по ширине | |
 
 ### Чекбокс (check)
@@ -133,6 +137,37 @@ powershell.exe -NoProfile -File .claude/skills/form-compile/scripts/form-compile
 |------|----------|
 | `path` | DataPath |
 | `titleLocation` | Размещение заголовка |
+
+### Поле переключателя (radio)
+
+Радиокнопки или тумблер для выбора одного значения из списка.
+
+| Ключ | Описание | Пример |
+|------|----------|--------|
+| `path` | DataPath — привязка к реквизиту | `"СпособКурса"` |
+| `radioButtonType` | Вид переключателя | `"Auto"` (по умолчанию), `"RadioButtons"`, `"Tumbler"` |
+| `columnsCount` | Число колонок раскладки | `1`, `2`, ... |
+| `titleLocation` | Размещение заголовка | по умолчанию `"none"` |
+| `choiceList` | Список вариантов: массив `{value, presentation}` | см. ниже |
+
+`choiceList[*]`:
+
+| Ключ | Описание |
+|------|----------|
+| `value` | Значение варианта. Строка/число/булево; для перечисления — `"Enum.ИмяТипа.EnumValue.ИмяЗначения"` |
+| `presentation` | Текст рядом с переключателем. Строка (русский) либо объект `{ru, en, ...}` для мультиязычности |
+
+```json
+{
+  "radio": "СпособКурса",
+  "path": "Объект.СпособУстановкиКурса",
+  "radioButtonType": "Auto",
+  "choiceList": [
+    { "value": "Enum.СпособыКурса.EnumValue.Авто",   "presentation": { "ru": "Автоматически", "en": "Automatic" } },
+    { "value": "Enum.СпособыКурса.EnumValue.Ручной", "presentation": "вручную" }
+  ]
+}
+```
 
 ### Надпись-декорация (label)
 
@@ -149,7 +184,8 @@ powershell.exe -NoProfile -File .claude/skills/form-compile/scripts/form-compile
 | Ключ | Описание |
 |------|----------|
 | `showTitle: true` | Показывать заголовок группы |
-| `united: false` | Не объединять рамку |
+| `united: false` | Левый край полей ввода выравнивается только в пределах этой группы (по умолчанию `true` — сквозное выравнивание по самому длинному заголовку, в т.ч. с соседними группами) |
+| `collapsed: true` | Только для `"group": "collapsible"` — группа создаётся свёрнутой |
 | `representation` | `"none"`, `"normal"`, `"weak"`, `"strong"` |
 | `children: [...]` | Вложенные элементы |
 
@@ -175,6 +211,35 @@ powershell.exe -NoProfile -File .claude/skills/form-compile/scripts/form-compile
 | `rowPictureDataPath` | Путь к картинке строки (напр. `"Список.DefaultPicture"`) |
 | `tableAutofill: false` | Управление Autofill внутреннего AutoCommandBar |
 
+Колонки можно группировать через `columnGroup` (см. ниже).
+
+### Группа колонок (columnGroup)
+
+Используется только внутри `columns` таблицы. Значение ключа задаёт ориентацию: `"horizontal"`, `"vertical"`, `"inCell"` (склеивает колонки в одну ячейку шапки). Допускается вложение `columnGroup` в `columnGroup`.
+
+| Ключ | Описание |
+|------|----------|
+| `name` | Имя элемента (рекомендуется задавать явно) |
+| `title` | Заголовок группы |
+| `showTitle: false` | Скрыть заголовок |
+| `showInHeader: true/false` | Показывать ли группу в шапке таблицы |
+| `width` | Ширина |
+| `horizontalStretch: false` | Растягивание |
+| `children: [...]` | Колонки внутри группы (`input`, `labelField`, `picField`, вложенный `columnGroup` …) |
+
+```json
+{ "table": "Список", "path": "Список", "columns": [
+    { "columnGroup": "horizontal", "name": "ГруппаДата", "title": "Срок", "children": [
+        { "input": "СрокИсполнения", "path": "Список.СрокИсполнения" },
+        { "labelField": "Просрочено", "path": "Список.Просрочено" }
+    ]},
+    { "columnGroup": "inCell", "name": "ГруппаИсполнитель", "showInHeader": true, "children": [
+        { "input": "Исполнитель", "path": "Список.Исполнитель" }
+    ]},
+    { "input": "Комментарий", "path": "Список.Комментарий" }
+]}
+```
+
 ### Страницы (pages + page)
 
 | Ключ (pages) | Описание |
@@ -195,17 +260,38 @@ powershell.exe -NoProfile -File .claude/skills/form-compile/scripts/form-compile
 | `command` | Имя команды формы → `Form.Command.Имя` |
 | `stdCommand` | Стандартная команда: `"Close"` → `Form.StandardCommand.Close`; с точкой: `"Товары.Add"` → `Form.Item.Товары.StandardCommand.Add` |
 | `defaultButton: true` | Кнопка по умолчанию |
-| `type` | `"usual"`, `"hyperlink"`, `"commandBar"` |
+| `type` | `"usual"`, `"hyperlink"`. По умолчанию `"usual"`. Конкретный XML-вид (UsualButton/Hyperlink/CommandBarButton/CommandBarHyperlink) подставляется автоматически по контексту |
 | `picture` | Картинка кнопки |
 | `representation` | `"Auto"`, `"Text"`, `"Picture"`, `"PictureAndText"` |
 | `locationInCommandBar` | `"Auto"`, `"InCommandBar"`, `"InAdditionalSubmenu"` |
 
 ### Командная панель (cmdBar)
 
+Дополнительная пользовательская панель команд, размещается как обычный элемент в layout формы.
+
 | Ключ | Описание |
 |------|----------|
 | `autofill: true` | Автозаполнение стандартными командами |
 | `children: [...]` | Кнопки панели |
+
+### Главная автокомандная панель формы (autoCmdBar)
+
+Наполняет встроенную AutoCommandBar формы (id=-1) кастомными кнопками. Указывать только если нужно добавить свои кнопки на главную панель или явно управлять автозаполнением.
+
+| Ключ | Описание |
+|------|----------|
+| `autofill: true/false` | Автозаполнение стандартными командами |
+| `horizontalAlign` | `"Left"` / `"Center"` / `"Right"` |
+| `children: [...]` | Кнопки/popup |
+
+```json
+{ "autoCmdBar": "ФормаКоманднаяПанель", "autofill": true, "children": [
+   { "button": "ИзменитьВыделенные", "command": "ИзменитьВыделенные",
+     "locationInCommandBar": "InAdditionalSubmenu" }
+]}
+```
+
+Кнопки основных действий формы и подменю размещают здесь, а не в отдельной группе на форме. Отдельной кнопкой в layout — только если она логически привязана к конкретному полю или группе.
 
 ### Выпадающее меню (popup)
 
@@ -239,6 +325,7 @@ powershell.exe -NoProfile -File .claude/skills/form-compile/scripts/form-compile
 ```
 
 - `savedData: true` — сохраняемые данные
+- `main: true` — главный реквизит формы (например, основной `*Object.*`, `DynamicList`, `*RecordSet.*`)
 
 ### Команды (commands)
 
@@ -348,9 +435,9 @@ powershell.exe -NoProfile -File .claude/skills/form-compile/scripts/form-compile
       { "check": "ПерваяСтрокаЗаголовок", "path": "ПерваяСтрокаЗаголовок" }
     ]},
     { "input": "Результат", "path": "Результат", "multiLine": true, "height": 8, "readOnly": true, "title": "Лог" },
-    { "group": "horizontal", "name": "ГруппаКнопок", "children": [
+    { "autoCmdBar": "ФормаКоманднаяПанель", "children": [
       { "button": "Загрузить", "command": "Загрузить", "defaultButton": true },
-      { "button": "Закрыть", "stdCommand": "Close" }
+      { "button": "Закрыть",   "stdCommand": "Close" }
     ]}
   ],
   "attributes": [

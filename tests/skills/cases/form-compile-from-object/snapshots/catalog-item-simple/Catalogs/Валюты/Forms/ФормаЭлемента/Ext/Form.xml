@@ -6,10 +6,8 @@
 			<v8:content>Валюты</v8:content>
 		</v8:item>
 	</Title>
-	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
-		<HorizontalAlign>Right</HorizontalAlign>
-		<Autofill>false</Autofill>
-	</AutoCommandBar>
+	<AutoTitle>false</AutoTitle>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
 	<ChildItems>
 		<UsualGroup name="ГруппаШапка" id="1">
 			<Group>Vertical</Group>
@@ -37,6 +35,7 @@
 				</UsualGroup>
 				<CheckBoxField name="ЗагружаетсяИзИнтернета" id="11">
 					<DataPath>Объект.ЗагружаетсяИзИнтернета</DataPath>
+					<TitleLocation>Right</TitleLocation>
 					<ContextMenu name="ЗагружаетсяИзИнтернетаКонтекстноеМеню" id="12"/>
 					<ExtendedTooltip name="ЗагружаетсяИзИнтернетаРасширеннаяПодсказка" id="13"/>
 				</CheckBoxField>
@@ -83,6 +82,7 @@
 				<v8:Type>cfg:CatalogObject.Валюты</v8:Type>
 			</Type>
 			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
 		</Attribute>
 	</Attributes>
 </Form>

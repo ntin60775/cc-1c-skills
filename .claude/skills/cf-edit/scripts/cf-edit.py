@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# cf-edit v1.1 — Edit 1C configuration root (Configuration.xml)
+# cf-edit v1.4 — Edit 1C configuration root (Configuration.xml)
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 
 import argparse
@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import sys
+import uuid as _uuid
 from html import escape as html_escape
 from lxml import etree
 
@@ -161,7 +162,7 @@ def main():
     parser = argparse.ArgumentParser(description="Edit 1C configuration root (Configuration.xml)", allow_abbrev=False)
     parser.add_argument("-ConfigPath", "-Path", required=True)
     parser.add_argument("-DefinitionFile", default=None)
-    parser.add_argument("-Operation", default=None, choices=["modify-property", "add-childObject", "remove-childObject", "add-defaultRole", "remove-defaultRole", "set-defaultRoles"])
+    parser.add_argument("-Operation", default=None, choices=["modify-property", "add-childObject", "remove-childObject", "add-defaultRole", "remove-defaultRole", "set-defaultRoles", "set-panels", "set-home-page"])
     parser.add_argument("-Value", default=None)
     parser.add_argument("-NoValidate", action="store_true")
     args = parser.parse_args()
@@ -493,6 +494,269 @@ def main():
         modify_count += 1
         info(f"Set DefaultRoles: {len(items)} roles")
 
+    # --- set-panels (writes Ext/ClientApplicationInterface.xml from scratch) ---
+    # Canonical English aliases — preferred form, used in docs and error messages.
+    PANEL_UUIDS = {
+        "sections":  "b553047f-c9aa-4157-978d-448ecad24248",
+        "open":      "cbab57f2-a0f3-4f0a-89ea-4cb19570ab75",
+        "favorites": "13322b22-3960-4d68-93a6-fe2dd7f28ca3",
+        "history":   "c933ac92-92cd-459d-81cc-e0c8a83ced99",
+        "functions": "b2735bd3-d822-4430-ba59-c9e869693b24",
+    }
+    # Russian synonyms — silently accepted (cf-info displays Russian names;
+    # users may copy them straight into cf-edit value).
+    PANEL_SYNONYMS = {
+        "разделов": "sections",   "разделы":   "sections",
+        "открытых": "open",       "открытые":  "open",
+        "избранного": "favorites","избранное": "favorites",
+        "истории":  "history",    "история":   "history",
+        "функций":  "functions",  "функции":   "functions",
+    }
+
+    def build_panel_entry_xml(entry, indent):
+        if isinstance(entry, str):
+            key = entry.lower()
+            key = PANEL_SYNONYMS.get(key, key)
+            if key not in PANEL_UUIDS:
+                allowed = ", ".join(sorted(PANEL_UUIDS.keys()))
+                print(f"Unknown panel alias '{entry}'. Allowed: {allowed}", file=sys.stderr)
+                sys.exit(1)
+            inst = str(_uuid.uuid4())
+            return f'{indent}<panel id="{inst}">\r\n{indent}\t<uuid>{PANEL_UUIDS[key]}</uuid>\r\n{indent}</panel>'
+        if isinstance(entry, dict) and "group" in entry:
+            children = entry["group"]
+            if not children:
+                print("group must contain at least one entry", file=sys.stderr)
+                sys.exit(1)
+            gid = str(_uuid.uuid4())
+            inner = ""
+            for child in children:
+                child_xml = build_panel_entry_xml(child, indent + "\t\t")
+                inner += f"{indent}\t<group>\r\n{child_xml}\r\n{indent}\t</group>\r\n"
+            return f'{indent}<group id="{gid}">\r\n{inner}{indent}</group>'
+        print(f"Panel entry must be string alias or {{group:[...]}}, got: {entry!r}", file=sys.stderr)
+        sys.exit(1)
+
+    def do_set_panels(value):
+        nonlocal modify_count
+        layout = value
+        if isinstance(layout, str):
+            try:
+                layout = json.loads(layout)
+            except json.JSONDecodeError:
+                print(f"set-panels value must be valid JSON object", file=sys.stderr)
+                sys.exit(1)
+        if not isinstance(layout, dict) or not layout:
+            print("set-panels value must be non-empty object", file=sys.stderr)
+            sys.exit(1)
+
+        sides = ("top", "left", "right", "bottom")
+        # Reject unknown side keys
+        for k in layout.keys():
+            if k not in sides:
+                print(f"Unknown side '{k}'. Allowed: {', '.join(sides)}", file=sys.stderr)
+                sys.exit(1)
+
+        body_parts = []
+        for side in sides:
+            entries = layout.get(side)
+            if entries is None:
+                continue
+            if not isinstance(entries, list):
+                entries = [entries]
+            for entry in entries:
+                entry_xml = build_panel_entry_xml(entry, "\t\t")
+                body_parts.append(f"\t<{side}>\r\n{entry_xml}\r\n\t</{side}>")
+        body = "\r\n".join(body_parts)
+        body_block = body + "\r\n" if body else ""
+        declarations = (
+            '\t<panelDef id="b553047f-c9aa-4157-978d-448ecad24248"/>\r\n'
+            '\t<panelDef id="13322b22-3960-4d68-93a6-fe2dd7f28ca3"/>\r\n'
+            '\t<panelDef id="c933ac92-92cd-459d-81cc-e0c8a83ced99"/>\r\n'
+            '\t<panelDef id="cbab57f2-a0f3-4f0a-89ea-4cb19570ab75"/>\r\n'
+            '\t<panelDef id="b2735bd3-d822-4430-ba59-c9e869693b24"/>'
+        )
+        cai_xml = (
+            '<?xml version="1.0" encoding="UTF-8"?>\r\n'
+            '<ClientApplicationInterface xmlns="http://v8.1c.ru/8.2/managed-application/core" '
+            'xmlns:xs="http://www.w3.org/2001/XMLSchema" '
+            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+            'xsi:type="InterfaceLayouter">\r\n'
+            f'{body_block}{declarations}\r\n'
+            '</ClientApplicationInterface>'
+        )
+        ext_dir = os.path.join(config_dir, "Ext")
+        os.makedirs(ext_dir, exist_ok=True)
+        cai_path = os.path.join(ext_dir, "ClientApplicationInterface.xml")
+        with open(cai_path, "w", encoding="utf-8-sig", newline="") as fh:
+            fh.write(cai_xml)
+        modify_count += 1
+        info(f"Wrote panel layout: {cai_path}")
+
+    # --- set-home-page (writes Ext/HomePageWorkArea.xml from scratch) ---
+    RU_TYPE_MAP = {
+        "справочник": "Catalog", "документ": "Document", "перечисление": "Enum",
+        "отчёт": "Report", "отчет": "Report", "обработка": "DataProcessor",
+        "общаяформа": "CommonForm", "журналдокументов": "DocumentJournal",
+        "планвидовхарактеристик": "ChartOfCharacteristicTypes",
+        "плансчетов": "ChartOfAccounts",
+        "планвидоврасчета": "ChartOfCalculationTypes",
+        "планвидоврасчёта": "ChartOfCalculationTypes",
+        "регистрсведений": "InformationRegister",
+        "регистрнакопления": "AccumulationRegister",
+        "регистрбухгалтерии": "AccountingRegister",
+        "регистррасчета": "CalculationRegister",
+        "регистррасчёта": "CalculationRegister",
+        "бизнеспроцесс": "BusinessProcess",
+        "задача": "Task", "планобмена": "ExchangePlan",
+        "хранилищенастроек": "SettingsStorage",
+    }
+    DIR_TO_TYPE = {v.lower(): k for k, v in TYPE_TO_DIR.items()}
+    UUID_RE = __import__("re").compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+
+    def normalize_form_ref(s):
+        s = (s or "").strip()
+        if not s:
+            return s
+        if UUID_RE.match(s):
+            return s
+        if "/" in s or "\\" in s:
+            parts = [p for p in s.replace("\\", "/").split("/") if p and p.lower() != "ext"]
+            if parts and parts[-1].lower() == "form.xml":
+                parts = parts[:-1]
+            if len(parts) >= 2:
+                type_dir = parts[0]
+                type_singular = DIR_TO_TYPE.get(type_dir.lower())
+                if type_singular:
+                    if type_singular == "CommonForm" and len(parts) >= 2:
+                        return f"CommonForm.{parts[1]}"
+                    if len(parts) >= 4 and parts[2].lower() == "forms":
+                        return f"{type_singular}.{parts[1]}.Form.{parts[3]}"
+            return s
+        segs = s.split(".")
+        if segs:
+            head = segs[0].lower()
+            if head in RU_TYPE_MAP:
+                segs[0] = RU_TYPE_MAP[head]
+            for i in range(1, len(segs)):
+                if segs[i] == "Форма":
+                    segs[i] = "Form"
+            if len(segs) == 3 and segs[0] in TYPE_ORDER and segs[0] != "CommonForm":
+                segs = [segs[0], segs[1], "Form", segs[2]]
+        return ".".join(segs)
+
+    def get_field(obj, keys):
+        for k in keys:
+            if isinstance(obj, dict) and k in obj:
+                return obj[k]
+        return None
+
+    def build_home_page_item_xml(entry, indent):
+        if isinstance(entry, str):
+            form_ref = normalize_form_ref(entry)
+            height = 10
+            common = True
+            roles = None
+        elif isinstance(entry, dict):
+            form_raw = get_field(entry, ["form", "Form"])
+            if not form_raw:
+                print(f"Home page item: 'form' is required, got: {entry!r}", file=sys.stderr)
+                sys.exit(1)
+            form_ref = normalize_form_ref(str(form_raw))
+            h = get_field(entry, ["height", "Height"])
+            height = int(h) if h is not None else 10
+            vis = get_field(entry, ["visibility", "Visibility"])
+            common = bool(vis) if vis is not None else True
+            roles = get_field(entry, ["roles"])
+        else:
+            print(f"Home page item must be string or object, got: {entry!r}", file=sys.stderr)
+            sys.exit(1)
+
+        vis_parts = [f"{indent}\t\t<xr:Common>{str(common).lower()}</xr:Common>"]
+        if roles and isinstance(roles, dict):
+            for rname, rval in roles.items():
+                if not rname.startswith("Role.") and not UUID_RE.match(rname):
+                    rname = f"Role.{rname}"
+                rval_s = str(bool(rval)).lower()
+                vis_parts.append(f'{indent}\t\t<xr:Value name="{html_escape(rname, quote=True)}">{rval_s}</xr:Value>')
+        vis_block = "\r\n".join(vis_parts)
+        esc_form = html_escape(form_ref, quote=True)
+        return (
+            f"{indent}<Item>\r\n"
+            f"{indent}\t<Form>{esc_form}</Form>\r\n"
+            f"{indent}\t<Height>{height}</Height>\r\n"
+            f"{indent}\t<Visibility>\r\n"
+            f"{vis_block}\r\n"
+            f"{indent}\t</Visibility>\r\n"
+            f"{indent}</Item>"
+        )
+
+    def do_set_home_page(value):
+        nonlocal modify_count
+        layout = value
+        if isinstance(layout, str):
+            try:
+                layout = json.loads(layout)
+            except json.JSONDecodeError:
+                print("set-home-page value must be valid JSON object", file=sys.stderr)
+                sys.exit(1)
+        if not isinstance(layout, dict) or not layout:
+            print("set-home-page value must be non-empty object", file=sys.stderr)
+            sys.exit(1)
+
+        allowed_templates = ("OneColumn", "TwoColumnsEqualWidth", "TwoColumnsVariableWidth")
+        tmpl = get_field(layout, ["template", "WorkingAreaTemplate"]) or "TwoColumnsEqualWidth"
+        if tmpl not in allowed_templates:
+            print(f"Unknown template '{tmpl}'. Allowed: {', '.join(allowed_templates)}", file=sys.stderr)
+            sys.exit(1)
+
+        left_items = get_field(layout, ["left", "LeftColumn"])
+        right_items = get_field(layout, ["right", "RightColumn"])
+
+        known = {"template", "WorkingAreaTemplate", "left", "LeftColumn", "right", "RightColumn"}
+        for k in layout.keys():
+            if k not in known:
+                print(f"Unknown key '{k}'. Allowed: template, left, right", file=sys.stderr)
+                sys.exit(1)
+
+        if tmpl == "OneColumn" and right_items:
+            print("Template 'OneColumn' cannot have items in 'right' column", file=sys.stderr)
+            sys.exit(1)
+
+        def build_column(tag, items):
+            if not items:
+                return f"\t<{tag}/>"
+            if not isinstance(items, list):
+                items = [items]
+            if not items:
+                return f"\t<{tag}/>"
+            blocks = [build_home_page_item_xml(it, "\t\t") for it in items]
+            body = "\r\n".join(blocks)
+            return f"\t<{tag}>\r\n{body}\r\n\t</{tag}>"
+
+        left_xml = build_column("LeftColumn", left_items)
+        right_xml = build_column("RightColumn", right_items)
+
+        hp_xml = (
+            '<?xml version="1.0" encoding="UTF-8"?>\r\n'
+            '<HomePageWorkArea xmlns="http://v8.1c.ru/8.3/xcf/extrnprops" '
+            'xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" '
+            'xmlns:xs="http://www.w3.org/2001/XMLSchema" '
+            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.17">\r\n'
+            f'\t<WorkingAreaTemplate>{tmpl}</WorkingAreaTemplate>\r\n'
+            f'{left_xml}\r\n'
+            f'{right_xml}\r\n'
+            '</HomePageWorkArea>'
+        )
+
+        ext_dir = os.path.join(config_dir, "Ext")
+        os.makedirs(ext_dir, exist_ok=True)
+        hp_path = os.path.join(ext_dir, "HomePageWorkArea.xml")
+        with open(hp_path, "w", encoding="utf-8-sig", newline="") as fh:
+            fh.write(hp_xml)
+        modify_count += 1
+        info(f"Wrote home page layout: {hp_path}")
+
     # --- Execute operations ---
     operations = []
     if args.DefinitionFile:
@@ -513,17 +777,21 @@ def main():
         op_value = op.get("value", args.Value or "")
 
         if op_name == "modify-property":
-            do_modify_property(op_value)
+            do_modify_property(op_value if isinstance(op_value, str) else str(op_value))
         elif op_name == "add-childObject":
-            do_add_child_object(op_value)
+            do_add_child_object(op_value if isinstance(op_value, str) else str(op_value))
         elif op_name == "remove-childObject":
-            do_remove_child_object(op_value)
+            do_remove_child_object(op_value if isinstance(op_value, str) else str(op_value))
         elif op_name == "add-defaultRole":
-            do_add_default_role(op_value)
+            do_add_default_role(op_value if isinstance(op_value, str) else str(op_value))
         elif op_name == "remove-defaultRole":
-            do_remove_default_role(op_value)
+            do_remove_default_role(op_value if isinstance(op_value, str) else str(op_value))
         elif op_name == "set-defaultRoles":
-            do_set_default_roles(op_value)
+            do_set_default_roles(op_value if isinstance(op_value, str) else str(op_value))
+        elif op_name == "set-panels":
+            do_set_panels(op_value)
+        elif op_name == "set-home-page":
+            do_set_home_page(op_value)
         else:
             print(f"Unknown operation: {op_name}", file=sys.stderr)
             sys.exit(1)
