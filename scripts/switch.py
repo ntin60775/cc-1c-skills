@@ -2,7 +2,7 @@
 # switch.py v1.3 — Переключение навыков 1С между AI-платформами и рантаймами
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
 """
-Копирует (или создаёт ссылки на) навыки из .claude/skills/ на другие AI-платформы
+Копирует (или создаёт ссылки на) навыки из .agents/skills/ на другие AI-платформы
 (Cursor, Codex, Copilot, Kiro, Gemini CLI, OpenCode, Windsurf, Kilo Code, Cline,
 Roo Code, Augment и др.) с перезаписью путей, и/или переключает рантайм (PowerShell ↔ Python).
 
@@ -27,7 +27,6 @@ import sys
 # Platform registry
 # ---------------------------------------------------------------------------
 PLATFORMS = {
-    'claude-code': '.claude/skills',
     'agents':      '.agents/skills',
     'augment':     '.augment/skills',
     'cline':       '.cline/skills',
@@ -37,13 +36,12 @@ PLATFORMS = {
     'gemini':      '.gemini/skills',
     'kilo':        '.kilocode/skills',
     'kiro':        '.kiro/skills',
-    'kimi':        '.kimi/skills',
     'opencode':    '.opencode/skills',
     'roo':         '.roo/skills',
     'windsurf':    '.windsurf/skills',
 }
 
-SOURCE_PREFIX = '.claude/skills'
+SOURCE_PREFIX = '.agents/skills'
 
 # Рекомендуемые записи для .gitignore целевого проекта
 GITIGNORE_RECOMMENDATIONS = [
@@ -182,7 +180,7 @@ def is_different_dir(dir1, dir2):
 # Transformations
 # ---------------------------------------------------------------------------
 def rewrite_paths(content, source_prefix, target_prefix):
-    """Replace .claude/skills/ path prefix with target platform prefix."""
+    """Replace .agents/skills/ path prefix with target platform prefix."""
     return content.replace(source_prefix + '/', target_prefix + '/')
 
 
@@ -524,7 +522,7 @@ def interactive_mode():
     print("=" * 31)
 
     platform_options = [
-        ("Claude Code",    ".claude/skills/"),
+        ("Claude Code",    ".agents/skills/"),
         ("Augment",        ".augment/skills/"),
         ("Cline",          ".cline/skills/"),
         ("Cursor",         ".cursor/skills/"),

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # switch-to-python v1.1 — Switch skill .md files to use Python scripts
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
-"""Replaces powershell.exe invocations with python in all .md files under .claude/skills/."""
+"""Replaces powershell.exe invocations with python in all .md files under .agents/skills/."""
 import os, re, glob, sys
 
 def main():

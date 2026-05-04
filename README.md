@@ -8,11 +8,11 @@
 
 ## Быстрый старт
 
-Скопируйте каталог `.claude/skills/` из этого репозитория в корень вашего проекта. Навыки станут доступны при запуске Claude Code из этого каталога.
+Скопируйте каталог `.agents/skills/` из этого репозитория в корень вашего проекта. Навыки станут доступны при запуске Claude Code из этого каталога.
 
 ```
 МойПроект/
-├── .claude/skills/    ← скопировать сюда
+├── .agents/skills/    ← скопировать сюда
 └── ...
 ```
 
@@ -103,7 +103,7 @@ python scripts/switch.py --undo cursor                         # удалить 
 
 | Платформа | Целевой каталог | `switch.py <platform>` |
 |-----------|----------------|------------------------|
-| Claude Code | `.claude/skills/` | `claude-code` |
+| Claude Code | `.agents/skills/` | `claude-code` |
 | Augment | `.augment/skills/` | `augment` |
 | Cline | `.cline/skills/` | `cline` |
 | Cursor | `.cursor/skills/` | `cursor` |
@@ -118,7 +118,7 @@ python scripts/switch.py --undo cursor                         # удалить 
 | Windsurf | `.windsurf/skills/` | `windsurf` |
 | Agent Skills | `.agents/skills/` | `agents` |
 
-Некоторые платформы (Augment, Cline, VS Code/Copilot) также сканируют `.claude/skills/` как fallback — для них копирование необязательно, но `switch.py` даёт явный контроль над путями.
+Некоторые платформы (Augment, Cline, VS Code/Copilot) также сканируют `.agents/skills/` как fallback — для них копирование необязательно, но `switch.py` даёт явный контроль над путями.
 
 Автоактивация — основной режим: просто опишите задачу своими словами, ассистент сам подберёт нужный навык по `description` в SKILL.md. Слеш-команды (например `/epf-init`) — для точного контроля, когда нужно вызвать конкретный навык.
 
@@ -162,7 +162,7 @@ python scripts/switch.py --runtime powershell  # вернуть на PowerShell
 ## Структура репозитория
 
 ```
-.claude/skills/          # Навыки Claude Code
+.agents/skills/          # Навыки Claude Code
 ├── epf-init/            # Создание обработки
 ├── epf-build/           # Сборка EPF
 ├── epf-dump/            # Разборка EPF

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # switch-to-powershell v1.1 — Switch skill .md files back to PowerShell scripts
 # Source: https://github.com/Nikolay-Shirokov/cc-1c-skills
-"""Replaces python invocations with powershell.exe in all .md files under .claude/skills/."""
+"""Replaces python invocations with powershell.exe in all .md files under .agents/skills/."""
 import os, re, glob, sys
 
 def main():
@@ -15,7 +15,7 @@ def main():
         print(f"Error: no .md files found in {skills_dir}", file=sys.stderr)
         sys.exit(1)
 
-    rx = re.compile(r'python\s+(\'?\.claude/skills/[^\s\']+?)\.py')
+    rx = re.compile(r'python\s+(\'?\.agents/skills/[^\s\']+?)\.py')
     switched = 0
     warnings = []
 
