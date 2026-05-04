@@ -10,6 +10,7 @@ Roo Code, Augment и др.) с перезаписью путей, и/или пе
   python scripts/switch.py                                       # интерактивный режим
   python scripts/switch.py cursor                                # скопировать на Cursor
   python scripts/switch.py cursor --runtime python               # скопировать + Python
+  python scripts/switch.py kimi --runtime python                 # скопировать на Kimi CLI
   python scripts/switch.py claude-code --project-dir /my/proj    # установить в проект
   python scripts/switch.py claude-code --project-dir /my/proj --link  # ссылки вместо копий
   python scripts/switch.py --undo cursor                         # удалить копию
@@ -36,6 +37,7 @@ PLATFORMS = {
     'gemini':      '.gemini/skills',
     'kilo':        '.kilocode/skills',
     'kiro':        '.kiro/skills',
+    'kimi':        '.kimi/skills',
     'opencode':    '.opencode/skills',
     'roo':         '.roo/skills',
     'windsurf':    '.windsurf/skills',
@@ -529,6 +531,7 @@ def interactive_mode():
         ("GitHub Copilot", ".github/skills/"),
         ("Kilo Code",      ".kilocode/skills/"),
         ("Kiro",           ".kiro/skills/"),
+        ("Kimi CLI",       ".kimi/skills/"),
         ("OpenAI Codex",   ".codex/skills/"),
         ("Gemini CLI",     ".gemini/skills/"),
         ("OpenCode",       ".opencode/skills/"),
@@ -538,7 +541,7 @@ def interactive_mode():
     ]
     platform_keys = [
         'claude-code', 'augment', 'cline', 'cursor', 'copilot', 'kilo',
-        'kiro', 'codex', 'gemini', 'opencode', 'roo', 'windsurf', 'agents',
+        'kiro', 'kimi', 'codex', 'gemini', 'opencode', 'roo', 'windsurf', 'agents',
     ]
 
     choice = ask_choice("Для какой платформы настроить навыки?", platform_options)
@@ -598,12 +601,15 @@ def interactive_mode():
         if method == 1:
             return cmd_link('claude-code', project_dir)
 
-    runtime_options = [
-        ("PowerShell", "рекомендуется для Windows"),
-        ("Python",     "рекомендуется для Linux/Mac"),
-    ]
-    rt_choice = ask_choice("Какой рантайм скриптов?", runtime_options)
-    runtime = 'powershell' if rt_choice == 1 else 'python'
+    if platform == 'kimi':
+        runtime = 'python'
+    else:
+        runtime_options = [
+            ("PowerShell", "рекомендуется для Windows"),
+            ("Python",     "рекомендуется для Linux/Mac"),
+        ]
+        rt_choice = ask_choice("Какой рантайм скриптов?", runtime_options)
+        runtime = 'powershell' if rt_choice == 1 else 'python'
 
     if install_mode:
         return cmd_install(platform, runtime, project_dir)

@@ -87,6 +87,7 @@ git remote add upstream https://github.com/Nikolay-Shirokov/cc-1c-skills.git
 python scripts/switch.py                                       # интерактивный режим
 python scripts/switch.py cursor                                # скопировать навыки для Cursor
 python scripts/switch.py cursor --runtime python               # Cursor + Python-рантайм
+python scripts/switch.py kimi --runtime python                 # Kimi CLI + Python-рантайм
 python scripts/switch.py claude-code --project-dir /my/proj    # установить копию в проект
 python scripts/switch.py claude-code --project-dir /my/proj --link  # ссылки вместо копий
 python scripts/switch.py --undo cursor                         # удалить копию / ссылки
@@ -109,6 +110,7 @@ python scripts/switch.py --undo cursor                         # удалить 
 | GitHub Copilot | `.github/skills/` | `copilot` |
 | Kilo Code | `.kilocode/skills/` | `kilo` |
 | Kiro | `.kiro/skills/` | `kiro` |
+| Kimi CLI | `.kimi/skills/` | `kimi` |
 | OpenAI Codex | `.codex/skills/` | `codex` |
 | Gemini CLI | `.gemini/skills/` | `gemini` |
 | OpenCode | `.opencode/skills/` | `opencode` |
