@@ -37,7 +37,7 @@ jobs:
       - name: Слить upstream/main
         run: |
           git checkout main
-          git merge --no-edit upstream/main
+          git merge --no-edit -X ours upstream/main
 
       - name: Отправить main в fork
         run: git push origin main
