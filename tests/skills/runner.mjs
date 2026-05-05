@@ -29,7 +29,7 @@ Arguments:
 
 Options:
   --update-snapshots      Overwrite snapshot files with current actual output
-  --runtime <ps|python>   Which script port to run (default: powershell)
+  --runtime <python>      Which script port to run (default: python)
   --json <path>           Write JSON report to <path>
   --concurrency <N>       Number of parallel workers (default: cpu count)
   --with-validation       Run platform validation (1cv8 design checks) after compile
@@ -39,7 +39,7 @@ Options:
 }
 
 function parseArgs(argv) {
-  const args = { filter: null, updateSnapshots: false, runtime: 'powershell', jsonReport: null, verbose: false, concurrency: cpus().length, withValidation: false, help: false };
+  const args = { filter: null, updateSnapshots: false, runtime: 'python', jsonReport: null, verbose: false, concurrency: cpus().length, withValidation: false, help: false };
   const rest = argv.slice(2);
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
@@ -127,9 +127,9 @@ function ensureSetup(setupName, runtime, skillCasesDir) {
     if (existsSync(cached)) return cached;
 
     mkdirSync(cached, { recursive: true });
-    const script = resolveScript('cf-init/scripts/cf-init', runtime);
+    const script = resolveScript('cf-init/scripts/cf-init');
     try {
-      execSkillRaw(runtime, script, ['-Name', 'TestConfig', '-OutputDir', cached]);
+      execSkillRaw(script, ['-Name', 'TestConfig', '-OutputDir', cached]);
     } catch (e) {
       rmSync(cached, { recursive: true, force: true });
       throw new Error(`Failed to create empty-config fixture: ${e.message}`);
@@ -148,28 +148,16 @@ function ensureSetup(setupName, runtime, skillCasesDir) {
 
 // ─── Script resolution ──────────────────────────────────────────────────────
 
-function resolveScript(scriptRelPath, runtime) {
-  const ext = runtime === 'python' ? '.py' : '.ps1';
+function resolveScript(scriptRelPath) {
+  const ext = '.py';
   const full = join(SKILLS, scriptRelPath + ext);
   if (!existsSync(full)) throw new Error(`Script not found: ${full}`);
   return full;
 }
 
-function execSkillRaw(runtime, scriptPath, args, cwd) {
+function execSkillRaw(scriptPath, args, cwd) {
   const execCwd = cwd || REPO_ROOT;
-  if (runtime === 'python') {
-    return execFileSync(process.env.PYTHON || 'python', [scriptPath, ...args], {
-      encoding: 'utf8',
-      timeout: 60_000,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      cwd: execCwd,
-    });
-  }
-  // PowerShell
-  return execFileSync('powershell.exe', [
-    '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
-    '-File', scriptPath, ...args
-  ], {
+  return execFileSync(process.env.PYTHON || 'python', [scriptPath, ...args], {
     encoding: 'utf8',
     timeout: 60_000,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -177,12 +165,10 @@ function execSkillRaw(runtime, scriptPath, args, cwd) {
   });
 }
 
-function execSkillAsync(runtime, scriptPath, args, cwd) {
+function execSkillAsync(scriptPath, args, cwd) {
   return new Promise((resolve, reject) => {
     const execCwd = cwd || REPO_ROOT;
-    const cmd = runtime === 'python'
-      ? [process.env.PYTHON || 'python', [scriptPath, ...args]]
-      : ['powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', scriptPath, ...args]];
+    const cmd = [process.env.PYTHON || 'python', [scriptPath, ...args]];
 
     const child = execFile(cmd[0], cmd[1], {
       encoding: 'utf8',
@@ -226,7 +212,7 @@ function cleanupWorkspace(ws) {
 
 function buildArgs(skillConfig, caseData, workDir, inputFilePath, runtime) {
   const args = [];
-  const scriptPath = resolveScript(skillConfig.script, runtime);
+  const scriptPath = resolveScript(skillConfig.script);
 
   for (const mapping of skillConfig.args) {
     args.push(mapping.flag);
@@ -436,10 +422,10 @@ function runPostValidation(postValidate, caseData, workDir, runtime) {
   const targetPath = resolveValidatePath(postValidate, caseData, workDir);
   if (!targetPath) return null; // no validatePath in case — skip silently
 
-  const script = resolveScript(postValidate.script, runtime);
+  const script = resolveScript(postValidate.script);
   const args = [postValidate.flag, targetPath];
   try {
-    execSkillRaw(runtime, script, args);
+    execSkillRaw(script, args);
     return null; // validation passed
   } catch (e) {
     const detail = e.stderr?.trim() || e.stdout?.trim() || e.message;
@@ -451,10 +437,10 @@ async function runPostValidationAsync(postValidate, caseData, workDir, runtime) 
   const targetPath = resolveValidatePath(postValidate, caseData, workDir);
   if (!targetPath) return null;
 
-  const script = resolveScript(postValidate.script, runtime);
+  const script = resolveScript(postValidate.script);
   const args = [postValidate.flag, targetPath];
   try {
-    await execSkillAsync(runtime, script, args);
+    await execSkillAsync(script, args);
     return null;
   } catch (e) {
     const detail = e.stderr?.trim() || e.stdout?.trim() || e.message;
@@ -485,7 +471,7 @@ async function runCaseAsync(testCase, opts) {
     // Pre-run steps
     if (caseData.preRun) {
       for (const step of caseData.preRun) {
-        const preScript = resolveScript(step.script, opts.runtime);
+        const preScript = resolveScript(step.script);
         const preArgs = [];
         for (const [flag, value] of Object.entries(step.args || {})) {
           preArgs.push(flag);
@@ -502,7 +488,7 @@ async function runCaseAsync(testCase, opts) {
         }
         try {
           const preCwd = step.cwd === '{workDir}' ? workDir : undefined;
-          await execSkillAsync(opts.runtime, preScript, preArgs, preCwd);
+          await execSkillAsync(preScript, preArgs, preCwd);
         } catch (e) {
           throw new Error(`preRun step "${step.script}" failed: ${e.stderr || e.message}`);
         }
@@ -521,7 +507,7 @@ async function runCaseAsync(testCase, opts) {
     let stdout = '', stderr = '', exitCode = 0;
     try {
       const execCwd = skillConfig.cwd === 'workDir' ? workDir : undefined;
-      stdout = await execSkillAsync(opts.runtime, scriptPath, args, execCwd);
+      stdout = await execSkillAsync(scriptPath, args, execCwd);
     } catch (e) {
       exitCode = e.status ?? 1;
       stdout = e.stdout || '';
@@ -615,7 +601,7 @@ function runCase(testCase, opts) {
     // 2. Pre-run steps (setup prerequisites like creating objects)
     if (caseData.preRun) {
       for (const step of caseData.preRun) {
-        const preScript = resolveScript(step.script, opts.runtime);
+        const preScript = resolveScript(step.script);
         const preArgs = [];
         for (const [flag, value] of Object.entries(step.args || {})) {
           preArgs.push(flag);
@@ -640,7 +626,7 @@ function runCase(testCase, opts) {
         }
         try {
           const preCwd = step.cwd === '{workDir}' ? workDir : undefined;
-          execSkillRaw(opts.runtime, preScript, preArgs, preCwd);
+          execSkillRaw(preScript, preArgs, preCwd);
         } catch (e) {
           throw new Error(`preRun step "${step.script}" failed: ${e.stderr || e.message}`);
         }
@@ -660,7 +646,7 @@ function runCase(testCase, opts) {
 
     try {
       const execCwd = skillConfig.cwd === 'workDir' ? workDir : undefined;
-      stdout = execSkillRaw(opts.runtime, scriptPath, args, execCwd);
+      stdout = execSkillRaw(scriptPath, args, execCwd);
     } catch (e) {
       exitCode = e.status ?? 1;
       stdout = e.stdout || '';
@@ -952,7 +938,7 @@ async function runIntegrationTest(test, opts) {
       }
 
       // Resolve args: replace placeholders
-      const script = resolveScript(step.script, opts.runtime);
+      const script = resolveScript(step.script);
       const args = [];
       for (const [flag, value] of Object.entries(step.args || {})) {
         args.push(flag);
@@ -965,7 +951,7 @@ async function runIntegrationTest(test, opts) {
       // Execute
       let stdout = '', stderr = '';
       try {
-        stdout = await execSkillAsync(opts.runtime, script, args);
+        stdout = await execSkillAsync(script, args);
       } catch (e) {
         const detail = e.stderr?.trim() || e.stdout?.trim() || e.message;
         stepResults.push({ name: step.name, passed: false, error: `Step ${i + 1} failed: ${detail.substring(0, 1000)}` });
@@ -976,14 +962,14 @@ async function runIntegrationTest(test, opts) {
 
       // Post-step validation
       if (opts.withValidation && step.validate) {
-        const valScript = resolveScript(step.validate.script, opts.runtime);
+        const valScript = resolveScript(step.validate.script);
         let valPath = workDir;
         if (step.validate.path) {
           valPath = join(workDir, step.validate.path);
           if (!existsSync(valPath) && existsSync(valPath + '.xml')) valPath += '.xml';
         }
         try {
-          await execSkillAsync(opts.runtime, valScript, [step.validate.flag, valPath]);
+          await execSkillAsync(valScript, [step.validate.flag, valPath]);
         } catch (e) {
           const detail = e.stderr?.trim() || e.stdout?.trim() || e.message;
           stepResults.push({ name: step.name, passed: false, error: `Validation: ${detail.substring(0, 500)}` });

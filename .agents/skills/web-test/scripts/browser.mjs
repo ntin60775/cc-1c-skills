@@ -21,7 +21,7 @@ import {
   switchTabScript, resolveGridScript
 } from './dom.mjs';
 
-// Project root: 4 levels up from .claude/skills/web-test/scripts/browser.mjs
+// Project root: 4 levels up from .agents/skills/web-test/scripts/browser.mjs
 const __fn_browser = fileURLToPath(import.meta.url);
 const projectRoot = pathResolve(dirname(__fn_browser), '..', '..', '..', '..');
 

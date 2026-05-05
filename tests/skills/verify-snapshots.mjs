@@ -34,7 +34,7 @@ Usage:
 Options:
   --skill <name>           Run only cases for the given skill (e.g. form-compile)
   --case <name>            Run only the case with this name
-  --runtime <ps|python>    Which script port to run (default: powershell)
+  --runtime <python>       Which script port to run (default: python)
   --keep                   Keep generated work directories on disk after run
   -v, --verbose            Verbose output
   -h, --help, /?           Show this help and exit
@@ -42,7 +42,7 @@ Options:
 }
 
 function parseArgs(argv) {
-  const args = { skill: null, caseName: null, runtime: 'powershell', keep: false, verbose: false, help: false };
+  const args = { skill: null, caseName: null, runtime: 'python', keep: false, verbose: false, help: false };
   const rest = argv.slice(2);
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
@@ -72,24 +72,18 @@ function loadV8Context() {
 
 // ─── Script execution ───────────────────────────────────────────────────────
 
-function resolveScript(relPath, runtime) {
-  const ext = runtime === 'python' ? '.py' : '.ps1';
+function resolveScript(relPath) {
+  const ext = '.py';
   const full = join(SKILLS, relPath + ext);
   if (!existsSync(full)) throw new Error(`Script not found: ${full}`);
   return full;
 }
 
-function execSkill(runtime, scriptRelPath, args, timeout = 60_000, cwd = REPO_ROOT) {
-  const scriptPath = resolveScript(scriptRelPath, runtime);
-  if (runtime === 'python') {
-    return execFileSync(process.env.PYTHON || 'python', [scriptPath, ...args], {
-      encoding: 'utf8', timeout, stdio: ['pipe', 'pipe', 'pipe'], cwd,
-    });
-  }
-  return execFileSync('powershell.exe', [
-    '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
-    '-File', scriptPath, ...args
-  ], { encoding: 'utf8', timeout, stdio: ['pipe', 'pipe', 'pipe'], cwd });
+function execSkill(scriptRelPath, args, timeout = 60_000, cwd = REPO_ROOT) {
+  const scriptPath = resolveScript(scriptRelPath);
+  return execFileSync(process.env.PYTHON || 'python', [scriptPath, ...args], {
+    encoding: 'utf8', timeout, stdio: ['pipe', 'pipe', 'pipe'], cwd,
+  });
 }
 
 // ─── Dependency resolution ──────────────────────────────────────────────────
@@ -283,7 +277,7 @@ function scanConfigObjects(configDir) {
 
 function buildSkillArgs(skillConfig, caseData, workDir, inputFile, runtime) {
   const args = [];
-  const scriptPath = resolveScript(skillConfig.script, runtime);
+  const scriptPath = resolveScript(skillConfig.script);
 
   for (const mapping of skillConfig.args) {
     args.push(mapping.flag);
@@ -346,7 +340,7 @@ function runPreSteps(preRun, workDir, runtime, log) {
     }
     const stepName = step.script.split('/').pop();
     try {
-      execSkill(runtime, step.script, preArgs);
+      execSkill(step.script, preArgs);
       log(`preRun: ${stepName}`, true);
     } catch (e) {
       log(`preRun: ${stepName}`, false, e.stderr || e.message);
@@ -456,7 +450,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
     // Skip setup for cf-init skill — the test itself creates the config
     if (configDir && setupType === 'empty-config' && !CONFIG_INIT_SKILLS.has(skillName) && !caseProvidedConfig) {
       try {
-        execSkill(opts.runtime, 'cf-init/scripts/cf-init', ['-Name', 'VerifyTest', '-OutputDir', workDir]);
+        execSkill('cf-init/scripts/cf-init', ['-Name', 'VerifyTest', '-OutputDir', workDir]);
         log('cf-init', true);
       } catch (e) {
         log('cf-init', false, e.stderr || e.message);
@@ -514,7 +508,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
         try {
           const stubFile = join(workDir, `__stub.json`);
           writeFileSync(stubFile, JSON.stringify(stubDSL, null, 2), 'utf8');
-          execSkill(opts.runtime, 'meta-compile/scripts/meta-compile', ['-JsonPath', stubFile, '-OutputDir', configDir]);
+          execSkill('meta-compile/scripts/meta-compile', ['-JsonPath', stubFile, '-OutputDir', configDir]);
           log(`stub: ${key}`, true);
         } catch (e) {
           log(`stub: ${key}`, false, e.stderr || e.message);
@@ -529,7 +523,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
           if (objPath && existsSync(objPath)) {
             for (const edit of edits) {
               try {
-                execSkill(opts.runtime, 'meta-edit/scripts/meta-edit',
+                execSkill('meta-edit/scripts/meta-edit',
                   ['-ObjectPath', objPath, '-Operation', edit.op, '-Value', edit.val]);
                 log(`postEdit: ${key}`, true, `${edit.op} ${edit.val}`);
               } catch (e) {
@@ -560,7 +554,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
           continue;
         }
         try {
-          execSkill(opts.runtime, 'meta-edit/scripts/meta-edit',
+          execSkill('meta-edit/scripts/meta-edit',
             ['-ObjectPath', objPath, '-Operation', he.op, '-Value', he.val]);
           log(`hostEdit: ${he.hostType}.${he.hostName}`, true, `${he.op} ${he.val}`);
         } catch (e) {
@@ -580,7 +574,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
     try {
       const { args } = buildSkillArgs(skillConfig, caseData, workDir, inputFile, opts.runtime);
       const mainCwd = skillConfig.cwd === 'workDir' ? workDir : REPO_ROOT;
-      const output = execSkill(opts.runtime, skillConfig.script, args, 60_000, mainCwd);
+      const output = execSkill( skillConfig.script, args, 60_000, mainCwd);
       const lastLine = output.trim().split('\n').pop();
       if (caseData.expectError) {
         log(skillName, false, 'expected non-zero exit but got success');
@@ -625,7 +619,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
       const erfOutDir = join(workDir, 'erf-build');
       mkdirSync(erfOutDir, { recursive: true });
       try {
-        execSkill(opts.runtime, 'erf-init/scripts/init', ['-Name', 'TestReport', '-SrcDir', erfDir, '-WithSKD']);
+        execSkill('erf-init/scripts/init', ['-Name', 'TestReport', '-SrcDir', erfDir, '-WithSKD']);
         log('erf-init', true);
       } catch (e) {
         const detail = (e.stderr || e.stdout || e.message).trim();
@@ -636,7 +630,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
       const dcsTpl = join(erfDir, 'TestReport', 'Templates', 'ОсновнаяСхемаКомпоновкиДанных', 'Ext', 'Template.xml');
       cpSync(tplPath, dcsTpl, { force: true });
       try {
-        execSkill(opts.runtime, 'epf-build/scripts/epf-build', [
+        execSkill('epf-build/scripts/epf-build', [
           '-V8Path', opts.v8ctx.v8path,
           '-SourceFile', join(erfDir, 'TestReport.xml'),
           '-OutputFile', join(erfOutDir, 'TestReport.erf'),
@@ -662,7 +656,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
       const epfOutDir = join(workDir, 'epf-build');
       mkdirSync(epfOutDir, { recursive: true });
       try {
-        execSkill(opts.runtime, 'epf-init/scripts/init', ['-Name', 'TestProc', '-SrcDir', epfDir]);
+        execSkill('epf-init/scripts/init', ['-Name', 'TestProc', '-SrcDir', epfDir]);
         log('epf-init', true);
       } catch (e) {
         const detail = (e.stderr || e.stdout || e.message).trim();
@@ -671,7 +665,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
         return result;
       }
       try {
-        execSkill(opts.runtime, 'template-add/scripts/add-template', [
+        execSkill('template-add/scripts/add-template', [
           '-ObjectName', 'TestProc',
           '-TemplateName', 'Макет',
           '-TemplateType', 'SpreadsheetDocument',
@@ -687,7 +681,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
       const tplDest = join(epfDir, 'TestProc', 'Templates', 'Макет', 'Ext', 'Template.xml');
       cpSync(tplPath, tplDest, { force: true });
       try {
-        execSkill(opts.runtime, 'epf-build/scripts/epf-build', [
+        execSkill('epf-build/scripts/epf-build', [
           '-V8Path', opts.v8ctx.v8path,
           '-SourceFile', join(epfDir, 'TestProc.xml'),
           '-OutputFile', join(epfOutDir, 'TestProc.epf'),
@@ -744,7 +738,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
       mkdirSync(outDir, { recursive: true });
       const outFile = join(outDir, `${name}${epfExt}`);
       try {
-        execSkill(opts.runtime, 'epf-build/scripts/epf-build', [
+        execSkill('epf-build/scripts/epf-build', [
           '-V8Path', opts.v8ctx.v8path,
           '-SourceFile', sourceFile,
           '-OutputFile', outFile,
@@ -774,7 +768,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
         try {
           const editFile = join(workDir, '__cf-edit-base.json');
           writeFileSync(editFile, JSON.stringify(baseCfEditOps, null, 2), 'utf8');
-          execSkill(opts.runtime, 'cf-edit/scripts/cf-edit', ['-ConfigPath', baseConfigDir, '-DefinitionFile', editFile]);
+          execSkill('cf-edit/scripts/cf-edit', ['-ConfigPath', baseConfigDir, '-DefinitionFile', editFile]);
           log('cf-edit (base)', true, `${baseCfEditOps.length} objects`);
         } catch (e) {
           log('cf-edit (base)', false, e.stderr || e.message);
@@ -785,7 +779,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
 
       // Create DB + load base config
       try {
-        execSkill(opts.runtime, 'db-create/scripts/db-create', ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir]);
+        execSkill('db-create/scripts/db-create', ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir]);
         log('db-create', true);
       } catch (e) {
         log('db-create', false, e.stderr || e.message);
@@ -794,7 +788,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
       }
 
       try {
-        execSkill(opts.runtime, 'db-load-xml/scripts/db-load-xml',
+        execSkill('db-load-xml/scripts/db-load-xml',
           ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir, '-ConfigDir', baseConfigDir, '-StrictLog'], 180_000);
         log('db-load-xml (config)', true);
       } catch (e) {
@@ -805,7 +799,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
       }
 
       try {
-        execSkill(opts.runtime, 'db-update/scripts/db-update',
+        execSkill('db-update/scripts/db-update',
           ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir], 180_000);
         log('db-update (config)', true);
       } catch (e) {
@@ -825,7 +819,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
 
       if (existsSync(extDir)) {
         try {
-          execSkill(opts.runtime, 'db-load-xml/scripts/db-load-xml',
+          execSkill('db-load-xml/scripts/db-load-xml',
             ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir, '-ConfigDir', extDir, '-Extension', extName, '-StrictLog'], 180_000);
           log('db-load-xml (ext)', true);
         } catch (e) {
@@ -836,7 +830,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
         }
 
         try {
-          execSkill(opts.runtime, 'db-update/scripts/db-update',
+          execSkill('db-update/scripts/db-update',
             ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir, '-Extension', extName], 180_000);
           log('db-update (ext)', true);
         } catch (e) {
@@ -877,7 +871,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
       try {
         const editFile = join(workDir, '__cf-edit.json');
         writeFileSync(editFile, JSON.stringify(cfEditOps, null, 2), 'utf8');
-        execSkill(opts.runtime, 'cf-edit/scripts/cf-edit', ['-ConfigPath', configDir, '-DefinitionFile', editFile]);
+        execSkill('cf-edit/scripts/cf-edit', ['-ConfigPath', configDir, '-DefinitionFile', editFile]);
         log('cf-edit', true, `${cfEditOps.length} objects`);
       } catch (e) {
         log('cf-edit', false, e.stderr || e.message);
@@ -900,7 +894,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
     const dbDir = join(workDir, 'testdb');
 
     try {
-      execSkill(opts.runtime, 'db-create/scripts/db-create', ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir]);
+      execSkill('db-create/scripts/db-create', ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir]);
       log('db-create', true);
     } catch (e) {
       log('db-create', false, e.stderr || e.message);
@@ -909,7 +903,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
     }
 
     try {
-      execSkill(opts.runtime, 'db-load-xml/scripts/db-load-xml',
+      execSkill('db-load-xml/scripts/db-load-xml',
         ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir, '-ConfigDir', configDir, '-StrictLog'], 180_000);
       log('db-load-xml', true);
     } catch (e) {
@@ -920,7 +914,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
     }
 
     try {
-      execSkill(opts.runtime, 'db-update/scripts/db-update',
+      execSkill('db-update/scripts/db-update',
         ['-V8Path', opts.v8ctx.v8path, '-InfoBasePath', dbDir], 180_000);
       log('db-update', true);
     } catch (e) {
