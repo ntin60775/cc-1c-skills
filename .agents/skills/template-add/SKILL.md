@@ -3,7 +3,7 @@ name: template-add
 description: 1C template - add empty template to a config object.
 ---
 
-# /skill:template-add — Добавление макета
+# $template-add — Добавление макета
 
 Создаёт макет указанного типа и регистрирует его в корневом XML объекта.
 
@@ -24,7 +24,7 @@ description: 1C template - add empty template to a config object.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ObjectName "<ObjectName>" -TemplateName "<TemplateName>" -TemplateType "<TemplateType>" [-Synonym "<Synonym>"] [-SrcDir "<SrcDir>"] [-SetMainSKD]
 ```
 
@@ -32,7 +32,7 @@ python .agents/skills/epf-init/scripts/init.py -ObjectName "<ObjectName>" -Templ
 
 Добавить основную СКД к отчёту в расширении:
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ObjectName "ОтчётПродажи" -TemplateName "ОсновнаяСхемаКомпоновкиДанных" -TemplateType "DataCompositionSchema" -SrcDir "src/cfe/МоёРасширение/Reports"
 ```
 

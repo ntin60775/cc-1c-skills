@@ -3,7 +3,7 @@ name: epf-dump
 description: 1C EPF - dump external processor to XML sources.
 ---
 
-# /skill:epf-dump — Разборка обработки
+# $epf-dump — Разборка обработки
 
 ## Usage
 
@@ -25,14 +25,14 @@ description: 1C EPF - dump external processor to XML sources.
 3. Если указал базу по имени — ищи по id / alias / name в `.v8-project.json`
 4. Если не указал — сопоставь текущую ветку Git с `databases[].branches`
 5. Если ветка не совпала — используй `default`
-6. Если `.v8-project.json` нет или база не найдена — **сообщи пользователю об ошибке**. Для dump база обязательна: в пустой базе ссылочные типы (CatalogRef, DocumentRef и т.д.) безвозвратно сбрасываются в строки. Предложи указать базу или зарегистрировать через `/skill:db-list add`.
+6. Если `.v8-project.json` нет или база не найдена — **сообщи пользователю об ошибке**. Для dump база обязательна: в пустой базе ссылочные типы (CatalogRef, DocumentRef и т.д.) безвозвратно сбрасываются в строки. Предложи указать базу или зарегистрировать через `$db-list add`.
 
 Если `v8path` не задан — автоопределение: `Get-ChildItem "C:\Program Files\1cv8\*\bin\1cv8.exe" | Sort -Desc | Select -First 1`
-Если использованная база не зарегистрирована — после выполнения предложи добавить через `/skill:db-list add`.
+Если использованная база не зарегистрирована — после выполнения предложи добавить через `$db-list add`.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py <параметры>
 ```
 
@@ -54,7 +54,7 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ## Примеры
 
-```powershell
+```bash
 # Разборка обработки (файловая база)
 python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -InputFile "build/МояОбработка.epf" -OutputDir "src"
 

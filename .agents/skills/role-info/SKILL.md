@@ -3,7 +3,7 @@ name: role-info
 description: 1C role - audit Rights.xml, object rights, RLS, restrictions.
 ---
 
-# /skill:role-info — анализ роли 1С
+# $role-info — анализ роли 1С
 
 Парсит `Rights.xml` роли и выдаёт компактную сводку: объекты сгруппированы по типу, показаны только разрешённые права. Сжатие: тысячи строк XML → 50–150 строк текста.
 
@@ -17,7 +17,7 @@ description: 1C role - audit Rights.xml, object rights, RLS, restrictions.
 
 ## Запуск скрипта
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -RightsPath <path> -OutFile <output.txt>
 ```
 
@@ -34,7 +34,7 @@ python .agents/skills/epf-init/scripts/init.py -RightsPath <path> -OutFile <outp
 **Важно:** Всегда используй `-OutFile` и читай результат через Read tool. Прямой вывод в консоль через bash ломает кириллицу.
 
 Для большой роли при усечении вывода:
-```powershell
+```bash
 ... -Offset 150            # пагинация: пропустить первые 150 строк
 ```
 

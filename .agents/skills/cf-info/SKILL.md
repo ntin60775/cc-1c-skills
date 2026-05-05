@@ -3,7 +3,7 @@ name: cf-info
 description: 1C config - inspect Configuration.xml, objects, properties, counters.
 ---
 
-# /skill:cf-info — Структура конфигурации 1С
+# $cf-info — Структура конфигурации 1С
 
 Читает Configuration.xml из выгрузки конфигурации и выводит компактное описание структуры.
 
@@ -17,7 +17,7 @@ description: 1C config - inspect Configuration.xml, objects, properties, counter
 | `Limit` / `Offset` | Пагинация (по умолчанию 150 строк) |
 | `OutFile` | Записать результат в файл (UTF-8 BOM) |
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ConfigPath "<путь>"
 ```
 
@@ -31,7 +31,7 @@ python .agents/skills/epf-init/scripts/init.py -ConfigPath "<путь>"
 
 ## Примеры
 
-```powershell
+```bash
 # Обзор пустой конфигурации
 ... -ConfigPath src
 

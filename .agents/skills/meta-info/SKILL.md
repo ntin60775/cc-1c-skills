@@ -3,7 +3,7 @@ name: meta-info
 description: 1C metadata - inspect XML object, attributes, tabular sections, forms, movements, types.
 ---
 
-# /skill:meta-info — Структура объекта метаданных 1С
+# $meta-info — Структура объекта метаданных 1С
 
 Читает XML объекта метаданных из выгрузки конфигурации 1С и выводит компактное описание структуры.
 
@@ -17,7 +17,7 @@ description: 1C metadata - inspect XML object, attributes, tabular sections, for
 | `Limit` / `Offset` | Пагинация (по умолчанию 150 строк) |
 | `OutFile` | Записать результат в файл (UTF-8 BOM) |
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ObjectPath "<путь>"
 ```
 
@@ -40,7 +40,7 @@ python .agents/skills/epf-init/scripts/init.py -ObjectPath "<путь>"
 
 ## Примеры
 
-```powershell
+```bash
 # Справочник — overview
 ... -ObjectPath Catalogs/Валюты/Валюты.xml
 

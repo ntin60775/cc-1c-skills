@@ -3,7 +3,7 @@ name: db-dump-cf
 description: 1C DB - dump config to CF or create a CF backup.
 ---
 
-# /skill:db-dump-cf — Выгрузка конфигурации в CF-файл
+# $db-dump-cf — Выгрузка конфигурации в CF-файл
 
 Выгружает конфигурацию информационной базы в бинарный CF-файл.
 
@@ -23,12 +23,12 @@ description: 1C DB - dump config to CF or create a CF backup.
 3. Если не указал — сопоставь текущую ветку Git с `databases[].branches`
 4. Если ветка не совпала — используй `default`
 Если `v8path` не задан — автоопределение: `Get-ChildItem "C:\Program Files\1cv8\*\bin\1cv8.exe" | Sort -Desc | Select -First 1`
-Если файла нет — предложи `/skill:db-list add`.
-Если использованная база не зарегистрирована — после выполнения предложи добавить через `/skill:db-list add`.
+Если файла нет — предложи `$db-list add`.
+Если использованная база не зарегистрирована — после выполнения предложи добавить через `$db-list add`.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py <параметры>
 ```
 
@@ -61,7 +61,7 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ## Примеры
 
-```powershell
+```bash
 # Выгрузка конфигурации (файловая база)
 python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -OutputFile "C:\backup\config.cf"
 

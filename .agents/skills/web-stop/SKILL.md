@@ -3,9 +3,9 @@ name: web-stop
 description: 1C web - stop Apache HTTP Server and publications.
 ---
 
-# /skill:web-stop — Остановка Apache
+# $web-stop — Остановка Apache
 
-Останавливает Apache HTTP Server. Публикации сохраняются — при следующем `/skill:web-publish` сервер запустится снова.
+Останавливает Apache HTTP Server. Публикации сохраняются — при следующем `$web-publish` сервер запустится снова.
 
 ## Usage
 
@@ -20,7 +20,7 @@ description: 1C web - stop Apache HTTP Server and publications.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py <параметры>
 ```
 
@@ -33,12 +33,12 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 ## После выполнения
 
 Предложи пользователю:
-- **Перезапуск** — `/skill:web-publish <база>` (повторный вызов поднимет Apache с существующими публикациями)
-- **Удаление публикаций** — `/skill:web-unpublish <имя>` или `/skill:web-unpublish --all`
+- **Перезапуск** — `$web-publish <база>` (повторный вызов поднимет Apache с существующими публикациями)
+- **Удаление публикаций** — `$web-unpublish <имя>` или `$web-unpublish --all`
 
 ## Примеры
 
-```powershell
+```bash
 # Остановить Apache
 python .agents/skills/epf-init/scripts/init.py
 

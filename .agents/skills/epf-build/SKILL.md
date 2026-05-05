@@ -3,7 +3,7 @@ name: epf-build
 description: 1C EPF - build external processor from XML sources.
 ---
 
-# /skill:epf-build — Сборка обработки
+# $epf-build — Сборка обработки
 
 ## Usage
 
@@ -29,11 +29,11 @@ description: 1C EPF - build external processor from XML sources.
 6. Если `.v8-project.json` нет или база не найдена — не указывай параметры подключения: скрипт автоматически создаст временную базу. Для EPF со ссылочными типами (CatalogRef, DocumentRef и т.д.) генерируются заглушки метаданных. Временная база удаляется после сборки.
 
 Если `v8path` не задан — автоопределение: `Get-ChildItem "C:\Program Files\1cv8\*\bin\1cv8.exe" | Sort -Desc | Select -First 1`
-Если использованная база не зарегистрирована — после выполнения предложи добавить через `/skill:db-list add`.
+Если использованная база не зарегистрирована — после выполнения предложи добавить через `$db-list add`.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py <параметры>
 ```
 
@@ -54,7 +54,7 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ## Примеры
 
-```powershell
+```bash
 # Сборка обработки (файловая база)
 python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -SourceFile "src/МояОбработка.xml" -OutputFile "build/МояОбработка.epf"
 

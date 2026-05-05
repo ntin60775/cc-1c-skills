@@ -3,7 +3,7 @@ name: cf-edit
 description: 1C config - edit Configuration.xml, ChildObjects, properties, default roles.
 ---
 
-# /skill:cf-edit — редактирование конфигурации 1С
+# $cf-edit — редактирование конфигурации 1С
 
 Точечное редактирование Configuration.xml: свойства, состав ChildObjects, роли по умолчанию.
 
@@ -17,7 +17,7 @@ description: 1C config - edit Configuration.xml, ChildObjects, properties, defau
 | `DefinitionFile` | JSON-файл с массивом операций |
 | `NoValidate` | Пропустить авто-валидацию |
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ConfigPath '<path>' -Operation modify-property -Value 'Version=1.0.0.1'
 ```
 
@@ -26,7 +26,7 @@ python .agents/skills/epf-init/scripts/init.py -ConfigPath '<path>' -Operation m
 | Операция | Формат Value | Описание |
 |----------|-------------|----------|
 | `modify-property` | `Ключ=Значение` (batch `;;`) | Изменить свойство |
-| `add-childObject` | `Type.Name` (batch `;;`) | Зарегистрировать уже существующий файл объекта в ChildObjects. Для создания нового объекта используй `/skill:meta-compile`, `/skill:role-compile`, `/skill:subsystem-compile` — они регистрируют автоматически |
+| `add-childObject` | `Type.Name` (batch `;;`) | Зарегистрировать уже существующий файл объекта в ChildObjects. Для создания нового объекта используй `$meta-compile`, `$role-compile`, `$subsystem-compile` — они регистрируют автоматически |
 | `remove-childObject` | `Type.Name` (batch `;;`) | Удалить объект из ChildObjects |
 | `add-defaultRole` | `Role.Name` или `Name` | Добавить роль по умолчанию |
 | `remove-defaultRole` | `Role.Name` или `Name` | Удалить роль по умолчанию |
@@ -38,7 +38,7 @@ python .agents/skills/epf-init/scripts/init.py -ConfigPath '<path>' -Operation m
 
 ## Примеры
 
-```powershell
+```bash
 # Изменить версию и поставщика
 ... -ConfigPath src -Operation modify-property -Value "Version=1.0.0.1 ;; Vendor=Фирма 1С"
 

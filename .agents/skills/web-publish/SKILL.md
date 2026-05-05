@@ -3,7 +3,7 @@ name: web-publish
 description: 1C web - publish infobase or services through Apache.
 ---
 
-# /skill:web-publish — Публикация 1С через Apache
+# $web-publish — Публикация 1С через Apache
 
 Генерирует `default.vrd`, настраивает `httpd.conf` и запускает Apache HTTP Server для веб-доступа к информационной базе. При необходимости скачивает portable Apache. Идемпотентный — повторный вызов обновляет конфигурацию.
 
@@ -30,11 +30,11 @@ description: 1C web - publish infobase or services through Apache.
 - **`-Password`** — из поля `password` найденной записи базы (если есть)
 - **`-ApachePath`** — из `webPath` в `.v8-project.json` (если есть)
 
-Если файла `.v8-project.json` нет — предложи `/skill:db-list add`.
+Если файла `.v8-project.json` нет — предложи `$db-list add`.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py <параметры>
 ```
 
@@ -59,7 +59,7 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 Повторный вызов с тем же AppName **заменяет** публикацию (идемпотентность). Это используется для:
 - смены пользователя: «опубликуй под Ивановым» → тот же AppName, новый `-UserName`
-- перезапуска после `/skill:web-stop`: тот же вызов поднимает Apache обратно
+- перезапуска после `$web-stop`: тот же вызов поднимает Apache обратно
 
 Если пользователь просит **параллельную** публикацию под другим пользователем (для тестирования разных наборов прав), добавь суффикс к AppName:
 - база `bpdemo`, пользователь `Иванов` → `-AppName bpdemo-ivanov`
@@ -76,11 +76,11 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
    - Web-сервисы: `http://localhost:{Port}/{AppName}/ws/<Имя>?wsdl`
 2. Предложи открыть в браузере
 3. Если нужно протестировать сервис — помоги составить запрос
-4. Если база не зарегистрирована — предложи `/skill:db-list add`
+4. Если база не зарегистрирована — предложи `$db-list add`
 
 ## Примеры
 
-```powershell
+```bash
 # Файловая база
 python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin"
 

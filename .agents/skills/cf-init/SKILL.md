@@ -3,7 +3,7 @@ name: cf-init
 description: 1C config - create an empty XML scaffold.
 ---
 
-# /skill:cf-init — Создание пустой конфигурации 1С
+# $cf-init — Создание пустой конфигурации 1С
 
 Создаёт scaffold исходников пустой конфигурации 1С: `Configuration.xml`, `Languages/Русский.xml`.
 
@@ -18,13 +18,13 @@ description: 1C config - create an empty XML scaffold.
 | `Vendor` | Поставщик |
 | `CompatibilityMode` | Режим совместимости (default: `Version8_3_24`) |
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -Name "МояКонфигурация"
 ```
 
 ## Примеры
 
-```powershell
+```bash
 # Базовая конфигурация
 ... -Name МояКонфигурация -Synonym "Моя конфигурация" -OutputDir test-tmp/cf
 
@@ -39,6 +39,6 @@ python .agents/skills/epf-init/scripts/init.py -Name "МояКонфигурац
 
 ```
 /cf-init TestConfig -OutputDir test-tmp/cf
-/skill:cf-info test-tmp/cf          — проверить созданное
-/skill:cf-validate test-tmp/cf      — валидировать
+$cf-info test-tmp/cf          — проверить созданное
+$cf-validate test-tmp/cf      — валидировать
 ```

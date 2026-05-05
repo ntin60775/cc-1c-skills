@@ -3,7 +3,7 @@ name: interface-validate
 description: 1C interface - validate subsystem command interface after edits.
 ---
 
-# /skill:interface-validate — валидация CommandInterface.xml
+# $interface-validate — валидация CommandInterface.xml
 
 Проверяет XML командного интерфейса на структурные ошибки: корневой элемент, допустимые секции, порядок, формат ссылок на команды, дубликаты.
 
@@ -18,7 +18,7 @@ description: 1C interface - validate subsystem command interface after edits.
 
 ## Команда
 
-```powershell
+```bash
 python ".agents/skills/interface-validate/scripts/interface-validate.py" -CIPath "Subsystems/Продажи"
 python ".agents/skills/interface-validate/scripts/interface-validate.py" -CIPath "Subsystems/Продажи/Ext/CommandInterface.xml"
 ```

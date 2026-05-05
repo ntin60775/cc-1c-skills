@@ -3,7 +3,7 @@ name: form-add
 description: 1C form - add an empty managed form to a config object.
 ---
 
-# /skill:form-add — Добавление формы к объекту конфигурации
+# $form-add — Добавление формы к объекту конфигурации
 
 Создаёт управляемую форму (metadata XML + Form.xml + Module.bsl) и регистрирует её в корневом XML объекта конфигурации (Document, Catalog, InformationRegister и др.).
 
@@ -23,7 +23,7 @@ description: 1C form - add an empty managed form to a config object.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ObjectPath "<ObjectPath>" -FormName "<FormName>" [-Purpose "<Purpose>"] [-Synonym "<Synonym>"] [-SetDefault]
 ```
 
@@ -57,7 +57,7 @@ python .agents/skills/epf-init/scripts/init.py -ObjectPath "<ObjectPath>" -FormN
 
 ## Workflow
 
-1. `/skill:form-add` — создать каркас формы
-2. `/skill:form-compile` или `/skill:form-edit` — наполнить Form.xml элементами
-3. `/skill:form-validate` — проверить корректность
-4. `/skill:form-info` — проанализировать результат
+1. `$form-add` — создать каркас формы
+2. `$form-compile` или `$form-edit` — наполнить Form.xml элементами
+3. `$form-validate` — проверить корректность
+4. `$form-info` — проанализировать результат

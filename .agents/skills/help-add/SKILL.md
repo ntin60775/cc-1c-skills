@@ -3,7 +3,7 @@ name: help-add
 description: 1C help - add embedded help page to a config object.
 ---
 
-# /skill:help-add — Добавление справки
+# $help-add — Добавление справки
 
 Добавляет встроенную справку к объекту: файл метаданных `Help.xml`, HTML-страницу и при необходимости обновляет метаданные форм.
 
@@ -21,7 +21,7 @@ description: 1C help - add embedded help page to a config object.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ObjectName "<ObjectName>" [-Lang "<Lang>"] [-SrcDir "<SrcDir>"]
 ```
 

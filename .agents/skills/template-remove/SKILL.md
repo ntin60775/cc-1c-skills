@@ -3,7 +3,7 @@ name: template-remove
 description: 1C template - remove template from a config object.
 ---
 
-# /skill:template-remove — Удаление макета
+# $template-remove — Удаление макета
 
 Удаляет макет и убирает его регистрацию из корневого XML объекта.
 
@@ -21,7 +21,7 @@ description: 1C template - remove template from a config object.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/template-remove/scripts/remove-template.py -ObjectName "<ObjectName>" -TemplateName "<TemplateName>" [-SrcDir "<SrcDir>"]
 ```
 

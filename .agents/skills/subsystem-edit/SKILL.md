@@ -3,7 +3,7 @@ name: subsystem-edit
 description: 1C subsystem - edit object membership, child subsystems, properties.
 ---
 
-# /skill:subsystem-edit — редактирование подсистемы 1С
+# $subsystem-edit — редактирование подсистемы 1С
 
 Точечное редактирование XML подсистемы: состав, дочерние подсистемы, свойства.
 
@@ -17,7 +17,7 @@ description: 1C subsystem - edit object membership, child subsystems, properties
 | `Value` | Значение для операции |
 | `NoValidate` | Пропустить авто-валидацию |
 
-```powershell
+```bash
 python '.agents/skills/subsystem-edit/scripts/subsystem-edit.py' -SubsystemPath '<path>' -Operation add-content -Value 'Catalog.Товары'
 ```
 
@@ -33,7 +33,7 @@ python '.agents/skills/subsystem-edit/scripts/subsystem-edit.py' -SubsystemPath 
 
 ## Примеры
 
-```powershell
+```bash
 # Добавить объект в состав
 ... -SubsystemPath Subsystems/Продажи.xml -Operation add-content -Value "Document.Заказ"
 

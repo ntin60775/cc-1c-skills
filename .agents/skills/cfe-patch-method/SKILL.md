@@ -3,13 +3,13 @@ name: cfe-patch-method
 description: 1C CFE extension - create before, after, or instead method handlers.
 ---
 
-# /skill:cfe-patch-method — Генерация перехватчика метода
+# $cfe-patch-method — Генерация перехватчика метода
 
 Генерирует `.bsl` файл с декоратором перехвата для заимствованного объекта расширения. Создаёт файл или дописывает в существующий.
 
 ## Предусловие
 
-Объект должен быть заимствован в расширение (`/skill:cfe-borrow`). Скрипт читает `NamePrefix` из `Configuration.xml` расширения для формирования имени процедуры.
+Объект должен быть заимствован в расширение (`$cfe-borrow`). Скрипт читает `NamePrefix` из `Configuration.xml` расширения для формирования имени процедуры.
 
 ## Параметры
 
@@ -45,13 +45,13 @@ description: 1C CFE extension - create before, after, or instead method handlers
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ExtensionPath src -ModulePath "Catalog.Контрагенты.ObjectModule" -MethodName "ПриЗаписи" -InterceptorType Before
 ```
 
 ## Примеры
 
-```powershell
+```bash
 # Перехват &Перед на сервере
 ... -ExtensionPath src -ModulePath "Catalog.Контрагенты.ObjectModule" -MethodName "ПриЗаписи" -InterceptorType Before
 

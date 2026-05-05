@@ -3,7 +3,7 @@ name: db-list
 description: 1C DBs - manage .v8-project.json registry, aliases, connections.
 ---
 
-# /skill:db-list — Управление реестром баз данных
+# $db-list — Управление реестром баз данных
 
 Управляет файлом `.v8-project.json` — реестром информационных баз проекта. Файл хранит параметры подключения, алиасы, привязку к веткам Git.
 
@@ -90,13 +90,13 @@ description: 1C DBs - manage .v8-project.json registry, aliases, connections.
 5. Если не найдено или неоднозначно — спроси пользователя
 6. Если файл `.v8-project.json` не найден — спроси параметры подключения и предложи создать файл
 
-После выполнения: если использованная база не зарегистрирована — предложи добавить через `/skill:db-list add`.
+После выполнения: если использованная база не зарегистрирована — предложи добавить через `$db-list add`.
 
 ### Автоопределение платформы
 
 Если `v8path` не задан в конфиге:
 
-```powershell
+```bash
 $v8 = Get-ChildItem "C:\Program Files\1cv8\*\bin\1cv8.exe" | Sort-Object -Descending | Select-Object -First 1
 ```
 

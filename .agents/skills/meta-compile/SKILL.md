@@ -3,7 +3,7 @@ name: meta-compile
 description: 1C metadata - create config object, catalog, document, register, module, report.
 ---
 
-# /skill:meta-compile — генерация объектов метаданных из JSON DSL
+# $meta-compile — генерация объектов метаданных из JSON DSL
 
 Принимает JSON-определение объекта метаданных → генерирует XML + модули в структуре выгрузки конфигурации + регистрирует в Configuration.xml.
 
@@ -11,12 +11,12 @@ description: 1C metadata - create config object, catalog, document, register, mo
 
 1. Составь JSON по синтаксису и примерам ниже → запиши во временный файл
 2. Запусти скрипт meta-compile
-3. Если нужно изменить созданный объект — `/skill:meta-edit`
-4. Если нужно проверить — `/skill:meta-validate`
+3. Если нужно изменить созданный объект — `$meta-edit`
+4. Если нужно проверить — `$meta-validate`
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -JsonPath "<json>" -OutputDir "<ConfigDir>"
 ```
 

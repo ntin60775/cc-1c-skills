@@ -3,7 +3,7 @@ name: mxl-info
 description: 1C MXL layout - inspect print-form areas, parameters, column sets.
 ---
 
-# /skill:mxl-info — Анализ структуры макета
+# $mxl-info — Анализ структуры макета
 
 Читает Template.xml табличного документа и выводит компактную сводку: именованные области, параметры, наборы колонок. Заменяет необходимость читать тысячи строк XML.
 
@@ -32,17 +32,17 @@ description: 1C MXL layout - inspect print-form areas, parameters, column sets.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -TemplatePath "<путь>"
 ```
 
 Или по имени обработки/макета:
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ProcessorName "<Имя>" -TemplateName "<Макет>" [-SrcDir "<каталог>"]
 ```
 
 Дополнительные флаги:
-```powershell
+```bash
 ... -WithText              # включить текстовое содержимое ячеек
 ... -Format json           # JSON-вывод для программной обработки
 ... -MaxParams 20          # показать больше параметров на область

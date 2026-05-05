@@ -3,7 +3,7 @@ name: skd-info
 description: 1C SKD/DCS - inspect datasets, fields, params, variants, query.
 ---
 
-# /skill:skd-info — Анализ схемы компоновки данных
+# $skd-info — Анализ схемы компоновки данных
 
 Читает Template.xml схемы компоновки данных (СКД) и выводит компактную сводку. Заменяет необходимость читать тысячи строк XML.
 
@@ -18,12 +18,12 @@ description: 1C SKD/DCS - inspect datasets, fields, params, variants, query.
 | `Limit` / `Offset` | Пагинация (по умолчанию 150 строк) |
 | `OutFile` | Записать результат в файл (UTF-8 BOM) |
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -TemplatePath "<путь>"
 ```
 
 С указанием режима:
-```powershell
+```bash
 ... -Mode query -Name НоменклатураСЦенами
 ... -Mode query -Name ДанныеТ13 -Batch 3
 ... -Mode fields -Name КадастроваяСтоимость

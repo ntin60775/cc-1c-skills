@@ -3,7 +3,7 @@ name: web-unpublish
 description: 1C web - remove Apache publication and close web access.
 ---
 
-# /skill:web-unpublish — Удаление веб-публикации 1С из Apache
+# $web-unpublish — Удаление веб-публикации 1С из Apache
 
 Удаляет блок публикации из `httpd.conf` и каталог `publish/{appname}` внутри Apache. Если других публикаций не осталось — удаляет глобальный блок 1C и останавливает Apache. С флагом `--all` удаляет все публикации разом.
 
@@ -22,13 +22,13 @@ description: 1C web - remove Apache publication and close web access.
 Прочитай `.v8-project.json` из корня проекта. Если задан `webPath` — используй как `-ApachePath`.
 По умолчанию `tools/apache24` от корня проекта.
 
-Если пользователь не указал `appname` и не указал `--all`, выполни `/skill:web-info` чтобы показать список публикаций и спроси какую удалить.
+Если пользователь не указал `appname` и не указал `--all`, выполни `$web-info` чтобы показать список публикаций и спроси какую удалить.
 
 Если пользователь просит удалить **все** публикации — используй `-All`.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py <параметры>
 ```
 
@@ -44,7 +44,7 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ## Примеры
 
-```powershell
+```bash
 # Удалить одну публикацию
 python .agents/skills/epf-init/scripts/init.py -AppName "bpdemo"
 

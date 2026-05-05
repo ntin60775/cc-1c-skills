@@ -3,7 +3,7 @@ name: epf-bsp-init
 description: BSP EPF - create external report/processor registration function.
 ---
 
-# /skill:epf-bsp-init — Регистрация обработки в БСП
+# $epf-bsp-init — Регистрация обработки в БСП
 
 Добавляет в модуль объекта обработки функцию `СведенияОВнешнейОбработке()`, необходимую для регистрации в подсистеме «Дополнительные отчёты и обработки» БСП.
 
@@ -15,7 +15,7 @@ description: BSP EPF - create external report/processor registration function.
 
 | Параметр      | Обязательный | По умолчанию | Описание                                                |
 |---------------|:------------:|--------------|---------------------------------------------------------|
-| ProcessorName | да           | —            | Имя обработки (должна быть создана через `/skill:epf-init`)   |
+| ProcessorName | да           | —            | Имя обработки (должна быть создана через `$epf-init`)   |
 | Вид           | да           | —            | Вид обработки (см. маппинг ниже)                        |
 | Назначение    | *            | —            | Объекты метаданных для назначаемых видов                 |
 | SrcDir        | нет          | `src`        | Каталог исходников                                      |
@@ -141,7 +141,7 @@ description: BSP EPF - create external report/processor registration function.
 1. Найди `ObjectModule.bsl` через Glob: `src/{{ProcessorName}}/Ext/ObjectModule.bsl`
 2. Прочитай файл
 3. Если `СведенияОВнешнейОбработке` уже есть — сообщи пользователю и не дублируй
-4. Если файл не найден — предложи сначала вызвать `/skill:epf-init`
+4. Если файл не найден — предложи сначала вызвать `$epf-init`
 5. Найди область `#Область ПрограммныйИнтерфейс` ... `#КонецОбласти`
 6. Вставь функцию `СведенияОВнешнейОбработке()` внутрь этой области
 7. Если вид требует серверный обработчик — вставь его тоже в эту область, после функции
@@ -149,7 +149,7 @@ description: BSP EPF - create external report/processor registration function.
 
 ## Пример
 
-Пользователь: `/skill:epf-bsp-init МояОбработка печатная форма для Документ.СчетНаОплату`
+Пользователь: `$epf-bsp-init МояОбработка печатная форма для Документ.СчетНаОплату`
 
 Результат в `ObjectModule.bsl`:
 
@@ -196,7 +196,7 @@ description: BSP EPF - create external report/processor registration function.
 
 ## Дальнейшие шаги
 
-- Добавить ещё команду: `/skill:epf-bsp-add-command`
-- Добавить форму: `/skill:form-add`
-- Добавить макет: `/skill:template-add`
-- Собрать EPF: `/skill:epf-build`
+- Добавить ещё команду: `$epf-bsp-add-command`
+- Добавить форму: `$form-add`
+- Добавить макет: `$template-add`
+- Собрать EPF: `$epf-build`

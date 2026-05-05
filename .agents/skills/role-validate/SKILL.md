@@ -3,7 +3,7 @@ name: role-validate
 description: 1C role - validate Rights.xml after create/edit.
 ---
 
-# /skill:role-validate — валидация роли 1С
+# $role-validate — валидация роли 1С
 
 Проверяет корректность `Rights.xml` роли: формат XML, namespace, глобальные флаги, типы объектов, имена прав, RLS-ограничения, шаблоны. Опционально проверяет метаданные роли (UUID, имя, синоним).
 
@@ -18,6 +18,6 @@ description: 1C role - validate Rights.xml after create/edit.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -RightsPath "Roles/МояРоль"
 ```

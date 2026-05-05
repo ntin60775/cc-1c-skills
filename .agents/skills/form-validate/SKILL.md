@@ -3,7 +3,7 @@ name: form-validate
 description: 1C form - validate Form.xml, BaseForm, callType, extension IDs.
 ---
 
-# /skill:form-validate — валидация управляемой формы 1С
+# $form-validate — валидация управляемой формы 1С
 
 Проверяет Form.xml на структурные ошибки: уникальность ID, наличие companion-элементов, корректность ссылок DataPath и команд.
 
@@ -17,7 +17,7 @@ description: 1C form - validate Form.xml, BaseForm, callType, extension IDs.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -FormPath "Catalogs/Номенклатура/Forms/ФормаЭлемента"
 python .agents/skills/epf-init/scripts/init.py -FormPath "src/МояОбработка/Forms/Форма/Ext/Form.xml"
 ```

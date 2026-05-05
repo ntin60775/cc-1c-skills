@@ -3,7 +3,7 @@ name: erf-init
 description: 1C ERF - create empty report XML scaffold.
 ---
 
-# /skill:erf-init — Создание нового отчёта
+# $erf-init — Создание нового отчёта
 
 Генерирует минимальный набор XML-исходников для внешнего отчёта 1С: корневой файл метаданных и каталог отчёта.
 
@@ -22,13 +22,13 @@ description: 1C ERF - create empty report XML scaffold.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -Name "<Name>" [-Synonym "<Synonym>"] [-SrcDir "<SrcDir>"] [-WithSKD]
 ```
 
 ## Дальнейшие шаги
 
-- Добавить форму: `/skill:form-add`
-- Добавить макет: `/skill:template-add`
-- Добавить справку: `/skill:help-add`
-- Собрать ERF: `/skill:erf-build`
+- Добавить форму: `$form-add`
+- Добавить макет: `$template-add`
+- Добавить справку: `$help-add`
+- Собрать ERF: `$erf-build`

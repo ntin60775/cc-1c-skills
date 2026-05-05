@@ -3,7 +3,7 @@ name: subsystem-info
 description: 1C subsystem - inspect content, children, interface, hierarchy.
 ---
 
-# /skill:subsystem-info — Структура подсистемы 1С
+# $subsystem-info — Структура подсистемы 1С
 
 Читает XML подсистемы из выгрузки конфигурации 1С и выводит компактное описание структуры.
 
@@ -17,7 +17,7 @@ description: 1C subsystem - inspect content, children, interface, hierarchy.
 | `Limit` / `Offset` | Пагинация (по умолчанию 150 строк) |
 | `OutFile` | Записать результат в файл (UTF-8 BOM) |
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -SubsystemPath "<путь>"
 ```
 
@@ -33,7 +33,7 @@ python .agents/skills/epf-init/scripts/init.py -SubsystemPath "<путь>"
 
 ## Примеры
 
-```powershell
+```bash
 # Обзор подсистемы
 ... -SubsystemPath Subsystems/Продажи.xml
 

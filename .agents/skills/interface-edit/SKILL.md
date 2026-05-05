@@ -3,7 +3,7 @@ name: interface-edit
 description: 1C interface - set subsystem commands, visibility, groups, order.
 ---
 
-# /skill:interface-edit — редактирование CommandInterface.xml
+# $interface-edit — редактирование CommandInterface.xml
 
 Точечное редактирование файла командного интерфейса подсистемы 1С.
 
@@ -22,13 +22,13 @@ description: 1C interface - set subsystem commands, visibility, groups, order.
 
 ### Inline mode
 
-```powershell
+```bash
 python '.agents/skills/interface-edit/scripts/interface-edit.py' -CIPath '<path>' -Operation hide -Value '<cmd>'
 ```
 
 ### JSON mode
 
-```powershell
+```bash
 python '.agents/skills/interface-edit/scripts/interface-edit.py' -CIPath '<path>' -DefinitionFile '<json>'
 ```
 
@@ -45,7 +45,7 @@ python '.agents/skills/interface-edit/scripts/interface-edit.py' -CIPath '<path>
 
 ## Примеры
 
-```powershell
+```bash
 # Скрыть команду
 ... -CIPath Subsystems/Продажи/Ext/CommandInterface.xml -Operation hide -Value "Catalog.Товары.StandardCommand.OpenList"
 
@@ -65,5 +65,5 @@ python '.agents/skills/interface-edit/scripts/interface-edit.py' -CIPath '<path>
 ## Верификация
 
 ```
-/skill:interface-validate <CIPath>
+$interface-validate <CIPath>
 ```

@@ -3,7 +3,7 @@ name: form-edit
 description: 1C form - edit Form.xml elements, attributes, commands, events.
 ---
 
-# /skill:form-edit — Редактирование формы
+# $form-edit — Редактирование формы
 
 Добавляет элементы, реквизиты и/или команды в существующий Form.xml. Автоматически выделяет ID из правильного пула, генерирует companion-элементы (ContextMenu, ExtendedTooltip, и др.) и обработчики событий.
 
@@ -22,7 +22,7 @@ description: 1C form - edit Form.xml elements, attributes, commands, events.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -FormPath "<путь>" -JsonPath "<путь>"
 ```
 
@@ -79,7 +79,7 @@ python .agents/skills/epf-init/scripts/init.py -FormPath "<путь>" -JsonPath 
 
 ### Типы элементов
 
-Те же DSL-ключи, что в `/skill:form-compile`:
+Те же DSL-ключи, что в `$form-compile`:
 
 | Ключ | XML тег | Companions |
 |------|---------|------------|
@@ -129,8 +129,8 @@ python .agents/skills/epf-init/scripts/init.py -FormPath "<путь>" -JsonPath 
 
 ## Workflow
 
-1. `/skill:form-info` — посмотреть текущую структуру формы
+1. `$form-info` — посмотреть текущую структуру формы
 2. Создать JSON с описанием добавлений
-3. `/skill:form-edit` — добавить в форму
-4. `/skill:form-validate` — проверить корректность
-5. `/skill:form-info` — убедиться что добавилось правильно
+3. `$form-edit` — добавить в форму
+4. `$form-validate` — проверить корректность
+5. `$form-info` — убедиться что добавилось правильно

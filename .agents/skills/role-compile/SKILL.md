@@ -3,7 +3,7 @@ name: role-compile
 description: 1C role - create Rights.xml from object rights spec.
 ---
 
-# /skill:role-compile — генерация роли 1С из JSON DSL
+# $role-compile — генерация роли 1С из JSON DSL
 
 Принимает JSON-определение роли → генерирует `Roles/Имя.xml` (метаданные) и `Roles/Имя/Ext/Rights.xml` (права). UUID автоматически.
 
@@ -14,7 +14,7 @@ description: 1C role - create Rights.xml from object rights spec.
 | `JsonPath` | Путь к JSON-определению роли |
 | `OutputDir` | Корень выгрузки конфигурации (где `Configuration.xml`, `Roles/` и т.д.) |
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -JsonPath "<json>" -OutputDir "<ConfigDir>"
 ```
 
@@ -98,6 +98,6 @@ python .agents/skills/epf-init/scripts/init.py -JsonPath "<json>" -OutputDir "<C
 ## Верификация
 
 ```
-/skill:role-validate <RightsPath> [MetadataPath]  — проверка корректности XML, прав, RLS
-/skill:role-info <RightsPath>                     — визуальная сводка структуры
+$role-validate <RightsPath> [MetadataPath]  — проверка корректности XML, прав, RLS
+$role-info <RightsPath>                     — визуальная сводка структуры
 ```

@@ -3,7 +3,7 @@ name: meta-validate
 description: 1C metadata - validate config object after create/edit.
 ---
 
-# /skill:meta-validate — валидация объекта метаданных 1С
+# $meta-validate — валидация объекта метаданных 1С
 
 Проверяет XML объекта метаданных из выгрузки конфигурации на структурные ошибки.
 
@@ -18,7 +18,7 @@ description: 1C metadata - validate config object after create/edit.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ObjectPath "Catalogs/Номенклатура/Номенклатура.xml"
 python .agents/skills/epf-init/scripts/init.py -ObjectPath "Catalogs/Банки|Documents/Заказ"
 ```

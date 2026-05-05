@@ -3,7 +3,7 @@ name: skd-validate
 description: 1C SKD/DCS - validate data composition schema after create/edit.
 ---
 
-# /skill:skd-validate — валидация СКД (DataCompositionSchema)
+# $skd-validate — валидация СКД (DataCompositionSchema)
 
 Проверяет структурную корректность Template.xml схемы компоновки данных. Выявляет ошибки формата, битые ссылки, дубликаты имён.
 
@@ -18,7 +18,7 @@ description: 1C SKD/DCS - validate data composition schema after create/edit.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -TemplatePath "src/МойОтчёт/Templates/ОсновнаяСхема"
 python .agents/skills/epf-init/scripts/init.py -TemplatePath "Catalogs/Номенклатура/Templates/СКД/Ext/Template.xml"
 ```

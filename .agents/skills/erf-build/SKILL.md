@@ -3,7 +3,7 @@ name: erf-build
 description: 1C ERF - build external report from XML sources.
 ---
 
-# /skill:erf-build — Сборка отчёта
+# $erf-build — Сборка отчёта
 
 ## Usage
 
@@ -29,13 +29,13 @@ description: 1C ERF - build external report from XML sources.
 6. Если `.v8-project.json` нет или база не найдена — не указывай параметры подключения: скрипт автоматически создаст временную базу. Для ERF со ссылочными типами (CatalogRef, DocumentRef и т.д.) генерируются заглушки метаданных. Временная база удаляется после сборки.
 
 Если `v8path` не задан — автоопределение: `Get-ChildItem "C:\Program Files\1cv8\*\bin\1cv8.exe" | Sort -Desc | Select -First 1`
-Если использованная база не зарегистрирована — после выполнения предложи добавить через `/skill:db-list add`.
+Если использованная база не зарегистрирована — после выполнения предложи добавить через `$db-list add`.
 
 ## Команда
 
 Используй общий скрипт из epf-build:
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py <параметры>
 ```
 
@@ -56,7 +56,7 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ## Примеры
 
-```powershell
+```bash
 # Сборка отчёта (файловая база)
 python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -SourceFile "src/МойОтчёт.xml" -OutputFile "build/МойОтчёт.erf"
 

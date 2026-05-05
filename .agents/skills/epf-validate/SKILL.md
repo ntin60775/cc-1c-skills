@@ -3,7 +3,7 @@ name: epf-validate
 description: 1C EPF - validate XML sources after create/edit.
 ---
 
-# /skill:epf-validate — валидация внешней обработки (EPF)
+# $epf-validate — валидация внешней обработки (EPF)
 
 Проверяет структурную корректность XML-исходников внешней обработки: корневую структуру, InternalInfo, свойства, ChildObjects, реквизиты, табличные части, уникальность имён, наличие файлов форм и макетов. Также работает для внешних отчётов (ERF).
 
@@ -18,7 +18,7 @@ description: 1C EPF - validate XML sources after create/edit.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ObjectPath "src/МояОбработка"
 python .agents/skills/epf-init/scripts/init.py -ObjectPath "src/МояОбработка/МояОбработка.xml"
 ```

@@ -3,7 +3,7 @@ name: meta-remove
 description: 1C metadata - remove a config object from XML sources.
 ---
 
-# /skill:meta-remove — удаление объекта метаданных
+# $meta-remove — удаление объекта метаданных
 
 Безопасно удаляет объект из XML-выгрузки конфигурации. Перед удалением проверяет ссылки на объект в реквизитах, коде и других метаданных. Если ссылки найдены — удаление блокируется.
 
@@ -25,7 +25,7 @@ description: 1C metadata - remove a config object from XML sources.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ConfigDir "<путь>" -Object "Catalog.Товары"
 ```
 
@@ -35,7 +35,7 @@ Catalog, Document, Enum, Constant, InformationRegister, AccumulationRegister, Ac
 
 ## Примеры
 
-```powershell
+```bash
 # Проверка ссылок + dry run
 ... -ConfigDir C:\WS\tasks\cfsrc\acc_8.3.24 -Object "Catalog.Устаревший" -DryRun
 

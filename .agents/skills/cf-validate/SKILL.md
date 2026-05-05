@@ -3,7 +3,7 @@ name: cf-validate
 description: 1C config - validate XML sources after create/edit.
 ---
 
-# /skill:cf-validate — валидация конфигурации 1С
+# $cf-validate — валидация конфигурации 1С
 
 Проверяет Configuration.xml на структурные ошибки: XML well-formedness, InternalInfo, свойства, enum-значения, ChildObjects, DefaultLanguage, файлы языков, каталоги объектов.
 
@@ -18,7 +18,7 @@ description: 1C config - validate XML sources after create/edit.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ConfigPath "upload/cfempty"
 python .agents/skills/epf-init/scripts/init.py -ConfigPath "upload/cfempty/Configuration.xml"
 ```

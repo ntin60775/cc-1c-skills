@@ -3,7 +3,7 @@ name: cfe-init
 description: 1C CFE extension - create an empty XML scaffold.
 ---
 
-# /skill:cfe-init — Создание расширения конфигурации 1С
+# $cfe-init — Создание расширения конфигурации 1С
 
 Создаёт scaffold расширения: `Configuration.xml`, `Languages/Русский.xml`, опционально `Roles/`.
 
@@ -15,7 +15,7 @@ description: 1C CFE extension - create an empty XML scaffold.
 
 Если пользователь не указал `-ConfigPath` — попробуй определить автоматически:
 1. Прочитай `.v8-project.json` из корня проекта
-2. Разреши целевую базу (по имени, ветке или `default` — алгоритм из `/skill:db-list`)
+2. Разреши целевую базу (по имени, ветке или `default` — алгоритм из `$db-list`)
 3. Если у базы есть поле `configSrc` — используй как `-ConfigPath`
 4. Если `configSrc` нет — спроси у пользователя
 
@@ -38,13 +38,13 @@ description: 1C CFE extension - create an empty XML scaffold.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -Name "МоёРасширение"
 ```
 
 ## Примеры
 
-```powershell
+```bash
 # Расширение для ERP с авто-определением совместимости из базовой конфигурации
 ... -Name Расш1 -ConfigPath C:\WS\tasks\cfsrc\erp_8.3.24 -OutputDir src
 
@@ -61,6 +61,6 @@ python .agents/skills/epf-init/scripts/init.py -Name "МоёРасширение
 ## Верификация
 
 ```
-/skill:cfe-validate <OutputDir>
+$cfe-validate <OutputDir>
 ```
 

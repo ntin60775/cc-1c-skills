@@ -3,7 +3,7 @@ name: db-create
 description: 1C DB - create a new or empty infobase.
 ---
 
-# /skill:db-create — Создание информационной базы
+# $db-create — Создание информационной базы
 
 Создаёт новую информационную базу 1С (файловую или серверную) и предлагает зарегистрировать в `.v8-project.json`.
 
@@ -19,11 +19,11 @@ description: 1C DB - create a new or empty infobase.
 
 Прочитай `.v8-project.json` из корня проекта для `v8path` (путь к платформе).
 Если `v8path` не задан — автоопределение: `Get-ChildItem "C:\Program Files\1cv8\*\bin\1cv8.exe" | Sort -Desc | Select -First 1`
-После создания базы предложи зарегистрировать через `/skill:db-list add`.
+После создания базы предложи зарегистрировать через `$db-list add`.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py <параметры>
 ```
 
@@ -51,12 +51,12 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 ## После создания
 
 1. Прочитай лог-файл и покажи результат
-2. Предложи зарегистрировать базу в `.v8-project.json` (через `/skill:db-list add`)
+2. Предложи зарегистрировать базу в `.v8-project.json` (через `$db-list add`)
 3. Если указан шаблон `/UseTemplate` — предупреди что конфигурация будет загружена из шаблона
 
 ## Примеры
 
-```powershell
+```bash
 # Создать файловую базу
 python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\NewDB"
 

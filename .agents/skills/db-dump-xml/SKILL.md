@@ -3,7 +3,7 @@ name: db-dump-xml
 description: 1C DB - dump config XML with DumpConfigToFiles.
 ---
 
-# /skill:db-dump-xml — Выгрузка конфигурации в XML
+# $db-dump-xml — Выгрузка конфигурации в XML
 
 Выгружает конфигурацию информационной базы в XML-файлы (исходники). Поддерживает полную, инкрементальную, частичную выгрузку и обновление ConfigDumpInfo.
 
@@ -24,13 +24,13 @@ description: 1C DB - dump config XML with DumpConfigToFiles.
 3. Если не указал — сопоставь текущую ветку Git с `databases[].branches`
 4. Если ветка не совпала — используй `default`
 Если `v8path` не задан — автоопределение: `Get-ChildItem "C:\Program Files\1cv8\*\bin\1cv8.exe" | Sort -Desc | Select -First 1`
-Если файла нет — предложи `/skill:db-list add`.
-Если использованная база не зарегистрирована — после выполнения предложи добавить через `/skill:db-list add`.
+Если файла нет — предложи `$db-list add`.
+Если использованная база не зарегистрирована — после выполнения предложи добавить через `$db-list add`.
 Если в записи базы указан `configSrc` — используй как каталог выгрузки по умолчанию.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py <параметры>
 ```
 
@@ -73,7 +73,7 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ## Примеры
 
-```powershell
+```bash
 # Полная выгрузка (файловая база)
 python .agents/skills/epf-init/scripts/init.py -V8Path "C:\Program Files\1cv8\8.3.25.1257\bin" -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -ConfigDir "C:\WS\cfsrc" -Mode Full
 

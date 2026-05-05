@@ -3,9 +3,9 @@ name: cfe-validate
 description: 1C CFE extension - validate XML sources after create/edit.
 ---
 
-# /skill:cfe-validate — валидация расширения конфигурации (CFE)
+# $cfe-validate — валидация расширения конфигурации (CFE)
 
-Проверяет структурную корректность расширения: XML-формат, свойства, состав, заимствованные объекты. Аналог `/skill:cf-validate`, но для расширений.
+Проверяет структурную корректность расширения: XML-формат, свойства, состав, заимствованные объекты. Аналог `$cf-validate`, но для расширений.
 
 ## Параметры
 
@@ -18,7 +18,7 @@ description: 1C CFE extension - validate XML sources after create/edit.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ExtensionPath "src"
 python .agents/skills/epf-init/scripts/init.py -ExtensionPath "src/Configuration.xml"
 ```

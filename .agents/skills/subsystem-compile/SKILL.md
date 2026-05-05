@@ -3,7 +3,7 @@ name: subsystem-compile
 description: 1C subsystem - create XML section sources from JSON.
 ---
 
-# /skill:subsystem-compile — генерация подсистемы из JSON
+# $subsystem-compile — генерация подсистемы из JSON
 
 Принимает JSON-определение подсистемы → генерирует XML + файловую структуру + регистрирует в родителе (Configuration.xml или родительская подсистема).
 
@@ -17,7 +17,7 @@ description: 1C subsystem - create XML section sources from JSON.
 | `Parent` | Путь к XML родительской подсистемы (для вложенных) |
 | `NoValidate` | Пропустить авто-валидацию |
 
-```powershell
+```bash
 python '.agents/skills/subsystem-compile/scripts/subsystem-compile.py' -Value '<json>' -OutputDir '<ConfigDir>'
 ```
 
@@ -40,7 +40,7 @@ python '.agents/skills/subsystem-compile/scripts/subsystem-compile.py' -Value '<
 
 ## Примеры
 
-```powershell
+```bash
 # Минимальная подсистема
 ... -Value '{"name":"Тест"}' -OutputDir config/
 

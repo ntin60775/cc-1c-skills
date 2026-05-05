@@ -3,9 +3,9 @@ name: mxl-decompile
 description: 1C MXL layout - decompile tabular document to JSON.
 ---
 
-# /skill:mxl-decompile — Декомпилятор макета в DSL
+# $mxl-decompile — Декомпилятор макета в DSL
 
-Принимает Template.xml табличного документа 1С и генерирует компактное JSON-определение (DSL). Обратная операция к `/skill:mxl-compile`.
+Принимает Template.xml табличного документа 1С и генерирует компактное JSON-определение (DSL). Обратная операция к `$mxl-compile`.
 
 ## Использование
 
@@ -22,7 +22,7 @@ description: 1C MXL layout - decompile tabular document to JSON.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -TemplatePath "<путь>/Template.xml" [-OutputPath "<путь>.json"]
 ```
 
@@ -30,10 +30,10 @@ python .agents/skills/epf-init/scripts/init.py -TemplatePath "<путь>/Templat
 
 Декомпиляция существующего макета для анализа или доработки:
 
-1. Claude вызывает `/skill:mxl-decompile` для получения JSON из Template.xml
+1. Claude вызывает `$mxl-decompile` для получения JSON из Template.xml
 2. Claude анализирует или модифицирует JSON (добавляет области, меняет стили)
-3. Claude вызывает `/skill:mxl-compile` для генерации нового Template.xml
-4. Claude вызывает `/skill:mxl-validate` для проверки
+3. Claude вызывает `$mxl-compile` для генерации нового Template.xml
+4. Claude вызывает `$mxl-validate` для проверки
 
 ## JSON-схема DSL
 

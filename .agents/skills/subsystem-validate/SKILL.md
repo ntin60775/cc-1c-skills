@@ -3,7 +3,7 @@ name: subsystem-validate
 description: 1C subsystem - validate XML sources after create/edit.
 ---
 
-# /skill:subsystem-validate — валидация подсистемы 1С
+# $subsystem-validate — валидация подсистемы 1С
 
 Проверяет структурную корректность XML-файла подсистемы из выгрузки конфигурации.
 
@@ -18,7 +18,7 @@ description: 1C subsystem - validate XML sources after create/edit.
 
 ## Команда
 
-```powershell
+```bash
 python ".agents/skills/subsystem-validate/scripts/subsystem-validate.py" -SubsystemPath "Subsystems/Продажи"
 python ".agents/skills/subsystem-validate/scripts/subsystem-validate.py" -SubsystemPath "Subsystems/Продажи.xml"
 ```

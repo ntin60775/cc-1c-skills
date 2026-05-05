@@ -3,7 +3,7 @@ name: mxl-compile
 description: 1C MXL layout - compile tabular document from JSON.
 ---
 
-# /skill:mxl-compile — Компилятор макета из DSL
+# $mxl-compile — Компилятор макета из DSL
 
 Принимает компактное JSON-определение макета и генерирует корректный Template.xml для табличного документа 1С. Claude описывает *что* нужно (области, параметры, стили), скрипт обеспечивает *корректность* XML (палитры, индексы, объединения, namespace).
 
@@ -22,18 +22,18 @@ description: 1C MXL layout - compile tabular document from JSON.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -JsonPath "<путь>.json" -OutputPath "<путь>/Template.xml"
 ```
 
 ## Рабочий процесс
 
 1. Claude пишет JSON-определение (Write tool) → файл `.json`
-2. Claude вызывает `/skill:mxl-compile` для генерации Template.xml
-3. Claude вызывает `/skill:mxl-validate` для проверки корректности
-4. Claude вызывает `/skill:mxl-info` для верификации структуры
+2. Claude вызывает `$mxl-compile` для генерации Template.xml
+3. Claude вызывает `$mxl-validate` для проверки корректности
+4. Claude вызывает `$mxl-info` для верификации структуры
 
-**Если макет создаётся по изображению** (скриншот, скан печатной формы) — сначала вызвать `/skill:img-grid` для наложения сетки, по ней определить границы колонок и пропорции, затем использовать `"Nx"` ширины + `"page"` для автоматического расчёта размеров.
+**Если макет создаётся по изображению** (скриншот, скан печатной формы) — сначала вызвать `$img-grid` для наложения сетки, по ней определить границы колонок и пропорции, затем использовать `"Nx"` ширины + `"page"` для автоматического расчёта размеров.
 
 ## JSON-схема DSL
 

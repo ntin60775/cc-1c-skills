@@ -3,7 +3,7 @@ name: web-test
 description: 1C web - test web client with browser automation.
 ---
 
-# /skill:web-test — Browser automation for 1C web client
+# $web-test — Browser automation for 1C web client
 
 Automates user interactions with 1C:Enterprise web client via Playwright — navigating sections, filling forms, reading tables and reports, filtering lists.
 
@@ -37,7 +37,7 @@ Requires Node.js 18+. `npm install` downloads Playwright and Chromium.
 
 Read `.v8-project.json` from project root. Each database has `id` and optional `webUrl`.
 Construct URL as `http://localhost:8081/<id>` or use `webUrl` if set.
-Use `/skill:web-publish` first if the database is not published.
+Use `$web-publish` first if the database is not published.
 
 ## Execution modes
 

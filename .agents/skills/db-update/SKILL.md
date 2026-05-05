@@ -3,9 +3,9 @@ name: db-update
 description: 1C DB - apply config with UpdateDBCfg.
 ---
 
-# /skill:db-update — Обновление конфигурации БД
+# $db-update — Обновление конфигурации БД
 
-Применяет изменения основной конфигурации к конфигурации базы данных (`/UpdateDBCfg`). Обязательный шаг после `/skill:db-load-cf`, `/skill:db-load-xml`, `/skill:db-load-git`.
+Применяет изменения основной конфигурации к конфигурации базы данных (`/UpdateDBCfg`). Обязательный шаг после `$db-load-cf`, `$db-load-xml`, `$db-load-git`.
 
 ## Usage
 
@@ -23,12 +23,12 @@ description: 1C DB - apply config with UpdateDBCfg.
 3. Если не указал — сопоставь текущую ветку Git с `databases[].branches`
 4. Если ветка не совпала — используй `default`
 Если `v8path` не задан — автоопределение: `Get-ChildItem "C:\Program Files\1cv8\*\bin\1cv8.exe" | Sort -Desc | Select -First 1`
-Если файла нет — предложи `/skill:db-list add`.
-Если использованная база не зарегистрирована — после выполнения предложи добавить через `/skill:db-list add`.
+Если файла нет — предложи `$db-list add`.
+Если использованная база не зарегистрирована — после выполнения предложи добавить через `$db-list add`.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py <параметры>
 ```
 
@@ -75,7 +75,7 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ## Примеры
 
-```powershell
+```bash
 # Обычное обновление (файловая база)
 python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin"
 

@@ -3,7 +3,7 @@ name: db-load-xml
 description: 1C DB - load config XML with LoadConfigFromFiles.
 ---
 
-# /skill:db-load-xml — Загрузка конфигурации из XML
+# $db-load-xml — Загрузка конфигурации из XML
 
 Загружает конфигурацию в информационную базу из XML-файлов (исходников). Поддерживает полную и частичную загрузку.
 
@@ -25,13 +25,13 @@ description: 1C DB - load config XML with LoadConfigFromFiles.
 3. Если не указал — сопоставь текущую ветку Git с `databases[].branches`
 4. Если ветка не совпала — используй `default`
 Если `v8path` не задан — автоопределение: `Get-ChildItem "C:\Program Files\1cv8\*\bin\1cv8.exe" | Sort -Desc | Select -First 1`
-Если файла нет — предложи `/skill:db-list add`.
-Если использованная база не зарегистрирована — после выполнения предложи добавить через `/skill:db-list add`.
+Если файла нет — предложи `$db-list add`.
+Если использованная база не зарегистрирована — после выполнения предложи добавить через `$db-list add`.
 Если в записи базы указан `configSrc` — используй как каталог загрузки по умолчанию.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py <параметры>
 ```
 
@@ -84,11 +84,11 @@ Documents/Заказ/Forms/ФормаДокумента.xml
 ## После выполнения
 
 1. Прочитай лог и покажи результат
-2. Если `-UpdateDB` не был указан — **предложи выполнить `/skill:db-update`** для применения изменений к БД
+2. Если `-UpdateDB` не был указан — **предложи выполнить `$db-update`** для применения изменений к БД
 
 ## Примеры
 
-```powershell
+```bash
 # Полная загрузка
 python .agents/skills/epf-init/scripts/init.py -V8Path "C:\Program Files\1cv8\8.3.25.1257\bin" -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -ConfigDir "C:\WS\cfsrc" -Mode Full
 

@@ -3,13 +3,13 @@ name: form-compile
 description: 1C form - compile Form.xml from JSON or object metadata.
 ---
 
-# /skill:form-compile — Генерация Form.xml
+# $form-compile — Генерация Form.xml
 
 Два режима:
 1. **JSON DSL** — из JSON-определения формы
 2. **From object** (`-FromObject`) — автоматически из метаданных объекта 1С по пресету ERP
 
-> **При проектировании формы с нуля (5+ элементов или нечёткие требования)** — вызовите `/skill:form-patterns` для загрузки справочника. Для простых форм (1–3 поля) — не нужно.
+> **При проектировании формы с нуля (5+ элементов или нечёткие требования)** — вызовите `$form-patterns` для загрузки справочника. Для простых форм (1–3 поля) — не нужно.
 
 ## Параметры
 
@@ -21,7 +21,7 @@ description: 1C form - compile Form.xml from JSON or object metadata.
 
 ## Команда
 
-```powershell
+```bash
 # Режим JSON DSL
 python .agents/skills/epf-init/scripts/init.py -JsonPath "<json>" -OutputPath "<Form.xml>"
 
@@ -517,19 +517,19 @@ python .agents/skills/epf-init/scripts/init.py -FromObject -OutputPath "<.../Typ
 
 ## Workflow
 
-1. **Компиляция**: `/skill:form-compile` генерирует `Form.xml` и автоматически регистрирует `<Form>` в `ChildObjects` родительского объекта (если OutputPath следует конвенции `.../TypePlural/ObjectName/Forms/FormName/Ext/Form.xml`).
-2. **Метаданные формы** (`ФормаСписка.xml`) и `Module.bsl` создаёт `/skill:form-add`. Если `/skill:form-add` ещё не вызывался — вызови после `/skill:form-compile`. Он не перезаписывает существующий Form.xml.
-3. **Проверка**: `/skill:form-validate`, `/skill:form-info`.
+1. **Компиляция**: `$form-compile` генерирует `Form.xml` и автоматически регистрирует `<Form>` в `ChildObjects` родительского объекта (если OutputPath следует конвенции `.../TypePlural/ObjectName/Forms/FormName/Ext/Form.xml`).
+2. **Метаданные формы** (`ФормаСписка.xml`) и `Module.bsl` создаёт `$form-add`. Если `$form-add` ещё не вызывался — вызови после `$form-compile`. Он не перезаписывает существующий Form.xml.
+3. **Проверка**: `$form-validate`, `$form-info`.
 
 ## Верификация
 
 ```
-/skill:form-validate <OutputPath>    — проверка корректности XML
-/skill:form-info <OutputPath>        — визуальная сводка структуры
+$form-validate <OutputPath>    — проверка корректности XML
+$form-info <OutputPath>        — визуальная сводка структуры
 ```
 
 ## Особенности для внешних обработок (EPF)
 
 - **Тип главного реквизита**: `ExternalDataProcessorObject.ИмяОбработки` (не `DataProcessorObject`)
 - **DataPath**: используйте реквизиты формы (`ИмяРеквизита`), а не `Объект.ИмяРеквизита` — у внешних обработок нет реквизитов объекта в метаданных
-- **Ссылочные типы**: `CatalogRef.XXX`, `DocumentRef.XXX` допустимы в XML, но для сборки EPF потребуется база с целевой конфигурацией (см. `/skill:epf-build`)
+- **Ссылочные типы**: `CatalogRef.XXX`, `DocumentRef.XXX` допустимы в XML, но для сборки EPF потребуется база с целевой конфигурацией (см. `$epf-build`)

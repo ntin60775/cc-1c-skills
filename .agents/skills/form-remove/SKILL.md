@@ -3,7 +3,7 @@ name: form-remove
 description: 1C form - remove a form from a config object.
 ---
 
-# /skill:form-remove — Удаление формы
+# $form-remove — Удаление формы
 
 Удаляет форму и убирает её регистрацию из корневого XML объекта.
 
@@ -21,7 +21,7 @@ description: 1C form - remove a form from a config object.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/form-remove/scripts/remove-form.py -ObjectName "<ObjectName>" -FormName "<FormName>" [-SrcDir "<SrcDir>"]
 ```
 

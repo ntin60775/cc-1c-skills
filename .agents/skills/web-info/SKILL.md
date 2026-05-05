@@ -3,7 +3,7 @@ name: web-info
 description: 1C web - check Apache, publications, web client, publication errors.
 ---
 
-# /skill:web-info — Статус Apache и публикаций 1С
+# $web-info — Статус Apache и публикаций 1С
 
 Показывает состояние Apache HTTP Server, список опубликованных баз и последние ошибки.
 
@@ -20,7 +20,7 @@ description: 1C web - check Apache, publications, web client, publication errors
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py <параметры>
 ```
 
@@ -48,7 +48,7 @@ Module: C:/Program Files/1cv8/8.3.24.1691/bin/wsap24.dll
 
 ## Примеры
 
-```powershell
+```bash
 # Статус по умолчанию
 python .agents/skills/epf-init/scripts/init.py
 

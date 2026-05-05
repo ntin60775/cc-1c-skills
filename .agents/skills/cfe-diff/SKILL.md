@@ -3,7 +3,7 @@ name: cfe-diff
 description: 1C CFE extension - analyze objects, borrowed items, handlers, and changes.
 ---
 
-# /skill:cfe-diff — Анализ расширения конфигурации
+# $cfe-diff — Анализ расширения конфигурации
 
 Анализирует расширение в двух режимах: обзор изменений (Mode A) или проверка переноса (Mode B).
 
@@ -17,7 +17,7 @@ description: 1C CFE extension - analyze objects, borrowed items, handlers, and c
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py -ExtensionPath src -ConfigPath C:\cfsrc\erp -Mode A
 ```
 
@@ -43,7 +43,7 @@ python .agents/skills/epf-init/scripts/init.py -ExtensionPath src -ConfigPath C:
 
 ## Примеры
 
-```powershell
+```bash
 # Обзор — что изменено в расширении
 ... -ExtensionPath src -ConfigPath C:\cfsrc\erp -Mode A
 

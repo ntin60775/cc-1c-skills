@@ -3,7 +3,7 @@ name: db-load-git
 description: 1C DB - load Git, staged, range, or partial changes into infobase.
 ---
 
-# /skill:db-load-git — Загрузка изменений из Git
+# $db-load-git — Загрузка изменений из Git
 
 Определяет изменённые файлы конфигурации по данным Git и выполняет частичную загрузку в информационную базу.
 
@@ -25,13 +25,13 @@ description: 1C DB - load Git, staged, range, or partial changes into infobase.
 3. Если не указал — сопоставь текущую ветку Git с `databases[].branches`
 4. Если ветка не совпала — используй `default`
 Если `v8path` не задан — автоопределение: `Get-ChildItem "C:\Program Files\1cv8\*\bin\1cv8.exe" | Sort -Desc | Select -First 1`
-Если файла нет — предложи `/skill:db-list add`.
-Если использованная база не зарегистрирована — после выполнения предложи добавить через `/skill:db-list add`.
+Если файла нет — предложи `$db-list add`.
+Если использованная база не зарегистрирована — после выполнения предложи добавить через `$db-list add`.
 Если в записи базы указан `configSrc` — используй как каталог конфигурации.
 
 ## Команда
 
-```powershell
+```bash
 python .agents/skills/epf-init/scripts/init.py <параметры>
 ```
 
@@ -59,11 +59,11 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 ## После выполнения
 
 1. Показать список загруженных файлов и результат из лога
-2. Если `-UpdateDB` не был указан — **предложить `/skill:db-update`** для применения изменений к БД
+2. Если `-UpdateDB` не был указан — **предложить `$db-update`** для применения изменений к БД
 
 ## Примеры
 
-```powershell
+```bash
 # Все незафиксированные изменения
 python .agents/skills/epf-init/scripts/init.py -V8Path "C:\Program Files\1cv8\8.3.25.1257\bin" -InfoBasePath "C:\Bases\MyDB" -ConfigDir "C:\WS\cfsrc" -Source All -UpdateDB
 

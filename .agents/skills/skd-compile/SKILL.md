@@ -3,7 +3,7 @@ name: skd-compile
 description: 1C SKD/DCS - compile data composition schema from JSON.
 ---
 
-# /skill:skd-compile — генерация СКД из JSON DSL
+# $skd-compile — генерация СКД из JSON DSL
 
 Принимает JSON-определение схемы компоновки данных → генерирует Template.xml (DataCompositionSchema).
 
@@ -15,7 +15,7 @@ description: 1C SKD/DCS - compile data composition schema from JSON.
 | `Value` | JSON-строка с определением СКД (взаимоисключающий с DefinitionFile) |
 | `OutputPath` | Путь к выходному Template.xml |
 
-```powershell
+```bash
 # Из файла
 python .agents/skills/epf-init/scripts/init.py -DefinitionFile "<json>" -OutputPath "<Template.xml>"
 
@@ -404,7 +404,7 @@ Raw XML (`"template": "<...>"`) остаётся как fallback. Детект: 
 ## Верификация
 
 ```
-/skill:skd-validate <OutputPath>                  — валидация структуры XML
-/skill:skd-info <OutputPath>                      — визуальная сводка
-/skill:skd-info <OutputPath> -Mode variant -Name 1 — проверка варианта настроек
+$skd-validate <OutputPath>                  — валидация структуры XML
+$skd-info <OutputPath>                      — визуальная сводка
+$skd-info <OutputPath> -Mode variant -Name 1 — проверка варианта настроек
 ```

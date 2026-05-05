@@ -3,7 +3,7 @@ name: img-grid
 description: Image - overlay a grid on screenshots, print forms, or tabular docs.
 ---
 
-# /skill:img-grid — Сетка для анализа макета
+# $img-grid — Сетка для анализа макета
 
 Накладывает пронумерованную сетку на изображение печатной формы. Позволяет точно определить границы колонок, их пропорции и span-ы для генерации макета табличного документа.
 
@@ -70,4 +70,4 @@ python .agents/skills/img-grid/scripts/overlay-grid.py "<ImagePath>" [-c 50] [-o
 
 ### 4. Скомпилировать
 
-`/skill:mxl-compile` → `/skill:mxl-validate` → `/skill:mxl-info`
+`$mxl-compile` → `$mxl-validate` → `$mxl-info`
