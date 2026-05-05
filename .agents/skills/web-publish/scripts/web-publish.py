@@ -12,6 +12,7 @@
 import argparse
 import glob
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -78,7 +79,17 @@ def main():
     # --- Resolve V8Path ---
     v8_path = args.V8Path
     if not v8_path:
-        candidates = glob.glob(r'C:\Program Files\1cv8\*\bin\1cv8.exe')
+        if platform.system() == "Windows":
+            candidates = glob.glob(r'C:\Program Files\1cv8\*\bin\1cv8.exe')
+        else:
+            candidates = []
+            for pattern in ['/opt/1cv8/*/bin/1cv8', '/opt/1cv8/x86_64/*/bin/1cv8']:
+                candidates.extend(glob.glob(pattern))
+            if not candidates:
+                for path_dir in os.environ.get('PATH', '').split(os.pathsep):
+                    candidate = os.path.join(path_dir, '1cv8')
+                    if os.path.isfile(candidate):
+                        candidates.append(candidate)
         candidates.sort(reverse=True)
         if candidates:
             v8_path = os.path.dirname(candidates[0])

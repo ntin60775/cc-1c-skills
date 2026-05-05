@@ -5,6 +5,7 @@
 import argparse
 import glob
 import os
+import platform
 import random
 import shutil
 import subprocess
@@ -13,21 +14,34 @@ import tempfile
 
 
 def resolve_v8path(v8path):
-    """Resolve path to 1cv8.exe."""
-    if not v8path:
-        found = sorted(glob.glob(r"C:\Program Files\1cv8\*\bin\1cv8.exe"))
-        if found:
-            return found[-1]
-        else:
-            print("Error: 1cv8.exe not found. Specify -V8Path", file=sys.stderr)
+    """Resolve path to 1cv8 executable."""
+    if v8path:
+        if os.path.isdir(v8path):
+            v8path = os.path.join(v8path, "1cv8.exe" if platform.system() == "Windows" else "1cv8")
+        if not os.path.isfile(v8path):
+            print(f"Error: 1cv8 not found at {v8path}", file=sys.stderr)
             sys.exit(1)
-    elif os.path.isdir(v8path):
-        v8path = os.path.join(v8path, "1cv8.exe")
+        return v8path
 
-    if not os.path.isfile(v8path):
-        print(f"Error: 1cv8.exe not found at {v8path}", file=sys.stderr)
-        sys.exit(1)
-    return v8path
+    # Auto-detect
+    if platform.system() == "Windows":
+        candidates = glob.glob(r"C:\Program Files\1cv8\*\bin\1cv8.exe")
+    else:
+        candidates = []
+        for pattern in ["/opt/1cv8/*/bin/1cv8", "/opt/1cv8/x86_64/*/bin/1cv8"]:
+            candidates.extend(glob.glob(pattern))
+        if not candidates:
+            for path_dir in os.environ.get("PATH", "").split(os.pathsep):
+                candidate = os.path.join(path_dir, "1cv8")
+                if os.path.isfile(candidate):
+                    candidates.append(candidate)
+
+    if candidates:
+        candidates.sort()
+        return candidates[-1]
+
+    print("Error: 1cv8 not found. Specify -V8Path", file=sys.stderr)
+    sys.exit(1)
 
 
 def main():
@@ -88,7 +102,7 @@ def main():
         arguments.append("/DisableStartupDialogs")
 
         # --- Execute ---
-        print(f"Running: 1cv8.exe {' '.join(arguments)}")
+        print(f"Running: 1cv8 {' '.join(arguments)}")
         result = subprocess.run(
             [v8path] + arguments,
             capture_output=True,
