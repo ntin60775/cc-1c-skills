@@ -1,5 +1,8 @@
 # TASK-2026-0006: Удаление PowerShell 5.1 и Windows legacy из проекта
 
+## Ветка
+main
+
 ## Краткое имя
 remove-powershell
 
