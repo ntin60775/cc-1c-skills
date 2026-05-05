@@ -12,13 +12,13 @@ description: 1C metadata - edit object attrs, tabular sections, dimensions, reso
 ### Inline mode (простые операции)
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ObjectPath "<path>" -Operation <op> -Value "<val>"
+python .agents/skills/meta-edit/scripts/meta-edit.py -ObjectPath "<path>" -Operation <op> -Value "<val>"
 ```
 
 ### JSON mode (сложные/комбинированные)
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -DefinitionFile "<json>" -ObjectPath "<path>"
+python .agents/skills/meta-edit/scripts/meta-edit.py -DefinitionFile "<json>" -ObjectPath "<path>"
 ```
 
 | Параметр | Описание |

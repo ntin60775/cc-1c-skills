@@ -35,7 +35,7 @@ description: 1C web - publish infobase or services through Apache.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/web-publish/scripts/web-publish.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -82,14 +82,14 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ```bash
 # Файловая база
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin"
+python .agents/skills/web-publish/scripts/web-publish.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin"
 
 # С явным именем публикации и портом
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -AppName "mydb" -Port 9090
+python .agents/skills/web-publish/scripts/web-publish.py -InfoBasePath "C:\Bases\MyDB" -AppName "mydb" -Port 9090
 
 # Серверная база
-python .agents/skills/epf-init/scripts/init.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret"
+python .agents/skills/web-publish/scripts/web-publish.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret"
 
 # Ручной режим (только инструкция)
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -Manual
+python .agents/skills/web-publish/scripts/web-publish.py -InfoBasePath "C:\Bases\MyDB" -Manual
 ```

@@ -17,10 +17,10 @@ description: 1C SKD/DCS - compile data composition schema from JSON.
 
 ```bash
 # Из файла
-python .agents/skills/epf-init/scripts/init.py -DefinitionFile "<json>" -OutputPath "<Template.xml>"
+python .agents/skills/skd-compile/scripts/skd-compile.py -DefinitionFile "<json>" -OutputPath "<Template.xml>"
 
 # Из строки (без промежуточного файла)
-python .agents/skills/epf-init/scripts/init.py -Value '<json-string>' -OutputPath "<Template.xml>"
+python .agents/skills/skd-compile/scripts/skd-compile.py -Value '<json-string>' -OutputPath "<Template.xml>"
 ```
 
 ## JSON DSL — краткий справочник

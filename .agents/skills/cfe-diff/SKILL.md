@@ -18,7 +18,7 @@ description: 1C CFE extension - analyze objects, borrowed items, handlers, and c
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ExtensionPath src -ConfigPath C:\cfsrc\erp -Mode A
+python .agents/skills/cfe-diff/scripts/cfe-diff.py -ExtensionPath src -ConfigPath C:\cfsrc\erp -Mode A
 ```
 
 ## Mode A — обзор расширения

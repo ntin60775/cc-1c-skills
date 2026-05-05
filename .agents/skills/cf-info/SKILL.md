@@ -18,7 +18,7 @@ description: 1C config - inspect Configuration.xml, objects, properties, counter
 | `OutFile` | Записать результат в файл (UTF-8 BOM) |
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ConfigPath "<путь>"
+python .agents/skills/cf-info/scripts/cf-info.py -ConfigPath "<путь>"
 ```
 
 ## Три режима

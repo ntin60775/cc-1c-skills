@@ -18,7 +18,7 @@ description: 1C form - validate Form.xml, BaseForm, callType, extension IDs.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -FormPath "Catalogs/Номенклатура/Forms/ФормаЭлемента"
-python .agents/skills/epf-init/scripts/init.py -FormPath "src/МояОбработка/Forms/Форма/Ext/Form.xml"
+python .agents/skills/form-validate/scripts/form-validate.py -FormPath "Catalogs/Номенклатура/Forms/ФормаЭлемента"
+python .agents/skills/form-validate/scripts/form-validate.py -FormPath "src/МояОбработка/Forms/Форма/Ext/Form.xml"
 ```
 

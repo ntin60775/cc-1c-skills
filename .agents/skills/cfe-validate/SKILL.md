@@ -19,6 +19,6 @@ description: 1C CFE extension - validate XML sources after create/edit.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ExtensionPath "src"
-python .agents/skills/epf-init/scripts/init.py -ExtensionPath "src/Configuration.xml"
+python .agents/skills/cfe-validate/scripts/cfe-validate.py -ExtensionPath "src"
+python .agents/skills/cfe-validate/scripts/cfe-validate.py -ExtensionPath "src/Configuration.xml"
 ```

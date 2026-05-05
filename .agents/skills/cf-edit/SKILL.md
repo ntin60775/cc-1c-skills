@@ -18,7 +18,7 @@ description: 1C config - edit Configuration.xml, ChildObjects, properties, defau
 | `NoValidate` | Пропустить авто-валидацию |
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ConfigPath '<path>' -Operation modify-property -Value 'Version=1.0.0.1'
+python .agents/skills/cf-edit/scripts/cf-edit.py -ConfigPath '<path>' -Operation modify-property -Value 'Version=1.0.0.1'
 ```
 
 ## Операции

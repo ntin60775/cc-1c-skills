@@ -30,7 +30,7 @@ description: 1C DB - launch 1C Enterprise and open an infobase.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/db-run/scripts/db-run.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -57,14 +57,14 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ```bash
 # Простой запуск
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin"
+python .agents/skills/db-run/scripts/db-run.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin"
 
 # Запуск с обработкой
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -Execute "C:\epf\МояОбработка.epf"
+python .agents/skills/db-run/scripts/db-run.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -Execute "C:\epf\МояОбработка.epf"
 
 # Открыть по навигационной ссылке
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -URL "e1cib/data/Справочник.Номенклатура"
+python .agents/skills/db-run/scripts/db-run.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -URL "e1cib/data/Справочник.Номенклатура"
 
 # Серверная база с параметром запуска
-python .agents/skills/epf-init/scripts/init.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret" -CParam "ЗапуститьОбновление"
+python .agents/skills/db-run/scripts/db-run.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret" -CParam "ЗапуститьОбновление"
 ```

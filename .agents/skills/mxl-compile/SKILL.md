@@ -23,7 +23,7 @@ description: 1C MXL layout - compile tabular document from JSON.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -JsonPath "<путь>.json" -OutputPath "<путь>/Template.xml"
+python .agents/skills/mxl-compile/scripts/mxl-compile.py -JsonPath "<путь>.json" -OutputPath "<путь>/Template.xml"
 ```
 
 ## Рабочий процесс

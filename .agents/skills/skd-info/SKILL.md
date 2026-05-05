@@ -19,7 +19,7 @@ description: 1C SKD/DCS - inspect datasets, fields, params, variants, query.
 | `OutFile` | Записать результат в файл (UTF-8 BOM) |
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -TemplatePath "<путь>"
+python .agents/skills/skd-info/scripts/skd-info.py -TemplatePath "<путь>"
 ```
 
 С указанием режима:

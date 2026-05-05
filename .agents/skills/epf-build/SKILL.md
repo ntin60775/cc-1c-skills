@@ -34,7 +34,7 @@ description: 1C EPF - build external processor from XML sources.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/epf-build/scripts/epf-build.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -56,8 +56,8 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ```bash
 # Сборка обработки (файловая база)
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -SourceFile "src/МояОбработка.xml" -OutputFile "build/МояОбработка.epf"
+python .agents/skills/epf-build/scripts/epf-build.py -InfoBasePath "C:\Bases\MyDB" -SourceFile "src/МояОбработка.xml" -OutputFile "build/МояОбработка.epf"
 
 # Серверная база
-python .agents/skills/epf-init/scripts/init.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret" -SourceFile "src/МояОбработка.xml" -OutputFile "build/МояОбработка.epf"
+python .agents/skills/epf-build/scripts/epf-build.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret" -SourceFile "src/МояОбработка.xml" -OutputFile "build/МояОбработка.epf"
 ```

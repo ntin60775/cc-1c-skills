@@ -29,7 +29,7 @@ description: 1C web - remove Apache publication and close web access.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/web-unpublish/scripts/web-unpublish.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -46,11 +46,11 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ```bash
 # Удалить одну публикацию
-python .agents/skills/epf-init/scripts/init.py -AppName "bpdemo"
+python .agents/skills/web-unpublish/scripts/web-unpublish.py -AppName "bpdemo"
 
 # Удалить все публикации
-python .agents/skills/epf-init/scripts/init.py -All
+python .agents/skills/web-unpublish/scripts/web-unpublish.py -All
 
 # С указанием пути
-python .agents/skills/epf-init/scripts/init.py -AppName "mydb" -ApachePath "C:\tools\apache24"
+python .agents/skills/web-unpublish/scripts/web-unpublish.py -AppName "mydb" -ApachePath "C:\tools\apache24"
 ```

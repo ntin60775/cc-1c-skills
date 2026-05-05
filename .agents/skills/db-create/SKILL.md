@@ -24,7 +24,7 @@ description: 1C DB - create a new or empty infobase.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/db-create/scripts/db-create.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -58,14 +58,14 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ```bash
 # Создать файловую базу
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\NewDB"
+python .agents/skills/db-create/scripts/db-create.py -InfoBasePath "C:\Bases\NewDB"
 
 # Создать серверную базу
-python .agents/skills/epf-init/scripts/init.py -InfoBaseServer "srv01" -InfoBaseRef "MyApp_Test"
+python .agents/skills/db-create/scripts/db-create.py -InfoBaseServer "srv01" -InfoBaseRef "MyApp_Test"
 
 # Создать из шаблона CF
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\NewDB" -UseTemplate "C:\Templates\config.cf"
+python .agents/skills/db-create/scripts/db-create.py -InfoBasePath "C:\Bases\NewDB" -UseTemplate "C:\Templates\config.cf"
 
 # Создать и добавить в список баз
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\NewDB" -AddToList -ListName "Новая база"
+python .agents/skills/db-create/scripts/db-create.py -InfoBasePath "C:\Bases\NewDB" -AddToList -ListName "Новая база"
 ```

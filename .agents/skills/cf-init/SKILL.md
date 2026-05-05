@@ -19,7 +19,7 @@ description: 1C config - create an empty XML scaffold.
 | `CompatibilityMode` | Режим совместимости (default: `Version8_3_24`) |
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -Name "МояКонфигурация"
+python .agents/skills/cf-init/scripts/cf-init.py -Name "МояКонфигурация"
 ```
 
 ## Примеры

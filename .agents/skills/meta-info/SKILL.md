@@ -18,7 +18,7 @@ description: 1C metadata - inspect XML object, attributes, tabular sections, for
 | `OutFile` | Записать результат в файл (UTF-8 BOM) |
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ObjectPath "<путь>"
+python .agents/skills/meta-info/scripts/meta-info.py -ObjectPath "<путь>"
 ```
 
 ## Три режима

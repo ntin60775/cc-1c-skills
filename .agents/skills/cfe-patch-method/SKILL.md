@@ -46,7 +46,7 @@ description: 1C CFE extension - create before, after, or instead method handlers
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ExtensionPath src -ModulePath "Catalog.Контрагенты.ObjectModule" -MethodName "ПриЗаписи" -InterceptorType Before
+python .agents/skills/cfe-patch-method/scripts/cfe-patch-method.py -ExtensionPath src -ModulePath "Catalog.Контрагенты.ObjectModule" -MethodName "ПриЗаписи" -InterceptorType Before
 ```
 
 ## Примеры

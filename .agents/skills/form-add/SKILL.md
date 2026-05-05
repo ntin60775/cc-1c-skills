@@ -24,7 +24,7 @@ description: 1C form - add an empty managed form to a config object.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ObjectPath "<ObjectPath>" -FormName "<FormName>" [-Purpose "<Purpose>"] [-Synonym "<Synonym>"] [-SetDefault]
+python .agents/skills/form-add/scripts/form-add.py -ObjectPath "<ObjectPath>" -FormName "<FormName>" [-Purpose "<Purpose>"] [-Synonym "<Synonym>"] [-SetDefault]
 ```
 
 ## Purpose — назначение формы

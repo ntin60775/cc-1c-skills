@@ -17,7 +17,7 @@ description: 1C metadata - create config object, catalog, document, register, mo
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -JsonPath "<json>" -OutputDir "<ConfigDir>"
+python .agents/skills/meta-compile/scripts/meta-compile.py -JsonPath "<json>" -OutputDir "<ConfigDir>"
 ```
 
 | Параметр | Описание |

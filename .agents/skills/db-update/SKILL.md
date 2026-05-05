@@ -29,7 +29,7 @@ description: 1C DB - apply config with UpdateDBCfg.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/db-update/scripts/db-update.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -77,11 +77,11 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ```bash
 # Обычное обновление (файловая база)
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin"
+python .agents/skills/db-update/scripts/db-update.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin"
 
 # Динамическое обновление (серверная база)
-python .agents/skills/epf-init/scripts/init.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret" -Dynamic "+"
+python .agents/skills/db-update/scripts/db-update.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret" -Dynamic "+"
 
 # Обновление расширения
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -Extension "МоёРасширение"
+python .agents/skills/db-update/scripts/db-update.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -Extension "МоёРасширение"
 ```

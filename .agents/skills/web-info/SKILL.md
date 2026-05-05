@@ -21,7 +21,7 @@ description: 1C web - check Apache, publications, web client, publication errors
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/web-info/scripts/web-info.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -50,8 +50,8 @@ Module: C:/Program Files/1cv8/8.3.24.1691/bin/wsap24.dll
 
 ```bash
 # Статус по умолчанию
-python .agents/skills/epf-init/scripts/init.py
+python .agents/skills/web-info/scripts/web-info.py
 
 # Указать путь к Apache
-python .agents/skills/epf-init/scripts/init.py -ApachePath "C:\tools\apache24"
+python .agents/skills/web-info/scripts/web-info.py -ApachePath "C:\tools\apache24"
 ```

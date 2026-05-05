@@ -29,7 +29,7 @@ description: 1C DB - dump config to CF or create a CF backup.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/db-dump-cf/scripts/db-dump-cf.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -63,11 +63,11 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ```bash
 # Выгрузка конфигурации (файловая база)
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -OutputFile "C:\backup\config.cf"
+python .agents/skills/db-dump-cf/scripts/db-dump-cf.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -OutputFile "C:\backup\config.cf"
 
 # Серверная база
-python .agents/skills/epf-init/scripts/init.py -InfoBaseServer "srv01" -InfoBaseRef "MyApp_Dev" -UserName "Admin" -Password "secret" -OutputFile "config.cf"
+python .agents/skills/db-dump-cf/scripts/db-dump-cf.py -InfoBaseServer "srv01" -InfoBaseRef "MyApp_Dev" -UserName "Admin" -Password "secret" -OutputFile "config.cf"
 
 # Выгрузка расширения
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -OutputFile "ext.cfe" -Extension "МоёРасширение"
+python .agents/skills/db-dump-cf/scripts/db-dump-cf.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -OutputFile "ext.cfe" -Extension "МоёРасширение"
 ```

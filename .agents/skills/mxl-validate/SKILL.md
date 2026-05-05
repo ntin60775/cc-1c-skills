@@ -18,7 +18,7 @@ description: 1C MXL layout - validate tabular document after create/edit.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -TemplatePath "Catalogs/Номенклатура/Templates/Макет"
-python .agents/skills/epf-init/scripts/init.py -TemplatePath "src/МояОбработка/Templates/ПечатнаяФорма"
+python .agents/skills/mxl-validate/scripts/mxl-validate.py -TemplatePath "Catalogs/Номенклатура/Templates/Макет"
+python .agents/skills/mxl-validate/scripts/mxl-validate.py -TemplatePath "src/МояОбработка/Templates/ПечатнаяФорма"
 ```
 

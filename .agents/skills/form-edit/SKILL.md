@@ -23,7 +23,7 @@ description: 1C form - edit Form.xml elements, attributes, commands, events.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -FormPath "<путь>" -JsonPath "<путь>"
+python .agents/skills/form-edit/scripts/form-edit.py -FormPath "<путь>" -JsonPath "<путь>"
 ```
 
 ## JSON формат

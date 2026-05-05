@@ -10,7 +10,7 @@ description: 1C form - inspect Form.xml, attributes, commands, events.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -FormPath "<путь к Form.xml>"
+python .agents/skills/form-info/scripts/form-info.py -FormPath "<путь к Form.xml>"
 ```
 
 ## Параметры

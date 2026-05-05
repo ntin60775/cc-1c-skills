@@ -19,6 +19,6 @@ description: 1C config - validate XML sources after create/edit.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ConfigPath "upload/cfempty"
-python .agents/skills/epf-init/scripts/init.py -ConfigPath "upload/cfempty/Configuration.xml"
+python .agents/skills/cf-validate/scripts/cf-validate.py -ConfigPath "upload/cfempty"
+python .agents/skills/cf-validate/scripts/cf-validate.py -ConfigPath "upload/cfempty/Configuration.xml"
 ```

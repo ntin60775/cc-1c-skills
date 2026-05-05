@@ -66,7 +66,7 @@ description: 1C CFE extension - borrow config object for method, form, or attrib
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ExtensionPath src -ConfigPath C:\cfsrc\erp -Object "Catalog.Контрагенты"
+python .agents/skills/cfe-borrow/scripts/cfe-borrow.py -ExtensionPath src -ConfigPath C:\cfsrc\erp -Object "Catalog.Контрагенты"
 ```
 
 ## Примеры

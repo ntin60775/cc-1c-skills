@@ -22,7 +22,7 @@ description: 1C help - add embedded help page to a config object.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ObjectName "<ObjectName>" [-Lang "<Lang>"] [-SrcDir "<SrcDir>"]
+python .agents/skills/help-add/scripts/add-help.py -ObjectName "<ObjectName>" [-Lang "<Lang>"] [-SrcDir "<SrcDir>"]
 ```
 
 ## Что делает скрипт

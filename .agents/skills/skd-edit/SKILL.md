@@ -19,7 +19,7 @@ description: 1C SKD/DCS - edit fields, totals, filters, params, query text.
 | `NoSelection` | (опц.) Не добавлять поле в selection варианта |
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -TemplatePath "<path>" -Operation <op> -Value "<value>"
+python .agents/skills/skd-edit/scripts/skd-edit.py -TemplatePath "<path>" -Operation <op> -Value "<value>"
 ```
 
 ## Пакетный режим (batch)

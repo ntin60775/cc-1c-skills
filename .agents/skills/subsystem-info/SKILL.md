@@ -18,7 +18,7 @@ description: 1C subsystem - inspect content, children, interface, hierarchy.
 | `OutFile` | Записать результат в файл (UTF-8 BOM) |
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -SubsystemPath "<путь>"
+python .agents/skills/subsystem-info/scripts/subsystem-info.py -SubsystemPath "<путь>"
 ```
 
 ## Пять режимов

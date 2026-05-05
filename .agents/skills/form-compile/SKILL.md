@@ -23,10 +23,10 @@ description: 1C form - compile Form.xml from JSON or object metadata.
 
 ```bash
 # Режим JSON DSL
-python .agents/skills/epf-init/scripts/init.py -JsonPath "<json>" -OutputPath "<Form.xml>"
+python .agents/skills/form-compile/scripts/form-compile.py -JsonPath "<json>" -OutputPath "<Form.xml>"
 
 # Режим from-object (объект и purpose выводятся из OutputPath; Document и Catalog)
-python .agents/skills/epf-init/scripts/init.py -FromObject -OutputPath "<.../TypePlural/ObjectName/Forms/FormName/Ext/Form.xml>"
+python .agents/skills/form-compile/scripts/form-compile.py -FromObject -OutputPath "<.../TypePlural/ObjectName/Forms/FormName/Ext/Form.xml>"
 ```
 
 ## JSON DSL — справка

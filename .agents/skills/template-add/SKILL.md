@@ -25,7 +25,7 @@ description: 1C template - add empty template to a config object.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ObjectName "<ObjectName>" -TemplateName "<TemplateName>" -TemplateType "<TemplateType>" [-Synonym "<Synonym>"] [-SrcDir "<SrcDir>"] [-SetMainSKD]
+python .agents/skills/template-add/scripts/add-template.py -ObjectName "<ObjectName>" -TemplateName "<TemplateName>" -TemplateType "<TemplateType>" [-Synonym "<Synonym>"] [-SrcDir "<SrcDir>"] [-SetMainSKD]
 ```
 
 ## Пример
@@ -33,7 +33,7 @@ python .agents/skills/epf-init/scripts/init.py -ObjectName "<ObjectName>" -Templ
 Добавить основную СКД к отчёту в расширении:
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ObjectName "ОтчётПродажи" -TemplateName "ОсновнаяСхемаКомпоновкиДанных" -TemplateType "DataCompositionSchema" -SrcDir "src/cfe/МоёРасширение/Reports"
+python .agents/skills/template-add/scripts/add-template.py -ObjectName "ОтчётПродажи" -TemplateName "ОсновнаяСхемаКомпоновкиДанных" -TemplateType "DataCompositionSchema" -SrcDir "src/cfe/МоёРасширение/Reports"
 ```
 
 ## Маппинг типов

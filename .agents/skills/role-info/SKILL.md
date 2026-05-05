@@ -18,7 +18,7 @@ description: 1C role - audit Rights.xml, object rights, RLS, restrictions.
 ## Запуск скрипта
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -RightsPath <path> -OutFile <output.txt>
+python .agents/skills/role-info/scripts/role-info.py -RightsPath <path> -OutFile <output.txt>
 ```
 
 ### Параметры

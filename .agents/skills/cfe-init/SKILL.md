@@ -39,7 +39,7 @@ description: 1C CFE extension - create an empty XML scaffold.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -Name "МоёРасширение"
+python .agents/skills/cfe-init/scripts/cfe-init.py -Name "МоёРасширение"
 ```
 
 ## Примеры

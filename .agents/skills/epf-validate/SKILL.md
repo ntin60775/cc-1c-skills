@@ -19,7 +19,7 @@ description: 1C EPF - validate XML sources after create/edit.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ObjectPath "src/МояОбработка"
-python .agents/skills/epf-init/scripts/init.py -ObjectPath "src/МояОбработка/МояОбработка.xml"
+python .agents/skills/epf-validate/scripts/epf-validate.py -ObjectPath "src/МояОбработка"
+python .agents/skills/epf-validate/scripts/epf-validate.py -ObjectPath "src/МояОбработка/МояОбработка.xml"
 ```
 

@@ -15,7 +15,7 @@ description: 1C role - create Rights.xml from object rights spec.
 | `OutputDir` | Корень выгрузки конфигурации (где `Configuration.xml`, `Roles/` и т.д.) |
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -JsonPath "<json>" -OutputDir "<ConfigDir>"
+python .agents/skills/role-compile/scripts/role-compile.py -JsonPath "<json>" -OutputDir "<ConfigDir>"
 ```
 
 Создаёт `{OutputDir}/Roles/Имя.xml` и `{OutputDir}/Roles/Имя/Ext/Rights.xml`. Регистрирует `<Role>` в `Configuration.xml`.

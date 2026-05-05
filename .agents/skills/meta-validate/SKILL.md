@@ -19,6 +19,6 @@ description: 1C metadata - validate config object after create/edit.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ObjectPath "Catalogs/Номенклатура/Номенклатура.xml"
-python .agents/skills/epf-init/scripts/init.py -ObjectPath "Catalogs/Банки|Documents/Заказ"
+python .agents/skills/meta-validate/scripts/meta-validate.py -ObjectPath "Catalogs/Номенклатура/Номенклатура.xml"
+python .agents/skills/meta-validate/scripts/meta-validate.py -ObjectPath "Catalogs/Банки|Documents/Заказ"
 ```

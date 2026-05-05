@@ -23,7 +23,7 @@ description: 1C MXL layout - decompile tabular document to JSON.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -TemplatePath "<путь>/Template.xml" [-OutputPath "<путь>.json"]
+python .agents/skills/mxl-decompile/scripts/mxl-decompile.py -TemplatePath "<путь>/Template.xml" [-OutputPath "<путь>.json"]
 ```
 
 ## Рабочий процесс

@@ -32,7 +32,7 @@ description: 1C DB - load Git, staged, range, or partial changes into infobase.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/db-load-git/scripts/db-load-git.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -65,8 +65,8 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ```bash
 # Все незафиксированные изменения
-python .agents/skills/epf-init/scripts/init.py -V8Path "C:\Program Files\1cv8\8.3.25.1257\bin" -InfoBasePath "C:\Bases\MyDB" -ConfigDir "C:\WS\cfsrc" -Source All -UpdateDB
+python .agents/skills/db-load-git/scripts/db-load-git.py -V8Path "C:\Program Files\1cv8\8.3.25.1257\bin" -InfoBasePath "C:\Bases\MyDB" -ConfigDir "C:\WS\cfsrc" -Source All -UpdateDB
 
 # Из диапазона коммитов
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -ConfigDir "C:\WS\cfsrc" -Source Commit -CommitRange "HEAD~3..HEAD"
+python .agents/skills/db-load-git/scripts/db-load-git.py -InfoBasePath "C:\Bases\MyDB" -ConfigDir "C:\WS\cfsrc" -Source Commit -CommitRange "HEAD~3..HEAD"
 ```

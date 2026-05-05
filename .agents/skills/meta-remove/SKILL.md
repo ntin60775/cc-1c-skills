@@ -26,7 +26,7 @@ description: 1C metadata - remove a config object from XML sources.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ConfigDir "<путь>" -Object "Catalog.Товары"
+python .agents/skills/meta-remove/scripts/meta-remove.py -ConfigDir "<путь>" -Object "Catalog.Товары"
 ```
 
 ## Поддерживаемые типы

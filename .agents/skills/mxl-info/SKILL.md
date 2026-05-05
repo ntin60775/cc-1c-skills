@@ -33,12 +33,12 @@ description: 1C MXL layout - inspect print-form areas, parameters, column sets.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -TemplatePath "<путь>"
+python .agents/skills/mxl-info/scripts/mxl-info.py -TemplatePath "<путь>"
 ```
 
 Или по имени обработки/макета:
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ProcessorName "<Имя>" -TemplateName "<Макет>" [-SrcDir "<каталог>"]
+python .agents/skills/mxl-info/scripts/mxl-info.py -ProcessorName "<Имя>" -TemplateName "<Макет>" [-SrcDir "<каталог>"]
 ```
 
 Дополнительные флаги:

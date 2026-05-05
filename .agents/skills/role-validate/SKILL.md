@@ -19,5 +19,5 @@ description: 1C role - validate Rights.xml after create/edit.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -RightsPath "Roles/МояРоль"
+python .agents/skills/role-validate/scripts/role-validate.py -RightsPath "Roles/МояРоль"
 ```

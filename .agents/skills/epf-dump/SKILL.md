@@ -33,7 +33,7 @@ description: 1C EPF - dump external processor to XML sources.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/epf-dump/scripts/epf-dump.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -56,8 +56,8 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ```bash
 # Разборка обработки (файловая база)
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -InputFile "build/МояОбработка.epf" -OutputDir "src"
+python .agents/skills/epf-dump/scripts/epf-dump.py -InfoBasePath "C:\Bases\MyDB" -InputFile "build/МояОбработка.epf" -OutputDir "src"
 
 # Серверная база
-python .agents/skills/epf-init/scripts/init.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret" -InputFile "build/МояОбработка.epf" -OutputDir "src"
+python .agents/skills/epf-dump/scripts/epf-dump.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret" -InputFile "build/МояОбработка.epf" -OutputDir "src"
 ```

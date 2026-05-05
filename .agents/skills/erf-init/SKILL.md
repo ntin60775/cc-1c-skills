@@ -23,7 +23,7 @@ description: 1C ERF - create empty report XML scaffold.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -Name "<Name>" [-Synonym "<Synonym>"] [-SrcDir "<SrcDir>"] [-WithSKD]
+python .agents/skills/erf-init/scripts/init.py -Name "<Name>" [-Synonym "<Synonym>"] [-SrcDir "<SrcDir>"] [-WithSKD]
 ```
 
 ## Дальнейшие шаги

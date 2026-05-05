@@ -19,6 +19,6 @@ description: 1C SKD/DCS - validate data composition schema after create/edit.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -TemplatePath "src/МойОтчёт/Templates/ОсновнаяСхема"
-python .agents/skills/epf-init/scripts/init.py -TemplatePath "Catalogs/Номенклатура/Templates/СКД/Ext/Template.xml"
+python .agents/skills/skd-validate/scripts/skd-validate.py -TemplatePath "src/МойОтчёт/Templates/ОсновнаяСхема"
+python .agents/skills/skd-validate/scripts/skd-validate.py -TemplatePath "Catalogs/Номенклатура/Templates/СКД/Ext/Template.xml"
 ```

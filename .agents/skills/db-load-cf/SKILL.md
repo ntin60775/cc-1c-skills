@@ -30,7 +30,7 @@ description: 1C DB - load config from CF or restore a CF backup.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/db-load-cf/scripts/db-load-cf.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -65,11 +65,11 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ```bash
 # Файловая база
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -InputFile "C:\backup\config.cf"
+python .agents/skills/db-load-cf/scripts/db-load-cf.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -InputFile "C:\backup\config.cf"
 
 # Серверная база
-python .agents/skills/epf-init/scripts/init.py -InfoBaseServer "srv01" -InfoBaseRef "MyApp_Test" -UserName "Admin" -Password "secret" -InputFile "config.cf"
+python .agents/skills/db-load-cf/scripts/db-load-cf.py -InfoBaseServer "srv01" -InfoBaseRef "MyApp_Test" -UserName "Admin" -Password "secret" -InputFile "config.cf"
 
 # Загрузка расширения
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -InputFile "ext.cfe" -Extension "МоёРасширение"
+python .agents/skills/db-load-cf/scripts/db-load-cf.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin" -InputFile "ext.cfe" -Extension "МоёРасширение"
 ```

@@ -21,7 +21,7 @@ description: 1C web - stop Apache HTTP Server and publications.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/web-stop/scripts/web-stop.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -40,8 +40,8 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ```bash
 # Остановить Apache
-python .agents/skills/epf-init/scripts/init.py
+python .agents/skills/web-stop/scripts/web-stop.py
 
 # С указанием пути
-python .agents/skills/epf-init/scripts/init.py -ApachePath "C:\tools\apache24"
+python .agents/skills/web-stop/scripts/web-stop.py -ApachePath "C:\tools\apache24"
 ```
