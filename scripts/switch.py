@@ -114,7 +114,7 @@ def repo_root():
 
 
 def source_skills_dir():
-    return os.path.join(repo_root(), '.claude', 'skills')
+    return os.path.join(repo_root(), '.agents', 'skills')
 
 
 def scan_skills(skills_dir):
