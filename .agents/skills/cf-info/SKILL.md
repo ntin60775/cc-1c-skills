@@ -1,0 +1,49 @@
+---
+name: cf-info
+description: 1C config - inspect Configuration.xml, objects, properties, counters.
+---
+
+# /skill:cf-info — Структура конфигурации 1С
+
+Читает Configuration.xml из выгрузки конфигурации и выводит компактное описание структуры.
+
+## Параметры и команда
+
+| Параметр | Описание |
+|----------|----------|
+| `ConfigPath` | Путь к Configuration.xml или каталогу выгрузки |
+| `Mode` | Режим: `overview` (default), `brief`, `full` |
+| `Section` | Drill-down по разделу (alias: `Name`). Сейчас: `home-page` |
+| `Limit` / `Offset` | Пагинация (по умолчанию 150 строк) |
+| `OutFile` | Записать результат в файл (UTF-8 BOM) |
+
+```powershell
+python .agents/skills/epf-init/scripts/init.py -ConfigPath "<путь>"
+```
+
+## Три режима
+
+| Режим | Что показывает |
+|---|---|
+| `overview` *(default)* | Заголовок + ключевые свойства + таблица счётчиков объектов по типам |
+| `brief` | Одна строка: Имя — "Синоним" vВерсия \| N объектов \| совместимость |
+| `full` | Все свойства по категориям + полный список ChildObjects + DefaultRoles + мобильные функциональности |
+
+## Примеры
+
+```powershell
+# Обзор пустой конфигурации
+... -ConfigPath src
+
+# Краткая сводка реальной конфигурации
+... -ConfigPath src -Mode brief
+
+# Полная информация
+... -ConfigPath src -Mode full
+
+# С пагинацией
+... -ConfigPath src -Mode full -Limit 50 -Offset 100
+
+# Drill-down: только начальная страница (раскладка форм с ролями)
+... -ConfigPath src -Section home-page
+```

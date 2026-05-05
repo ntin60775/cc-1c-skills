@@ -1,0 +1,95 @@
+---
+name: web-publish
+description: 1C web - publish infobase or services through Apache.
+---
+
+# /skill:web-publish — Публикация 1С через Apache
+
+Генерирует `default.vrd`, настраивает `httpd.conf` и запускает Apache HTTP Server для веб-доступа к информационной базе. При необходимости скачивает portable Apache. Идемпотентный — повторный вызов обновляет конфигурацию.
+
+## Usage
+
+```
+/web-publish [database]
+/web-publish dev
+/web-publish dev --manual
+/web-publish dev --port 9090
+```
+
+## Параметры подключения
+
+Прочитай `.v8-project.json` из корня проекта и разреши базу:
+1. Если пользователь указал параметры подключения (путь, сервер) — используй напрямую
+2. Если указал базу по имени — ищи по id / alias / name в `.v8-project.json`
+3. Если не указал — сопоставь текущую ветку Git с `databases[].branches`
+4. Если ветка не совпала — используй `default`
+
+**ОБЯЗАТЕЛЬНО передавай все найденные параметры:**
+- **`-V8Path`** — из `v8path` в `.v8-project.json`. Если не передать, скрипт автоопределит версию платформы, что может выбрать не ту версию
+- **`-UserName`** — из поля `user` найденной записи базы (если есть)
+- **`-Password`** — из поля `password` найденной записи базы (если есть)
+- **`-ApachePath`** — из `webPath` в `.v8-project.json` (если есть)
+
+Если файла `.v8-project.json` нет — предложи `/skill:db-list add`.
+
+## Команда
+
+```powershell
+python .agents/skills/epf-init/scripts/init.py <параметры>
+```
+
+### Параметры скрипта
+
+| Параметр | Обязательный | Описание |
+|----------|:------------:|----------|
+| `-V8Path <путь>` | нет | Каталог bin платформы (для wsap24.dll) |
+| `-InfoBasePath <путь>` | * | Файловая база |
+| `-InfoBaseServer <сервер>` | * | Сервер 1С (для серверной базы) |
+| `-InfoBaseRef <имя>` | * | Имя базы на сервере |
+| `-UserName <имя>` | нет | Имя пользователя |
+| `-Password <пароль>` | нет | Пароль |
+| `-AppName <имя>` | нет | Имя публикации (по умолчанию из имени каталога базы) |
+| `-ApachePath <путь>` | нет | Корень Apache (по умолчанию `tools/apache24`) |
+| `-Port <порт>` | нет | Порт (по умолчанию `8081`) |
+| `-Manual` | нет | Не скачивать — только проверить и дать инструкцию |
+
+> `*` — нужен либо `-InfoBasePath`, либо пара `-InfoBaseServer` + `-InfoBaseRef`
+
+## Несколько пользователей одной базы
+
+Повторный вызов с тем же AppName **заменяет** публикацию (идемпотентность). Это используется для:
+- смены пользователя: «опубликуй под Ивановым» → тот же AppName, новый `-UserName`
+- перезапуска после `/skill:web-stop`: тот же вызов поднимает Apache обратно
+
+Если пользователь просит **параллельную** публикацию под другим пользователем (для тестирования разных наборов прав), добавь суффикс к AppName:
+- база `bpdemo`, пользователь `Иванов` → `-AppName bpdemo-ivanov`
+- база `bpdemo`, пользователь `Admin` → `-AppName bpdemo-admin` (или просто `bpdemo`)
+
+Ключевые слова: «ещё одну публикацию», «дополнительно», «параллельно», «под другим пользователем не убирая текущую».
+
+## После выполнения
+
+1. Сообщи URL-ы:
+   - Веб-клиент: `http://skill:localhost:{Port}/{AppName}`
+   - OData: `http://skill:localhost:{Port}/{AppName}/skill:odata/standard.odata`
+   - HTTP-сервисы: `http://skill:localhost:{Port}/{AppName}/skill:hs/<RootUrl>/...`
+   - Web-сервисы: `http://skill:localhost:{Port}/{AppName}/skill:ws/<Имя>?wsdl`
+2. Предложи открыть в браузере
+3. Если нужно протестировать сервис — помоги составить запрос
+4. Если база не зарегистрирована — предложи `/skill:db-list add`
+
+## Примеры
+
+```powershell
+# Файловая база
+python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -UserName "Admin"
+
+# С явным именем публикации и портом
+python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -AppName "mydb" -Port 9090
+
+# Серверная база
+python .agents/skills/epf-init/scripts/init.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret"
+
+# Ручной режим (только инструкция)
+python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -Manual
+```
