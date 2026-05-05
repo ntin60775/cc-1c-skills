@@ -10,7 +10,7 @@ description: 1C template - remove template from a config object.
 ## Usage
 
 ```
-/template-remove <ObjectName> <TemplateName>
+$template-remove <ObjectName> <TemplateName>
 ```
 
 | Параметр     | Обязательный | По умолчанию | Описание                            |

@@ -12,9 +12,9 @@ description: 1C web - remove Apache publication and close web access.
 ## Usage
 
 ```
-/web-unpublish <appname>
-/web-unpublish bpdemo
-/web-unpublish --all
+$web-unpublish <appname>
+$web-unpublish bpdemo
+$web-unpublish --all
 ```
 
 ## Параметры подключения

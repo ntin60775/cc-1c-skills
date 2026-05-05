@@ -10,9 +10,9 @@ description: 1C DB - dump config to CF or create a CF backup.
 ## Usage
 
 ```
-/db-dump-cf [database] [output.cf]
-/db-dump-cf dev config.cf
-/db-dump-cf                          — база по умолчанию, файл config.cf
+$db-dump-cf [database] [output.cf]
+$db-dump-cf dev config.cf
+$db-dump-cf                          — база по умолчанию, файл config.cf
 ```
 
 ## Параметры подключения

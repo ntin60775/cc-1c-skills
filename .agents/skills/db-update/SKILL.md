@@ -10,9 +10,9 @@ description: 1C DB - apply config with UpdateDBCfg.
 ## Usage
 
 ```
-/db-update [database]
-/db-update dev
-/db-update dev -Dynamic+
+$db-update [database]
+$db-update dev
+$db-update dev -Dynamic+
 ```
 
 ## Параметры подключения

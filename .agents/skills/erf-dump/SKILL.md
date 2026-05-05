@@ -8,7 +8,7 @@ description: 1C ERF - dump external report to XML sources.
 ## Usage
 
 ```
-/erf-dump <ErfFile> [OutDir]
+$erf-dump <ErfFile> [OutDir]
 ```
 
 | Параметр | Обязательный | По умолчанию | Описание                            |
@@ -35,7 +35,7 @@ description: 1C ERF - dump external report to XML sources.
 Используй общий скрипт из epf-dump:
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/epf-dump/scripts/epf-dump.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -58,8 +58,8 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ```bash
 # Разборка отчёта (файловая база)
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -InputFile "build/МойОтчёт.erf" -OutputDir "src"
+python .agents/skills/epf-dump/scripts/epf-dump.py -InfoBasePath "C:\Bases\MyDB" -InputFile "build/МойОтчёт.erf" -OutputDir "src"
 
 # Серверная база
-python .agents/skills/epf-init/scripts/init.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret" -InputFile "build/МойОтчёт.erf" -OutputDir "src"
+python .agents/skills/epf-dump/scripts/epf-dump.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret" -InputFile "build/МойОтчёт.erf" -OutputDir "src"
 ```

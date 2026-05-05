@@ -10,7 +10,7 @@ description: 1C form - edit Form.xml elements, attributes, commands, events.
 ## Использование
 
 ```
-/form-edit <FormPath> <JsonPath>
+$form-edit <FormPath> <JsonPath>
 ```
 
 ## Параметры

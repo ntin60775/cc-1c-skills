@@ -10,7 +10,7 @@ description: 1C form - add an empty managed form to a config object.
 ## Usage
 
 ```
-/form-add <ObjectPath> <FormName> [Purpose] [Synonym] [--set-default]
+$form-add <ObjectPath> <FormName> [Purpose] [Synonym] [--set-default]
 ```
 
 | Параметр    | Обязательный | По умолчанию | Описание                                     |
@@ -40,19 +40,19 @@ python .agents/skills/form-add/scripts/form-add.py -ObjectPath "<ObjectPath>" -F
 
 ```
 # Форма документа
-/form-add Documents/АвансовыйОтчет.xml ФормаДокумента --purpose Object
+$form-add Documents/АвансовыйОтчет.xml ФормаДокумента --purpose Object
 
 # Форма списка каталога
-/form-add Catalogs/Контрагенты.xml ФормаСписка --purpose List
+$form-add Catalogs/Контрагенты.xml ФормаСписка --purpose List
 
 # Форма записи регистра сведений
-/form-add InformationRegisters/КурсыВалют.xml ФормаЗаписи --purpose Record
+$form-add InformationRegisters/КурсыВалют.xml ФормаЗаписи --purpose Record
 
 # Форма выбора с синонимом
-/form-add Catalogs/Номенклатура.xml ФормаВыбора --purpose Choice --synonym "Выбор номенклатуры"
+$form-add Catalogs/Номенклатура.xml ФормаВыбора --purpose Choice --synonym "Выбор номенклатуры"
 
 # Установить как форму по умолчанию
-/form-add Documents/Заказ.xml ФормаДокументаНовая --purpose Object --set-default
+$form-add Documents/Заказ.xml ФормаДокументаНовая --purpose Object --set-default
 ```
 
 ## Workflow

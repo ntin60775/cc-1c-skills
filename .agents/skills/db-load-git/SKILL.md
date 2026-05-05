@@ -10,11 +10,11 @@ description: 1C DB - load Git, staged, range, or partial changes into infobase.
 ## Usage
 
 ```
-/db-load-git [database]
-/db-load-git dev                              — все незафиксированные изменения
-/db-load-git dev -Source Staged               — только staged
-/db-load-git dev -Source Commit -CommitRange "HEAD~3..HEAD"
-/db-load-git dev -DryRun                      — только показать что будет загружено
+$db-load-git [database]
+$db-load-git dev                              — все незафиксированные изменения
+$db-load-git dev -Source Staged               — только staged
+$db-load-git dev -Source Commit -CommitRange "HEAD~3..HEAD"
+$db-load-git dev -DryRun                      — только показать что будет загружено
 ```
 
 ## Параметры подключения

@@ -10,10 +10,10 @@ description: 1C DB - dump config XML with DumpConfigToFiles.
 ## Usage
 
 ```
-/db-dump-xml [database] [outputDir]
-/db-dump-xml dev src/config
-/db-dump-xml dev src/config -Mode Full
-/db-dump-xml dev src/config -Mode Partial -Objects "Справочник.Номенклатура,Документ.Заказ"
+$db-dump-xml [database] [outputDir]
+$db-dump-xml dev src/config
+$db-dump-xml dev src/config -Mode Full
+$db-dump-xml dev src/config -Mode Partial -Objects "Справочник.Номенклатура,Документ.Заказ"
 ```
 
 ## Параметры подключения

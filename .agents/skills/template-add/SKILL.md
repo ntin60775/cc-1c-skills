@@ -10,7 +10,7 @@ description: 1C template - add empty template to a config object.
 ## Usage
 
 ```
-/template-add <ObjectName> <TemplateName> <TemplateType>
+$template-add <ObjectName> <TemplateName> <TemplateType>
 ```
 
 | Параметр      | Обязательный | По умолчанию    | Описание                                         |

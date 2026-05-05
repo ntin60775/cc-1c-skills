@@ -10,7 +10,7 @@ description: 1C ERF - create empty report XML scaffold.
 ## Usage
 
 ```
-/erf-init <Name> [Synonym] [SrcDir] [--with-skd]
+$erf-init <Name> [Synonym] [SrcDir] [--with-skd]
 ```
 
 | Параметр  | Обязательный | По умолчанию | Описание                              |

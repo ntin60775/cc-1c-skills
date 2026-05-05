@@ -10,7 +10,7 @@ description: 1C web - check Apache, publications, web client, publication errors
 ## Usage
 
 ```
-/web-info
+$web-info
 ```
 
 ## Параметры подключения

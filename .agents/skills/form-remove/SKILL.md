@@ -10,7 +10,7 @@ description: 1C form - remove a form from a config object.
 ## Usage
 
 ```
-/form-remove <ObjectName> <FormName>
+$form-remove <ObjectName> <FormName>
 ```
 
 | Параметр   | Обязательный | По умолчанию | Описание                            |

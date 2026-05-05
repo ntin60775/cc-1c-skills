@@ -10,7 +10,7 @@ description: 1C role - audit Rights.xml, object rights, RLS, restrictions.
 ## Использование
 
 ```
-/role-info <RightsPath>
+$role-info <RightsPath>
 ```
 
 **RightsPath** — путь к файлу `Rights.xml` роли (обычно `Roles/ИмяРоли/Ext/Rights.xml`).

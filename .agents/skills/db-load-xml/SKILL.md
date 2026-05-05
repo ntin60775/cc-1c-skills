@@ -10,9 +10,9 @@ description: 1C DB - load config XML with LoadConfigFromFiles.
 ## Usage
 
 ```
-/db-load-xml <configDir> [database]
-/db-load-xml src/config dev
-/db-load-xml src/config dev -Mode Partial -Files "Catalogs/Номенклатура.xml,Catalogs/Номенклатура/Ext/ObjectModule.bsl"
+$db-load-xml <configDir> [database]
+$db-load-xml src/config dev
+$db-load-xml src/config dev -Mode Partial -Files "Catalogs/Номенклатура.xml,Catalogs/Номенклатура/Ext/ObjectModule.bsl"
 ```
 
 > **Внимание**: полная загрузка **заменяет всю конфигурацию** в базе. Перед выполнением запроси подтверждение у пользователя.

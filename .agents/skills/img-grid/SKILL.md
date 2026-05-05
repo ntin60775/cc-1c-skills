@@ -10,7 +10,7 @@ description: Image - overlay a grid on screenshots, print forms, or tabular docs
 ## Использование
 
 ```
-/img-grid <ImagePath> [-c COLS] [-o OUTPUT]
+$img-grid <ImagePath> [-c COLS] [-o OUTPUT]
 ```
 
 ## Параметры

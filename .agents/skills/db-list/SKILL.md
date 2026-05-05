@@ -10,10 +10,10 @@ description: 1C DBs - manage .v8-project.json registry, aliases, connections.
 ## Usage
 
 ```
-/db-list                    — показать список баз
-/db-list add                — добавить базу (интерактивно)
-/db-list remove <id>        — удалить базу из реестра
-/db-list show <id|alias>    — подробности по базе
+$db-list                    — показать список баз
+$db-list add                — добавить базу (интерактивно)
+$db-list remove <id>        — удалить базу из реестра
+$db-list show <id|alias>    — подробности по базе
 ```
 
 ## Формат `.v8-project.json`

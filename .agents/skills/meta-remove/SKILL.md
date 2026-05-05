@@ -10,7 +10,7 @@ description: 1C metadata - remove a config object from XML sources.
 ## Использование
 
 ```
-/meta-remove <ConfigDir> -Object <Type.Name>
+$meta-remove <ConfigDir> -Object <Type.Name>
 ```
 
 ## Параметры

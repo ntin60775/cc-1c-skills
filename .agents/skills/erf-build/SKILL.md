@@ -8,7 +8,7 @@ description: 1C ERF - build external report from XML sources.
 ## Usage
 
 ```
-/erf-build <ReportName> [SrcDir] [OutDir]
+$erf-build <ReportName> [SrcDir] [OutDir]
 ```
 
 | Параметр   | Обязательный | По умолчанию | Описание                             |
@@ -36,7 +36,7 @@ description: 1C ERF - build external report from XML sources.
 Используй общий скрипт из epf-build:
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py <параметры>
+python .agents/skills/epf-build/scripts/epf-build.py <параметры>
 ```
 
 ### Параметры скрипта
@@ -58,8 +58,8 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 
 ```bash
 # Сборка отчёта (файловая база)
-python .agents/skills/epf-init/scripts/init.py -InfoBasePath "C:\Bases\MyDB" -SourceFile "src/МойОтчёт.xml" -OutputFile "build/МойОтчёт.erf"
+python .agents/skills/epf-build/scripts/epf-build.py -InfoBasePath "C:\Bases\MyDB" -SourceFile "src/МойОтчёт.xml" -OutputFile "build/МойОтчёт.erf"
 
 # Серверная база
-python .agents/skills/epf-init/scripts/init.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret" -SourceFile "src/МойОтчёт.xml" -OutputFile "build/МойОтчёт.erf"
+python .agents/skills/epf-build/scripts/epf-build.py -InfoBaseServer "srv01" -InfoBaseRef "MyDB" -UserName "Admin" -Password "secret" -SourceFile "src/МойОтчёт.xml" -OutputFile "build/МойОтчёт.erf"
 ```

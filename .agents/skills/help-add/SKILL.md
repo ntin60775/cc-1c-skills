@@ -10,7 +10,7 @@ description: 1C help - add embedded help page to a config object.
 ## Usage
 
 ```
-/help-add <ObjectName> [Lang] [SrcDir]
+$help-add <ObjectName> [Lang] [SrcDir]
 ```
 
 | Параметр   | Обязательный | По умолчанию | Описание                            |

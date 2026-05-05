@@ -386,11 +386,10 @@ def main():
             print(f'       Наш Apache: {httpd_exe}')
 
     print('Запуск Apache...')
-    subprocess.Popen(
-        [httpd_exe],
-        cwd=apache_path,
-        creationflags=subprocess.CREATE_NO_WINDOW,
-    )
+    popen_kwargs = {"cwd": apache_path}
+    if platform.system() == "Windows":
+        popen_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+    subprocess.Popen([httpd_exe], **popen_kwargs)
 
     time.sleep(2)
 

@@ -10,7 +10,7 @@ description: BSP EPF - create external report/processor registration function.
 ## Usage
 
 ```
-/epf-bsp-init <ProcessorName> <Вид> [Назначение...]
+$epf-bsp-init <ProcessorName> <Вид> [Назначение...]
 ```
 
 | Параметр      | Обязательный | По умолчанию | Описание                                                |

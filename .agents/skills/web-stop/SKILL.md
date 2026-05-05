@@ -10,7 +10,7 @@ description: 1C web - stop Apache HTTP Server and publications.
 ## Usage
 
 ```
-/web-stop
+$web-stop
 ```
 
 ## Параметры подключения

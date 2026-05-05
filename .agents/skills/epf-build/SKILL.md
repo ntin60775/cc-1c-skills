@@ -8,7 +8,7 @@ description: 1C EPF - build external processor from XML sources.
 ## Usage
 
 ```
-/epf-build <ProcessorName> [SrcDir] [OutDir]
+$epf-build <ProcessorName> [SrcDir] [OutDir]
 ```
 
 | Параметр      | Обязательный | По умолчанию | Описание                             |

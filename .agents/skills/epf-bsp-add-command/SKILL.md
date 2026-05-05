@@ -12,7 +12,7 @@ description: BSP EPF - add command registration for form, method, or object fill
 ## Usage
 
 ```
-/epf-bsp-add-command <ProcessorName> <Идентификатор> [ТипКоманды] [Представление]
+$epf-bsp-add-command <ProcessorName> <Идентификатор> [ТипКоманды] [Представление]
 ```
 
 | Параметр      | Обязательный | По умолчанию          | Описание                                   |

@@ -10,7 +10,7 @@ description: 1C EPF - create empty XML scaffold for external processor.
 ## Usage
 
 ```
-/epf-init <Name> [Synonym] [SrcDir]
+$epf-init <Name> [Synonym] [SrcDir]
 ```
 
 | Параметр  | Обязательный | По умолчанию | Описание                            |

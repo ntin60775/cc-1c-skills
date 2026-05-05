@@ -65,6 +65,6 @@ python .agents/skills/skd-info/scripts/skd-info.py -TemplatePath "<путь>"
 ## Верификация
 
 ```
-/skd-info <path>                            — overview (точка входа)
-/skd-info <path> -Mode trace -Name <field>  — трассировка поля
+$skd-info <path>                            — overview (точка входа)
+$skd-info <path> -Mode trace -Name <field>  — трассировка поля
 ```

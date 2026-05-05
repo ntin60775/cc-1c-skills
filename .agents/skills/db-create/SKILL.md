@@ -10,9 +10,9 @@ description: 1C DB - create a new or empty infobase.
 ## Usage
 
 ```
-/db-create <path>                   — файловая база по указанному пути
-/db-create <server>/<name>          — серверная база
-/db-create                          — интерактивно
+$db-create <path>                   — файловая база по указанному пути
+$db-create <server>/<name>          — серверная база
+$db-create                          — интерактивно
 ```
 
 ## Параметры подключения

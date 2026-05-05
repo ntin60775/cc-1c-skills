@@ -38,7 +38,7 @@ python .agents/skills/cf-init/scripts/cf-init.py -Name "МояКонфигура
 ## Верификация
 
 ```
-/cf-init TestConfig -OutputDir test-tmp/cf
+$cf-init TestConfig -OutputDir test-tmp/cf
 $cf-info test-tmp/cf          — проверить созданное
 $cf-validate test-tmp/cf      — валидировать
 ```

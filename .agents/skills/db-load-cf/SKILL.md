@@ -10,8 +10,8 @@ description: 1C DB - load config from CF or restore a CF backup.
 ## Usage
 
 ```
-/db-load-cf <input.cf> [database]
-/db-load-cf config.cf dev
+$db-load-cf <input.cf> [database]
+$db-load-cf config.cf dev
 ```
 
 > **Внимание**: загрузка CF **полностью заменяет** конфигурацию в базе. Перед выполнением запроси подтверждение у пользователя.

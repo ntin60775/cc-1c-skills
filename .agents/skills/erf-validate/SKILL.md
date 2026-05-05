@@ -21,7 +21,7 @@ description: 1C ERF - validate XML sources after create/edit.
 ## Команда
 
 ```bash
-python .agents/skills/epf-init/scripts/init.py -ObjectPath "src/МойОтчёт"
-python .agents/skills/epf-init/scripts/init.py -ObjectPath "src/МойОтчёт/МойОтчёт.xml"
+python .agents/skills/epf-validate/scripts/epf-validate.py -ObjectPath "src/МойОтчёт"
+python .agents/skills/epf-validate/scripts/epf-validate.py -ObjectPath "src/МойОтчёт/МойОтчёт.xml"
 ```
 

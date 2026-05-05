@@ -8,7 +8,7 @@ description: 1C EPF - dump external processor to XML sources.
 ## Usage
 
 ```
-/epf-dump <EpfFile> [OutDir]
+$epf-dump <EpfFile> [OutDir]
 ```
 
 | Параметр | Обязательный | По умолчанию | Описание                            |

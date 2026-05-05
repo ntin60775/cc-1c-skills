@@ -10,10 +10,10 @@ description: 1C web - publish infobase or services through Apache.
 ## Usage
 
 ```
-/web-publish [database]
-/web-publish dev
-/web-publish dev --manual
-/web-publish dev --port 9090
+$web-publish [database]
+$web-publish dev
+$web-publish dev --manual
+$web-publish dev --port 9090
 ```
 
 ## Параметры подключения

@@ -10,10 +10,10 @@ description: 1C DB - launch 1C Enterprise and open an infobase.
 ## Usage
 
 ```
-/db-run [database]
-/db-run dev
-/db-run dev /Execute process.epf
-/db-run dev /C "параметр запуска"
+$db-run [database]
+$db-run dev
+$db-run dev /Execute process.epf
+$db-run dev /C "параметр запуска"
 ```
 
 ## Параметры подключения

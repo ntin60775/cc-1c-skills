@@ -10,8 +10,8 @@ description: 1C MXL layout - inspect print-form areas, parameters, column sets.
 ## Использование
 
 ```
-/mxl-info <TemplatePath>
-/mxl-info <ProcessorName> <TemplateName>
+$mxl-info <TemplatePath>
+$mxl-info <ProcessorName> <TemplateName>
 ```
 
 ## Параметры
