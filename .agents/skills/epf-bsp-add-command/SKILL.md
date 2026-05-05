@@ -131,7 +131,7 @@ description: BSP EPF - add command registration for form, method, or object fill
 
 ### ВызовКлиентскогоМетода
 
-Добавляется в **модуль формы** (`Forms/<FormName>/skill:Ext/Form/Module.bsl`):
+Добавляется в **модуль формы** (`Forms/<FormName>/Ext/Form/Module.bsl`):
 
 Для глобальных обработок:
 
@@ -163,13 +163,13 @@ description: BSP EPF - add command registration for form, method, or object fill
 
 ## Инструкции
 
-1. Найди и прочитай `ObjectModule.bsl` через Glob: `src/{{ProcessorName}}/skill:Ext/ObjectModule.bsl`
+1. Найди и прочитай `ObjectModule.bsl` через Glob: `src/{{ProcessorName}}/Ext/ObjectModule.bsl`
 2. Убедись что `СведенияОВнешнейОбработке()` существует. Если нет — предложи вызвать `/skill:epf-bsp-init`
 3. Определи вид обработки из существующего кода (найди строку с `ВидОбработки...()`)
 4. Вставь блок команды **перед** `Возврат ПараметрыРегистрации`
 5. Добавь обработчик:
    - Для серверных обработчиков — в `ObjectModule.bsl`, область `ПрограммныйИнтерфейс`
-   - Для клиентских обработчиков — в модуль формы (найти через Glob: `src/{{ProcessorName}}/skill:Forms/*/skill:Ext/Form/Module.bsl`)
+   - Для клиентских обработчиков — в модуль формы (найти через Glob: `src/{{ProcessorName}}/Forms/*/Ext/Form/Module.bsl`)
 6. Если обработчик (`ВыполнитьКоманду` / `Печать`) уже есть — добавь ветку, не создавай дубль процедуры
 7. Используй табы для отступов
 

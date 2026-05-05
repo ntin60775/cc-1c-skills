@@ -22,7 +22,7 @@ description: 1C form - remove a form from a config object.
 ## Команда
 
 ```powershell
-python .agents/skills/epf-init/scripts/init.py -ObjectName "<ObjectName>" -FormName "<FormName>" [-SrcDir "<SrcDir>"]
+python .agents/skills/form-remove/scripts/remove-form.py -ObjectName "<ObjectName>" -FormName "<FormName>" [-SrcDir "<SrcDir>"]
 ```
 
 ## Что удаляется

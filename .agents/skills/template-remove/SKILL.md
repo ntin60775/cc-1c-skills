@@ -22,7 +22,7 @@ description: 1C template - remove template from a config object.
 ## Команда
 
 ```powershell
-python .agents/skills/epf-init/scripts/init.py -ObjectName "<ObjectName>" -TemplateName "<TemplateName>" [-SrcDir "<SrcDir>"]
+python .agents/skills/template-remove/scripts/remove-template.py -ObjectName "<ObjectName>" -TemplateName "<TemplateName>" [-SrcDir "<SrcDir>"]
 ```
 
 ## Что удаляется

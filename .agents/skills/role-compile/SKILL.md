@@ -18,7 +18,7 @@ description: 1C role - create Rights.xml from object rights spec.
 python .agents/skills/epf-init/scripts/init.py -JsonPath "<json>" -OutputDir "<ConfigDir>"
 ```
 
-Создаёт `{OutputDir}/skill:Roles/Имя.xml` и `{OutputDir}/skill:Roles/Имя/Ext/Rights.xml`. Регистрирует `<Role>` в `Configuration.xml`.
+Создаёт `{OutputDir}/Roles/Имя.xml` и `{OutputDir}/Roles/Имя/Ext/Rights.xml`. Регистрирует `<Role>` в `Configuration.xml`.
 
 ## JSON DSL
 

@@ -70,10 +70,10 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 ## После выполнения
 
 1. Сообщи URL-ы:
-   - Веб-клиент: `http://skill:localhost:{Port}/{AppName}`
-   - OData: `http://skill:localhost:{Port}/{AppName}/skill:odata/standard.odata`
-   - HTTP-сервисы: `http://skill:localhost:{Port}/{AppName}/skill:hs/<RootUrl>/...`
-   - Web-сервисы: `http://skill:localhost:{Port}/{AppName}/skill:ws/<Имя>?wsdl`
+   - Веб-клиент: `http://localhost:{Port}/{AppName}`
+   - OData: `http://localhost:{Port}/{AppName}/odata/standard.odata`
+   - HTTP-сервисы: `http://localhost:{Port}/{AppName}/hs/<RootUrl>/...`
+   - Web-сервисы: `http://localhost:{Port}/{AppName}/ws/<Имя>?wsdl`
 2. Предложи открыть в браузере
 3. Если нужно протестировать сервис — помоги составить запрос
 4. Если база не зарегистрирована — предложи `/skill:db-list add`

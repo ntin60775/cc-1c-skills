@@ -5,7 +5,7 @@ description: 1C DB - apply config with UpdateDBCfg.
 
 # /skill:db-update — Обновление конфигурации БД
 
-Применяет изменения основной конфигурации к конфигурации базы данных (`/skill:UpdateDBCfg`). Обязательный шаг после `/skill:db-load-cf`, `/skill:db-load-xml`, `/skill:db-load-git`.
+Применяет изменения основной конфигурации к конфигурации базы данных (`/UpdateDBCfg`). Обязательный шаг после `/skill:db-load-cf`, `/skill:db-load-xml`, `/skill:db-load-git`.
 
 ## Usage
 
@@ -44,7 +44,7 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 | `-Password <пароль>` | нет | Пароль |
 | `-Extension <имя>` | нет | Обновить расширение |
 | `-AllExtensions` | нет | Обновить все расширения |
-| `-Dynamic <+/skill:->` | нет | `+` — динамическое обновление, `-` — отключить |
+| `-Dynamic <+/->` | нет | `+` — динамическое обновление, `-` — отключить |
 | `-Server` | нет | Обновление на стороне сервера |
 | `-WarningsAsErrors` | нет | Предупреждения считать ошибками |
 

@@ -36,7 +36,7 @@ Requires Node.js 18+. `npm install` downloads Playwright and Chromium.
 ## URL resolution
 
 Read `.v8-project.json` from project root. Each database has `id` and optional `webUrl`.
-Construct URL as `http://skill:localhost:8081/<id>` or use `webUrl` if set.
+Construct URL as `http://localhost:8081/<id>` or use `webUrl` if set.
 Use `/skill:web-publish` first if the database is not published.
 
 ## Execution modes

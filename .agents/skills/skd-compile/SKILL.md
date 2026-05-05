@@ -82,7 +82,7 @@ python .agents/skills/epf-init/scripts/init.py -Value '<json-string>' -OutputPat
 
 Многоязычный заголовок: `"title": { "ru": "...", "en": "..." }`. Применимо везде, где принимается title/presentation (поля, calculatedFields, parameters, settingsVariants, availableValues и пр.). Строка эквивалентна `{ "ru": "..." }`.
 
-Типы: `string`, `string(N)`, `decimal(D,F)`, `boolean`, `date`, `dateTime`, `CatalogRef.X`, `DocumentRef.X`, `EnumRef.X`, `StandardPeriod`. Ссылочные типы эмитируются с inline namespace `d5p1:` (`http://skill:v8.1c.ru/8.1/data/enterprise/current-config`). Сборка EPF со ссылочными типами требует базу с соответствующей конфигурацией.
+Типы: `string`, `string(N)`, `decimal(D,F)`, `boolean`, `date`, `dateTime`, `CatalogRef.X`, `DocumentRef.X`, `EnumRef.X`, `StandardPeriod`. Ссылочные типы эмитируются с inline namespace `d5p1:` (`http://v8.1c.ru/8.1/data/enterprise/current-config`). Сборка EPF со ссылочными типами требует базу с соответствующей конфигурацией.
 
 Составной тип (несколько типов значений) — массив в объектной форме: `"type": ["CatalogRef.A", "CatalogRef.B"]`. Квалификаторы (`(N)`, `(D,F)`) применяются к каждому элементу.
 
@@ -136,7 +136,7 @@ Shorthand: `"Имя [Заголовок]: тип = значение @флаги"
 
 Флаги shorthand:
 - `@autoDates` — добавляет к параметру StandardPeriod пару дат `НачалоПериода`/`КонецПериода`, вычисляемых из него. Используй их в тексте запроса как `&НачалоПериода`/`&КонецПериода`; пользователь выбирает только сам период. По умолчанию сам параметр получает `use=Always` и `denyIncompleteValues=true` (чтобы производные даты всегда были заполнены); в объектной форме можно явно переопределить.
-- `@valueList` — `<valueListAllowed>true</skill:valueListAllowed>` — разрешает передавать список значений
+- `@valueList` — `<valueListAllowed>true</valueListAllowed>` — разрешает передавать список значений
 - `@hidden` — скрытый параметр: `availableAsField=false` + исключается из `"dataParameters": "auto"`
 
 Объектная форма: `title`, `hidden: true`, `valueListAllowed: true`, `availableAsField: false`, `denyIncompleteValues: true`, `use: "Always"`.

@@ -138,7 +138,7 @@ description: BSP EPF - create external report/processor registration function.
 
 ## Инструкции
 
-1. Найди `ObjectModule.bsl` через Glob: `src/{{ProcessorName}}/skill:Ext/ObjectModule.bsl`
+1. Найди `ObjectModule.bsl` через Glob: `src/{{ProcessorName}}/Ext/ObjectModule.bsl`
 2. Прочитай файл
 3. Если `СведенияОВнешнейОбработке` уже есть — сообщи пользователю и не дублируй
 4. Если файл не найден — предложи сначала вызвать `/skill:epf-init`

@@ -517,7 +517,7 @@ python .agents/skills/epf-init/scripts/init.py -FromObject -OutputPath "<.../Typ
 
 ## Workflow
 
-1. **Компиляция**: `/skill:form-compile` генерирует `Form.xml` и автоматически регистрирует `<Form>` в `ChildObjects` родительского объекта (если OutputPath следует конвенции `.../skill:TypePlural/ObjectName/Forms/FormName/Ext/Form.xml`).
+1. **Компиляция**: `/skill:form-compile` генерирует `Form.xml` и автоматически регистрирует `<Form>` в `ChildObjects` родительского объекта (если OutputPath следует конвенции `.../TypePlural/ObjectName/Forms/FormName/Ext/Form.xml`).
 2. **Метаданные формы** (`ФормаСписка.xml`) и `Module.bsl` создаёт `/skill:form-add`. Если `/skill:form-add` ещё не вызывался — вызови после `/skill:form-compile`. Он не перезаписывает существующий Form.xml.
 3. **Проверка**: `/skill:form-validate`, `/skill:form-info`.
 

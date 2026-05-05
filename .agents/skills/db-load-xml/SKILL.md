@@ -52,7 +52,7 @@ python .agents/skills/epf-init/scripts/init.py <параметры>
 | `-Extension <имя>` | нет | Загрузить в расширение |
 | `-AllExtensions` | нет | Загрузить все расширения |
 | `-Format <формат>` | нет | `Hierarchical` (по умолч.) / `Plain` |
-| `-UpdateDB` | нет | После загрузки сразу обновить конфигурацию БД (`/skill:UpdateDBCfg`) |
+| `-UpdateDB` | нет | После загрузки сразу обновить конфигурацию БД (`/UpdateDBCfg`) |
 
 > `*` — нужен либо `-InfoBasePath`, либо пара `-InfoBaseServer` + `-InfoBaseRef`
 
