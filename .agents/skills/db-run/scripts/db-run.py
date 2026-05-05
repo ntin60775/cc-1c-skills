@@ -28,6 +28,7 @@ def resolve_v8path(v8path):
         for pattern in ["/opt/1cv8/*/bin/1cv8", "/opt/1cv8/x86_64/*/bin/1cv8"]:
             candidates.extend(glob.glob(pattern))
         if not candidates:
+            # Fallback to PATH on Linux/Unix only
             for path_dir in os.environ.get("PATH", "").split(os.pathsep):
                 candidate = os.path.join(path_dir, "1cv8")
                 if os.path.isfile(candidate):
