@@ -251,6 +251,7 @@ docs/
 ├── 1c-erf-spec.md          # Спецификация XML-формата (ERF)
 ├── 1c-form-spec.md         # Спецификация управляемых форм
 ├── 1c-help-spec.md         # Спецификация встроенной справки
+├── 1c-configuration-spec.md # XML-формат Configuration.xml, ConfigDumpInfo.xml, Languages/
 ├── 1c-config-objects-spec.md # Спецификация объектов конфигурации
 ├── build-spec.md           # Пакетный режим конфигуратора 1С
 ├── 1c-spreadsheet-spec.md  # Спецификация табличного документа
