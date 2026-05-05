@@ -97,7 +97,7 @@
 
 ### Примеры
 
-```powershell
+```bash
 # Скрыть команду
 ... -CIPath Subsystems/Продажи/Ext/CommandInterface.xml -Operation hide -Value "Catalog.Товары.StandardCommand.OpenList"
 
@@ -151,7 +151,7 @@ Claude сформирует JSON:
 ```
 
 Claude вызовет `/subsystem-edit` с операцией `add-content`:
-```powershell
+```bash
 ... -SubsystemPath Subsystems/Продажи.xml -Operation add-content -Value '["Document.Счёт","Report.Задолженность"]'
 ```
 
@@ -162,7 +162,7 @@ Claude вызовет `/subsystem-edit` с операцией `add-content`:
 ```
 
 Claude вызовет `/interface-edit`:
-```powershell
+```bash
 # Скрыть команду
 ... -CIPath Subsystems/Продажи/Ext/CommandInterface.xml -Operation hide -Value "Catalog.Товары.StandardCommand.OpenList"
 

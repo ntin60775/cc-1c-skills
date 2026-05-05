@@ -55,7 +55,7 @@
 
 ### Свойства
 
-```powershell
+```bash
 # Скалярные и enum
 -Operation modify-property -Value "Version=2.0.0.1 ;; Vendor=Фирма 1С ;; CompatibilityMode=Version8_3_27"
 
@@ -77,7 +77,7 @@
 
 ### Состав объектов (ChildObjects)
 
-```powershell
+```bash
 # Добавить (вставляется в каноническую позицию — по типу, затем по алфавиту)
 -Operation add-childObject -Value "Catalog.Товары ;; Document.Заказ ;; Enum.ВидыОплат"
 
@@ -89,7 +89,7 @@
 
 ### Роли по умолчанию (DefaultRoles)
 
-```powershell
+```bash
 # Добавить
 -Operation add-defaultRole -Value "ПолныеПрава"
 

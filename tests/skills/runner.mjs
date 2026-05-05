@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // skill-test-runner v0.4 — Snapshot-based regression tests for 1C skill scripts
-// Usage: node tests/skills/runner.mjs [filter] [--update-snapshots] [--runtime python] [--json report.json] [--concurrency N] [--with-validation]
+// Usage: node tests/skills/runner.mjs [filter] [--update-snapshots] [--json report.json] [--concurrency N] [--with-validation]
 
 import { execFileSync, execFile } from 'child_process';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, readFileSync, writeFileSync,
@@ -29,7 +29,6 @@ Arguments:
 
 Options:
   --update-snapshots      Overwrite snapshot files with current actual output
-  --runtime <python>      Which script port to run (default: python)
   --json <path>           Write JSON report to <path>
   --concurrency <N>       Number of parallel workers (default: cpu count)
   --with-validation       Run platform validation (1cv8 design checks) after compile
@@ -39,13 +38,12 @@ Options:
 }
 
 function parseArgs(argv) {
-  const args = { filter: null, updateSnapshots: false, runtime: 'python', jsonReport: null, verbose: false, concurrency: cpus().length, withValidation: false, help: false };
+  const args = { filter: null, updateSnapshots: false, jsonReport: null, verbose: false, concurrency: cpus().length, withValidation: false, help: false };
   const rest = argv.slice(2);
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
     if (a === '-h' || a === '--help' || a === '/?' || a === '/help' || a === '?') { args.help = true; continue; }
     if (a === '--update-snapshots') { args.updateSnapshots = true; continue; }
-    if (a === '--runtime' && rest[i + 1]) { args.runtime = rest[++i]; continue; }
     if (a === '--json' && rest[i + 1]) { args.jsonReport = rest[++i]; continue; }
     if (a === '--verbose' || a === '-v') { args.verbose = true; continue; }
     if (a === '--concurrency' && rest[i + 1]) { args.concurrency = parseInt(rest[++i], 10) || 1; continue; }
@@ -104,7 +102,7 @@ function discoverCases(filter) {
 
 const SKIP = Symbol('skip');
 
-function ensureSetup(setupName, runtime, skillCasesDir) {
+function ensureSetup(setupName, skillCasesDir) {
   if (setupName === 'none' || !setupName) return null;
 
   if (setupName.startsWith('fixture:')) {
@@ -210,7 +208,7 @@ function cleanupWorkspace(ws) {
 
 // ─── Arg building ───────────────────────────────────────────────────────────
 
-function buildArgs(skillConfig, caseData, workDir, inputFilePath, runtime) {
+function buildArgs(skillConfig, caseData, workDir, inputFilePath) {
   const args = [];
   const scriptPath = resolveScript(skillConfig.script);
 
@@ -299,9 +297,7 @@ function normalizeContent(text, config) {
   // Normalize line endings
   s = s.replace(/\r\n/g, '\n');
   // Normalize XML differences (Python etree serialization quirks)
-  if (config?.runtime === 'python') {
-    s = normalizeXmlContent(s);
-  }
+  s = normalizeXmlContent(s);
 
   // Normalize UUIDs
   if (config?.normalizeUuids) {
@@ -418,7 +414,7 @@ function resolveValidatePath(postValidate, caseData, workDir) {
   return full;
 }
 
-function runPostValidation(postValidate, caseData, workDir, runtime) {
+function runPostValidation(postValidate, caseData, workDir) {
   const targetPath = resolveValidatePath(postValidate, caseData, workDir);
   if (!targetPath) return null; // no validatePath in case — skip silently
 
@@ -433,7 +429,7 @@ function runPostValidation(postValidate, caseData, workDir, runtime) {
   }
 }
 
-async function runPostValidationAsync(postValidate, caseData, workDir, runtime) {
+async function runPostValidationAsync(postValidate, caseData, workDir) {
   const targetPath = resolveValidatePath(postValidate, caseData, workDir);
   if (!targetPath) return null;
 
@@ -503,7 +499,7 @@ async function runCaseAsync(testCase, opts) {
     }
 
     // Execute
-    const { scriptPath, args } = buildArgs(skillConfig, caseData, workDir, inputFile, opts.runtime);
+    const { scriptPath, args } = buildArgs(skillConfig, caseData, workDir, inputFile);
     let stdout = '', stderr = '', exitCode = 0;
     try {
       const execCwd = skillConfig.cwd === 'workDir' ? workDir : undefined;
@@ -538,7 +534,7 @@ async function runCaseAsync(testCase, opts) {
         }
       }
       if (errors.length === 0 && !caseData.expectError && !workspace.readOnly) {
-        const snapshotConfig = { ...skillConfig.snapshot, runtime: opts.runtime };
+        const snapshotConfig = { ...skillConfig.snapshot };
         if (opts.updateSnapshots) {
           updateSnapshot(workDir, snapshotDir, snapshotConfig);
         } else {
@@ -556,7 +552,7 @@ async function runCaseAsync(testCase, opts) {
     // Post-run validation (on real output, before cleanup)
     let validationError = null;
     if (opts.withValidation && !caseData.expectError && !caseData.skipValidation && exitCode === 0 && skillConfig.postValidate) {
-      validationError = await runPostValidationAsync(skillConfig.postValidate, caseData, workDir, opts.runtime);
+      validationError = await runPostValidationAsync(skillConfig.postValidate, caseData, workDir);
       if (validationError) errors.push(validationError);
     }
 
@@ -812,7 +808,7 @@ function printReport(results, opts, wallTime) {
   if (opts.jsonReport) {
     const report = {
       timestamp: new Date().toISOString(),
-      runtime: opts.runtime,
+
       passed: passed.length,
       failed: failed.length,
       total: results.length,
@@ -906,7 +902,7 @@ async function runIntegrationTest(test, opts) {
 
   try {
     // Start from configured fixture or empty workspace
-    const fixturePath = test.setup === 'none' ? null : ensureSetup(test.setup, opts.runtime, CASES);
+    const fixturePath = test.setup === 'none' ? null : ensureSetup(test.setup, CASES);
     if (fixturePath === SKIP) {
       const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
       return { id: test.id, name: test.name, passed: true, skipped: true, steps: [], elapsed: `${elapsed}s`, errors: [] };
@@ -1041,7 +1037,7 @@ async function main() {
     const integrationTests = await discoverIntegration(opts.filter);
     if (integrationTests.length > 0) {
       const valStr = opts.withValidation ? ', +validation' : '';
-      console.log(`\nRunning ${integrationTests.length} integration test(s)... [runtime: ${opts.runtime}${valStr}]`);
+      console.log(`\nRunning ${integrationTests.length} integration test(s)...${valStr}`);
       const integrationResults = [];
       for (const test of integrationTests) {
         integrationResults.push(await runIntegrationTest(test, opts));
@@ -1058,13 +1054,13 @@ async function main() {
       const parallel = opts.concurrency > 1;
       const modeStr = parallel ? `${opts.concurrency} workers` : 'sequential';
       const valStr = opts.withValidation ? ', +validation' : '';
-      console.log(`\nRunning ${cases.length} test(s)... [runtime: ${opts.runtime}, ${modeStr}${valStr}]`);
+      console.log(`\nRunning ${cases.length} test(s)... [${modeStr}${valStr}]`);
 
       // Pre-warm shared fixtures before parallel run
       const setups = new Set(cases.map(c => c.caseData.setup || c.skillConfig.setup || 'none'));
       for (const setup of setups) {
         if (setup === 'empty-config' || setup === 'base-config') {
-          try { ensureSetup(setup, opts.runtime, CASES); } catch {}
+          try { ensureSetup(setup, CASES); } catch {}
         }
       }
 

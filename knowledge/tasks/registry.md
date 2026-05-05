@@ -19,3 +19,4 @@
 | ID | Parent ID | Статус | Приоритет | Ветка | Каталог | Краткое описание |
 |----|-----------|--------|-----------|-------|---------|------------------|
 | TASK-2026-0001 | — | в работе | высокий | task/TASK-2026-0001-kimi-adaptation | [knowledge/tasks/TASK-2026-0001-kimi-adaptation](knowledge/tasks/TASK-2026-0001-kimi-adaptation) | Полная адаптация навыков cc-1c-skills под Kimi Code CLI с переходом на Python-рантайм |
+| TASK-2026-0006 | — | в работе | высокий | task/TASK-2026-0006-remove-powershell | [knowledge/tasks/TASK-2026-0006-remove-powershell](knowledge/tasks/TASK-2026-0006-remove-powershell) | Полное удаление PowerShell 5.1 и Windows legacy из проекта, Python 3 — единственный рантайм |

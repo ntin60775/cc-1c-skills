@@ -43,7 +43,7 @@
 
 ### Реквизиты
 
-```powershell
+```bash
 # Добавить
 -Operation add-attribute -Value "Комментарий: Строка(200) ;; Сумма: Число(15,2) | req, index"
 
@@ -59,7 +59,7 @@
 
 ### Табличные части
 
-```powershell
+```bash
 # Создать ТЧ с реквизитами
 -Operation add-ts -Value "Товары: Ном: CatalogRef.Ном | req, Кол: Число(15,3), Цена: Число(15,2)"
 
@@ -72,7 +72,7 @@
 
 ### Свойства объекта
 
-```powershell
+```bash
 # Скалярные свойства
 -Operation modify-property -Value "CodeLength=11 ;; DescriptionLength=150"
 
@@ -85,7 +85,7 @@
 
 ### Регистры
 
-```powershell
+```bash
 -Operation add-dimension -Value "Организация: CatalogRef.Организации | master, mainFilter"
 -Operation add-resource -Value "Сумма: Число(15,2)"
 ```

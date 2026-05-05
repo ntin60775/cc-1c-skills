@@ -3,7 +3,7 @@
 Для сложных и комбинированных операций используйте JSON-файл вместо inline-режима.
 
 ```bash
-powershell.exe -NoProfile -File .agents/skills/meta-edit/scripts/meta-edit.py -DefinitionFile "<json>" -ObjectPath "<path>"
+python .agents/skills/meta-edit/scripts/meta-edit.py -DefinitionFile "<json>" -ObjectPath "<path>"
 ```
 
 ## add — добавить элементы

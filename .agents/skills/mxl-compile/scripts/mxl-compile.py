@@ -288,7 +288,7 @@ def main():
     # Pre-register all formats from areas
     for area in defn['areas']:
         for row in area.get('rows', []):
-            # Skip list-of-values shorthand rows (treated as empty rows like PS1)
+            # Skip list-of-values shorthand rows (treated as empty rows)
             if isinstance(row, list):
                 continue
             # Skip empty row placeholder
@@ -359,7 +359,7 @@ def main():
         local_row = 0
 
         for row in area.get('rows', []):
-            # List-of-values shorthand: treat as row with no properties (like PS1)
+            # List-of-values shorthand: treat as row with no properties
             if isinstance(row, list):
                 row = {}
             # Empty row placeholder: emit N empty rows

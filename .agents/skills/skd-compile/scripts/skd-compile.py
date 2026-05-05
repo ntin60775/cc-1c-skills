@@ -13,7 +13,7 @@ def esc_xml(s):
     return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
 
 def fmt_dec(v):
-    """Format decimal: 30.0 → '30', 16.625 → '16.625' (match PS1 output)."""
+    """Format decimal: 30.0 → '30', 16.625 → '16.625'."""
     return str(int(v)) if v == int(v) else str(v)
 
 

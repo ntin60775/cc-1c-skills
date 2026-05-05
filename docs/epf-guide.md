@@ -174,8 +174,7 @@ src/
 ## Технические детали
 
 - Все XML-файлы создаются в **UTF-8 с BOM** (как в реальных выгрузках 1С)
-- PowerShell-скрипты используют `System.Xml.XmlDocument` для модификации корневого XML
-- UUID генерируются через `[guid]::NewGuid()`
+- UUID генерируются через `uuid.uuid4()`
 - ClassId обработки: `c3831ec8-d8d5-4f93-8a22-f9bfae07327f`
 - ClassId отчёта: `e41aff26-25cf-4bb6-b6c1-3f478a75f374`
 - Порядок элементов в `ChildObjects`: TabularSections → Forms → Templates

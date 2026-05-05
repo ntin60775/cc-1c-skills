@@ -75,7 +75,7 @@ git remote add upstream https://github.com/Nikolay-Shirokov/cc-1c-skills.git
 
 ## Требования
 
-- **Windows** с PowerShell 5.1+ (входит в Windows) — рантайм по умолчанию
+- **Python 3** — рантайм скриптов (кросс-платформенный)
 - **1С:Предприятие 8.3** — для сборки/разборки EPF/ERF (навыки генерации XML работают без платформы)
 - **Node.js 18+** — для `/web-test` (тестирование через браузер)
 
@@ -122,20 +122,10 @@ python scripts/switch.py --undo cursor                         # удалить 
 
 Автоактивация — основной режим: просто опишите задачу своими словами, ассистент сам подберёт нужный навык по `description` в SKILL.md. Слеш-команды (например `/epf-init`) — для точного контроля, когда нужно вызвать конкретный навык.
 
-### Переключение рантайма (PowerShell ↔ Python)
+### Дополнительные зависимости Python
 
-На Windows рекомендуется PS1-рантайм (по умолчанию). Python-порты — для **Linux/Mac** или если PowerShell недоступен. PS1-скрипты — мастер-версия; Python-порты производные (см. [Python Porting Guide](docs/python-porting-guide.md)).
-
-```bash
-python scripts/switch.py --runtime python      # переключить на Python
-python scripts/switch.py --runtime powershell  # вернуть на PowerShell
-```
-
-Дополнительные зависимости Python-рантайма:
 - `lxml>=4.9.0` — для навыков, работающих с DOM (edit/validate/info)
 - `psutil>=5.9.0` — для web-навыков (управление Apache)
-
-Параметры скриптов идентичны для обоих рантаймов — переключение меняет только интерпретатор в вызовах. Подробнее: [Python Porting Guide](docs/python-porting-guide.md).
 
 ## Спецификации
 

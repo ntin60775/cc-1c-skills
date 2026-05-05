@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // verify-snapshots v0.2 — Platform verification of skill test snapshots
 // Reruns skill scripts from test-case DSL, then loads into 1C platform.
-// Usage: node tests/skills/verify-snapshots.mjs [--skill meta-compile] [--case catalog-basic] [--runtime powershell|python] [--keep] [--verbose]
+// Usage: node tests/skills/verify-snapshots.mjs [--skill meta-compile] [--case catalog-basic] [--keep] [--verbose]
 // Supports: meta-compile, form-compile, form-add, form-edit, skd-compile, skd-edit,
 //           role-compile, subsystem-compile, subsystem-edit, mxl-compile, template-add,
 //           help-add, cf-init, cf-edit, epf-init, meta-edit, interface-edit,
@@ -34,7 +34,6 @@ Usage:
 Options:
   --skill <name>           Run only cases for the given skill (e.g. form-compile)
   --case <name>            Run only the case with this name
-  --runtime <python>       Which script port to run (default: python)
   --keep                   Keep generated work directories on disk after run
   -v, --verbose            Verbose output
   -h, --help, /?           Show this help and exit
@@ -42,14 +41,13 @@ Options:
 }
 
 function parseArgs(argv) {
-  const args = { skill: null, caseName: null, runtime: 'python', keep: false, verbose: false, help: false };
+  const args = { skill: null, caseName: null, keep: false, verbose: false, help: false };
   const rest = argv.slice(2);
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
     if (a === '-h' || a === '--help' || a === '/?' || a === '/help' || a === '?') { args.help = true; continue; }
     if (a === '--skill' && rest[i + 1]) { args.skill = rest[++i]; continue; }
     if (a === '--case' && rest[i + 1]) { args.caseName = rest[++i]; continue; }
-    if (a === '--runtime' && rest[i + 1]) { args.runtime = rest[++i]; continue; }
     if (a === '--keep') { args.keep = true; continue; }
     if (a === '--verbose' || a === '-v') { args.verbose = true; continue; }
   }
@@ -275,7 +273,7 @@ function scanConfigObjects(configDir) {
 
 // ─── Build skill args from _skill.json mapping ─────────────────────────────
 
-function buildSkillArgs(skillConfig, caseData, workDir, inputFile, runtime) {
+function buildSkillArgs(skillConfig, caseData, workDir, inputFile) {
   const args = [];
   const scriptPath = resolveScript(skillConfig.script);
 
@@ -321,7 +319,7 @@ function buildSkillArgs(skillConfig, caseData, workDir, inputFile, runtime) {
 
 // ─── Execute preRun steps ───────────────────────────────────────────────────
 
-function runPreSteps(preRun, workDir, runtime, log) {
+function runPreSteps(preRun, workDir, log) {
   if (!preRun) return;
   for (const step of preRun) {
     const preArgs = [];
@@ -538,7 +536,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
 
     // ── Step 3: preRun steps ──
     try {
-      runPreSteps(caseData.preRun, workDir, opts.runtime, log);
+      runPreSteps(caseData.preRun, workDir, log);
     } catch (e) {
       result.errors.push(e.message);
       return result;
@@ -572,7 +570,7 @@ async function verifyCase(skillName, caseName, skillConfig, caseData, opts) {
     }
 
     try {
-      const { args } = buildSkillArgs(skillConfig, caseData, workDir, inputFile, opts.runtime);
+      const { args } = buildSkillArgs(skillConfig, caseData, workDir, inputFile);
       const mainCwd = skillConfig.cwd === 'workDir' ? workDir : REPO_ROOT;
       const output = execSkill( skillConfig.script, args, 60_000, mainCwd);
       const lastLine = output.trim().split('\n').pop();
