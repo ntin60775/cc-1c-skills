@@ -33,6 +33,7 @@
 | `/template-add` | `<ObjectName> <TemplateName> <TemplateType>` | Добавить макет (HTML, Text, SpreadsheetDocument, BinaryData, DataCompositionSchema) |
 | `/template-remove` | `<ObjectName> <TemplateName>` | Удалить макет |
 | `/help-add` | `<ObjectName>` | Добавить встроенную справку (Help.xml + HTML) |
+| `/form-add` | `<ObjectPath> <FormName> [Purpose]` | Добавить форму к объекту (универсальный) |
 | `/form-remove` | `<ObjectName> <FormName>` | Удалить форму |
 
 Для отчётов: при добавлении макета типа DataCompositionSchema автоматически заполняется `MainDataCompositionSchema` (если пуст).

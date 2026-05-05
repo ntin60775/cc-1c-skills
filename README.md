@@ -59,7 +59,7 @@ git remote add upstream https://github.com/Nikolay-Shirokov/cc-1c-skills.git
 | Внешние отчёты (ERF) | 4 навыка `/erf-*` | Создание, сборка, разборка, валидация внешних отчётов | [Подробнее](docs/epf-guide.md#внешние-отчёты-erf) |
 | Универсальные операции | `/template-add`, `/template-remove`, `/help-add`, `/form-remove` | Добавление/удаление макетов, форм, справки для любых объектов | [Подробнее](docs/epf-guide.md#универсальные-навыки) |
 | Табличный документ (MXL) | 4 навыка `/mxl-*` | Анализ, создание, компиляция макетов печатных форм | [Подробнее](docs/mxl-guide.md) |
-| Управляемые формы (Form) | 6 навыков `/form-*` | Создание, анализ, генерация, модификация, валидация управляемых форм | [Подробнее](docs/form-guide.md) |
+| Управляемые формы (Form) | `/form-add`, `/form-compile`, `/form-edit`, `/form-info`, `/form-patterns`, `/form-validate` | Создание, анализ, генерация, модификация, валидация управляемых форм | [Подробнее](docs/form-guide.md) |
 | Роли (Role) | 3 навыка `/role-*` | Анализ прав роли, создание из JSON DSL, валидация | [Подробнее](docs/role-guide.md) |
 | Схема компоновки (СКД) | 4 навыка `/skd-*` | Анализ, генерация из JSON DSL, точечное редактирование, валидация схем компоновки данных | [Подробнее](docs/skd-guide.md) |
 | Метаданные конфигурации | 5 навыков `/meta-*` | Создание, анализ, редактирование, удаление, валидация объектов метаданных (23 типа) | [Подробнее](docs/meta-guide.md) |
@@ -158,6 +158,7 @@ python scripts/switch.py --runtime powershell  # вернуть на PowerShell
 - [Корневая конфигурация](docs/1c-configuration-spec.md) — XML-формат Configuration.xml, ConfigDumpInfo.xml, Languages/, 44 типа ChildObjects
 - [Расширения конфигурации (CFE)](docs/1c-extension-spec.md) — XML-формат выгрузки расширений конфигурации
 - [Веб-публикация 1С](docs/web-spec.md) — VRD, httpd.conf, wsap24.dll, portable Apache
+- [Meta DSL](docs/meta-dsl-spec.md) — JSON-формат для создания/редактирования объектов метаданных
 
 ## Структура репозитория
 
@@ -263,5 +264,7 @@ docs/
 ├── 1c-extension-spec.md    # Спецификация расширений конфигурации (CFE)
 ├── 1c-subsystem-spec.md    # Спецификация подсистем и командного интерфейса
 ├── web-spec.md             # Спецификация веб-публикации (VRD, httpd.conf, Apache)
-└── python-porting-guide.md # Руководство по Python-портам навыков
+├── python-porting-guide.md # Руководство по Python-портам навыков
+├── 1c-specs-index.md       # Сводный индекс всех спецификаций (44 типа объектов)
+└── form-patterns.md        # Паттерны компоновки управляемых форм
 ```
