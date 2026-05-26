@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Удалены 13 навыков, функциональность которых перекрыта v8-runner CLI:
+  `db-create`, `db-load-cf`, `db-load-xml`, `db-load-git`, `db-dump-cf`, `db-dump-xml`,
+  `db-update`, `db-run`, `cf-validate`, `epf-build`, `erf-build`, `epf-dump`, `erf-dump`.
+- Обновлён `SKILL.md`: добавлена ссылка на `skills-1c-project-v8runner`.
+- Обновлён `skill.json`: версия 0.3.0, описание.
+
 ## 0.2.0
 
 - Полностью удалена поддержка PowerShell 5.1-рантайма.

@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0.0",
   "name": "1c-devtools",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "system": "skills-1c-system",
   "role": "devtools",
   "entrypoint": "SKILL.md",
-  "description": "Операционный слой разработки 1С — создание артефактов, управление базами, сборка, публикация, тестирование",
+  "description": "Операционный слой разработки 1С — генерация и редактирование XML-артефактов. Сборка, тесты и работа с БД вынесены в skills-1c-project-v8runner",
   "release_status": "beta",
   "install_source": ".agents/skills"
 }
