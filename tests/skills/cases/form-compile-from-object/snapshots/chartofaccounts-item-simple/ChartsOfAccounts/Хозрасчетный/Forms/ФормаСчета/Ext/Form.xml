@@ -54,6 +54,7 @@
 		</InputField>
 		<CheckBoxField name="Забалансовый" id="16">
 			<DataPath>Объект.OffBalance</DataPath>
+			<CheckBoxType>Auto</CheckBoxType>
 			<TitleLocation>Right</TitleLocation>
 			<ContextMenu name="ЗабалансовыйКонтекстноеМеню" id="17"/>
 			<ExtendedTooltip name="ЗабалансовыйРасширеннаяПодсказка" id="18"/>
@@ -70,12 +71,14 @@
 			<ChildItems>
 				<CheckBoxField name="Валютный" id="21">
 					<DataPath>Объект.Валютный</DataPath>
+					<CheckBoxType>Auto</CheckBoxType>
 					<TitleLocation>Right</TitleLocation>
 					<ContextMenu name="ВалютныйКонтекстноеМеню" id="22"/>
 					<ExtendedTooltip name="ВалютныйРасширеннаяПодсказка" id="23"/>
 				</CheckBoxField>
 				<CheckBoxField name="Количественный" id="24">
 					<DataPath>Объект.Количественный</DataPath>
+					<CheckBoxType>Auto</CheckBoxType>
 					<TitleLocation>Right</TitleLocation>
 					<ContextMenu name="КоличественныйКонтекстноеМеню" id="25"/>
 					<ExtendedTooltip name="КоличественныйРасширеннаяПодсказка" id="26"/>
@@ -86,38 +89,63 @@
 			<DataPath>Объект.ExtDimensionTypes</DataPath>
 			<ContextMenu name="ВидыСубконтоКонтекстноеМеню" id="28"/>
 			<AutoCommandBar name="ВидыСубконтоКоманднаяПанель" id="29"/>
-			<SearchStringAddition name="ВидыСубконтоСтрокаПоиска" id="30"/>
-			<ViewStatusAddition name="ВидыСубконтоСостояниеПросмотра" id="31"/>
-			<SearchControlAddition name="ВидыСубконтоУправлениеПоиском" id="32"/>
+			<ExtendedTooltip name="ВидыСубконтоРасширеннаяПодсказка" id="30"/>
+			<SearchStringAddition name="ВидыСубконтоСтрокаПоиска" id="31">
+				<AdditionSource>
+					<Item>ВидыСубконто</Item>
+					<Type>SearchStringRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="ВидыСубконтоСтрокаПоискаКонтекстноеМеню" id="32"/>
+				<ExtendedTooltip name="ВидыСубконтоСтрокаПоискаРасширеннаяПодсказка" id="33"/>
+			</SearchStringAddition>
+			<ViewStatusAddition name="ВидыСубконтоСостояниеПросмотра" id="34">
+				<AdditionSource>
+					<Item>ВидыСубконто</Item>
+					<Type>ViewStatusRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="ВидыСубконтоСостояниеПросмотраКонтекстноеМеню" id="35"/>
+				<ExtendedTooltip name="ВидыСубконтоСостояниеПросмотраРасширеннаяПодсказка" id="36"/>
+			</ViewStatusAddition>
+			<SearchControlAddition name="ВидыСубконтоУправлениеПоиском" id="37">
+				<AdditionSource>
+					<Item>ВидыСубконто</Item>
+					<Type>SearchControl</Type>
+				</AdditionSource>
+				<ContextMenu name="ВидыСубконтоУправлениеПоискомКонтекстноеМеню" id="38"/>
+				<ExtendedTooltip name="ВидыСубконтоУправлениеПоискомРасширеннаяПодсказка" id="39"/>
+			</SearchControlAddition>
 			<ChildItems>
-				<InputField name="ВидСубконто" id="33">
+				<InputField name="ВидыСубконтоВидСубконто" id="40">
 					<DataPath>Объект.ExtDimensionTypes.ExtDimensionType</DataPath>
-					<ContextMenu name="ВидСубконтоКонтекстноеМеню" id="34"/>
-					<ExtendedTooltip name="ВидСубконтоРасширеннаяПодсказка" id="35"/>
+					<ContextMenu name="ВидыСубконтоВидСубконтоКонтекстноеМеню" id="41"/>
+					<ExtendedTooltip name="ВидыСубконтоВидСубконтоРасширеннаяПодсказка" id="42"/>
 				</InputField>
-				<CheckBoxField name="ТолькоОбороты" id="36">
+				<CheckBoxField name="ВидыСубконтоТолькоОбороты" id="43">
 					<DataPath>Объект.ExtDimensionTypes.TurnoversOnly</DataPath>
+					<CheckBoxType>Auto</CheckBoxType>
 					<TitleLocation>Right</TitleLocation>
-					<ContextMenu name="ТолькоОборотыКонтекстноеМеню" id="37"/>
-					<ExtendedTooltip name="ТолькоОборотыРасширеннаяПодсказка" id="38"/>
+					<ContextMenu name="ВидыСубконтоТолькоОборотыКонтекстноеМеню" id="44"/>
+					<ExtendedTooltip name="ВидыСубконтоТолькоОборотыРасширеннаяПодсказка" id="45"/>
 				</CheckBoxField>
-				<CheckBoxField name="Валютный" id="39">
+				<CheckBoxField name="ВидыСубконтоВалютный" id="46">
 					<DataPath>Объект.ExtDimensionTypes.Валютный</DataPath>
+					<CheckBoxType>Auto</CheckBoxType>
 					<TitleLocation>Right</TitleLocation>
-					<ContextMenu name="ВалютныйКонтекстноеМеню" id="40"/>
-					<ExtendedTooltip name="ВалютныйРасширеннаяПодсказка" id="41"/>
+					<ContextMenu name="ВидыСубконтоВалютныйКонтекстноеМеню" id="47"/>
+					<ExtendedTooltip name="ВидыСубконтоВалютныйРасширеннаяПодсказка" id="48"/>
 				</CheckBoxField>
-				<CheckBoxField name="Количественный" id="42">
+				<CheckBoxField name="ВидыСубконтоКоличественный" id="49">
 					<DataPath>Объект.ExtDimensionTypes.Количественный</DataPath>
+					<CheckBoxType>Auto</CheckBoxType>
 					<TitleLocation>Right</TitleLocation>
-					<ContextMenu name="КоличественныйКонтекстноеМеню" id="43"/>
-					<ExtendedTooltip name="КоличественныйРасширеннаяПодсказка" id="44"/>
+					<ContextMenu name="ВидыСубконтоКоличественныйКонтекстноеМеню" id="50"/>
+					<ExtendedTooltip name="ВидыСубконтоКоличественныйРасширеннаяПодсказка" id="51"/>
 				</CheckBoxField>
 			</ChildItems>
 		</Table>
 	</ChildItems>
 	<Attributes>
-		<Attribute name="Объект" id="45">
+		<Attribute name="Объект" id="52">
 			<Type>
 				<v8:Type>cfg:ChartOfAccountsObject.Хозрасчетный</v8:Type>
 			</Type>

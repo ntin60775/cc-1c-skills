@@ -19,27 +19,32 @@
 	<ChildItems>
 		<InputField name="Поле" id="3">
 			<DataPath>Поле</DataPath>
+			<ChoiceButton>true</ChoiceButton>
+			<QuickChoice>false</QuickChoice>
+			<Width>15</Width>
 			<ContextMenu name="ПолеКонтекстноеМеню" id="4"/>
 			<ExtendedTooltip name="ПолеРасширеннаяПодсказка" id="5"/>
 		</InputField>
 		<CommandBar name="ДопПанель" id="6">
+			<ExtendedTooltip name="ДопПанельРасширеннаяПодсказка" id="7"/>
 			<ChildItems>
-				<Button name="Кн2" id="7">
+				<Button name="Кн2" id="8">
 					<Type>CommandBarButton</Type>
 					<CommandName>Form.Command.Кн2</CommandName>
-					<ExtendedTooltip name="Кн2РасширеннаяПодсказка" id="8"/>
+					<Check>true</Check>
+					<ExtendedTooltip name="Кн2РасширеннаяПодсказка" id="9"/>
 				</Button>
 			</ChildItems>
 		</CommandBar>
 	</ChildItems>
 	<Attributes>
-		<Attribute name="Объект" id="9">
+		<Attribute name="Объект" id="10">
 			<Type>
 				<v8:Type>cfg:DataProcessorObject.Тест</v8:Type>
 			</Type>
 			<MainAttribute>true</MainAttribute>
 		</Attribute>
-		<Attribute name="Поле" id="10">
+		<Attribute name="Поле" id="11">
 			<Title>
 				<v8:item>
 					<v8:lang>ru</v8:lang>
@@ -56,7 +61,7 @@
 		</Attribute>
 	</Attributes>
 	<Commands>
-		<Command name="Кн1" id="11">
+		<Command name="Кн1" id="12">
 			<Title>
 				<v8:item>
 					<v8:lang>ru</v8:lang>
@@ -65,7 +70,7 @@
 			</Title>
 			<Action>Кн1</Action>
 		</Command>
-		<Command name="Кн2" id="12">
+		<Command name="Кн2" id="13">
 			<Title>
 				<v8:item>
 					<v8:lang>ru</v8:lang>

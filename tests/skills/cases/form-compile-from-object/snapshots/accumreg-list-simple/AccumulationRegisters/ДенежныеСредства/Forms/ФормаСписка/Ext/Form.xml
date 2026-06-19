@@ -13,67 +13,119 @@
 			<DataPath>Список</DataPath>
 			<CommandBarLocation>None</CommandBarLocation>
 			<RowPictureDataPath>Список.DefaultPicture</RowPictureDataPath>
+			<AutoRefresh>false</AutoRefresh>
+			<AutoRefreshPeriod>60</AutoRefreshPeriod>
+			<Period>
+				<v8:variant xsi:type="v8:StandardPeriodVariant">Custom</v8:variant>
+				<v8:startDate>0001-01-01T00:00:00</v8:startDate>
+				<v8:endDate>0001-01-01T00:00:00</v8:endDate>
+			</Period>
+			<ChoiceFoldersAndItems>Items</ChoiceFoldersAndItems>
+			<RestoreCurrentRow>false</RestoreCurrentRow>
+			<TopLevelParent xsi:nil="true"/>
+			<ShowRoot>true</ShowRoot>
+			<AllowRootChoice>false</AllowRootChoice>
+			<UpdateOnDataChange>Auto</UpdateOnDataChange>
+			<AllowGettingCurrentRowURL>true</AllowGettingCurrentRowURL>
 			<ContextMenu name="СписокКонтекстноеМеню" id="2"/>
 			<AutoCommandBar name="СписокКоманднаяПанель" id="3">
 				<Autofill>false</Autofill>
 			</AutoCommandBar>
-			<SearchStringAddition name="СписокСтрокаПоиска" id="4"/>
-			<ViewStatusAddition name="СписокСостояниеПросмотра" id="5"/>
-			<SearchControlAddition name="СписокУправлениеПоиском" id="6"/>
+			<ExtendedTooltip name="СписокРасширеннаяПодсказка" id="4"/>
+			<SearchStringAddition name="СписокСтрокаПоиска" id="5">
+				<AdditionSource>
+					<Item>Список</Item>
+					<Type>SearchStringRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="СписокСтрокаПоискаКонтекстноеМеню" id="6"/>
+				<ExtendedTooltip name="СписокСтрокаПоискаРасширеннаяПодсказка" id="7"/>
+			</SearchStringAddition>
+			<ViewStatusAddition name="СписокСостояниеПросмотра" id="8">
+				<AdditionSource>
+					<Item>Список</Item>
+					<Type>ViewStatusRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="СписокСостояниеПросмотраКонтекстноеМеню" id="9"/>
+				<ExtendedTooltip name="СписокСостояниеПросмотраРасширеннаяПодсказка" id="10"/>
+			</ViewStatusAddition>
+			<SearchControlAddition name="СписокУправлениеПоиском" id="11">
+				<AdditionSource>
+					<Item>Список</Item>
+					<Type>SearchControl</Type>
+				</AdditionSource>
+				<ContextMenu name="СписокУправлениеПоискомКонтекстноеМеню" id="12"/>
+				<ExtendedTooltip name="СписокУправлениеПоискомРасширеннаяПодсказка" id="13"/>
+			</SearchControlAddition>
 			<ChildItems>
-				<LabelField name="Период" id="7">
+				<LabelField name="Период" id="14">
 					<DataPath>Список.Period</DataPath>
-					<ContextMenu name="ПериодКонтекстноеМеню" id="8"/>
-					<ExtendedTooltip name="ПериодРасширеннаяПодсказка" id="9"/>
+					<ContextMenu name="ПериодКонтекстноеМеню" id="15"/>
+					<ExtendedTooltip name="ПериодРасширеннаяПодсказка" id="16"/>
 				</LabelField>
-				<LabelField name="Регистратор" id="10">
+				<LabelField name="Регистратор" id="17">
 					<DataPath>Список.Recorder</DataPath>
-					<ContextMenu name="РегистраторКонтекстноеМеню" id="11"/>
-					<ExtendedTooltip name="РегистраторРасширеннаяПодсказка" id="12"/>
+					<ContextMenu name="РегистраторКонтекстноеМеню" id="18"/>
+					<ExtendedTooltip name="РегистраторРасширеннаяПодсказка" id="19"/>
 				</LabelField>
-				<LabelField name="НомерСтроки" id="13">
+				<LabelField name="НомерСтроки" id="20">
 					<DataPath>Список.LineNumber</DataPath>
-					<ContextMenu name="НомерСтрокиКонтекстноеМеню" id="14"/>
-					<ExtendedTooltip name="НомерСтрокиРасширеннаяПодсказка" id="15"/>
+					<ContextMenu name="НомерСтрокиКонтекстноеМеню" id="21"/>
+					<ExtendedTooltip name="НомерСтрокиРасширеннаяПодсказка" id="22"/>
 				</LabelField>
-				<LabelField name="Организация" id="16">
+				<LabelField name="Организация" id="23">
 					<DataPath>Список.Организация</DataPath>
-					<ContextMenu name="ОрганизацияКонтекстноеМеню" id="17"/>
-					<ExtendedTooltip name="ОрганизацияРасширеннаяПодсказка" id="18"/>
+					<ContextMenu name="ОрганизацияКонтекстноеМеню" id="24"/>
+					<ExtendedTooltip name="ОрганизацияРасширеннаяПодсказка" id="25"/>
 				</LabelField>
-				<LabelField name="БанковскийСчет" id="19">
+				<LabelField name="БанковскийСчет" id="26">
 					<DataPath>Список.БанковскийСчет</DataPath>
-					<ContextMenu name="БанковскийСчетКонтекстноеМеню" id="20"/>
-					<ExtendedTooltip name="БанковскийСчетРасширеннаяПодсказка" id="21"/>
+					<ContextMenu name="БанковскийСчетКонтекстноеМеню" id="27"/>
+					<ExtendedTooltip name="БанковскийСчетРасширеннаяПодсказка" id="28"/>
 				</LabelField>
-				<LabelField name="Сумма" id="22">
+				<LabelField name="Сумма" id="29">
 					<DataPath>Список.Сумма</DataPath>
-					<ContextMenu name="СуммаКонтекстноеМеню" id="23"/>
-					<ExtendedTooltip name="СуммаРасширеннаяПодсказка" id="24"/>
+					<ContextMenu name="СуммаКонтекстноеМеню" id="30"/>
+					<ExtendedTooltip name="СуммаРасширеннаяПодсказка" id="31"/>
 				</LabelField>
-				<LabelField name="СуммаВалютная" id="25">
+				<LabelField name="СуммаВалютная" id="32">
 					<DataPath>Список.СуммаВалютная</DataPath>
-					<ContextMenu name="СуммаВалютнаяКонтекстноеМеню" id="26"/>
-					<ExtendedTooltip name="СуммаВалютнаяРасширеннаяПодсказка" id="27"/>
+					<ContextMenu name="СуммаВалютнаяКонтекстноеМеню" id="33"/>
+					<ExtendedTooltip name="СуммаВалютнаяРасширеннаяПодсказка" id="34"/>
 				</LabelField>
-				<LabelField name="СуммаУпр" id="28">
+				<LabelField name="СуммаУпр" id="35">
 					<DataPath>Список.СуммаУпр</DataPath>
-					<ContextMenu name="СуммаУпрКонтекстноеМеню" id="29"/>
-					<ExtendedTooltip name="СуммаУпрРасширеннаяПодсказка" id="30"/>
+					<ContextMenu name="СуммаУпрКонтекстноеМеню" id="36"/>
+					<ExtendedTooltip name="СуммаУпрРасширеннаяПодсказка" id="37"/>
 				</LabelField>
 			</ChildItems>
 		</Table>
 	</ChildItems>
 	<Attributes>
-		<Attribute name="Список" id="31">
+		<Attribute name="Список" id="38">
 			<Type>
 				<v8:Type>cfg:DynamicList</v8:Type>
 			</Type>
 			<MainAttribute>true</MainAttribute>
 			<Settings xsi:type="DynamicList">
-				<MainTable>AccumulationRegister.ДенежныеСредства</MainTable>
 				<ManualQuery>false</ManualQuery>
 				<DynamicDataRead>true</DynamicDataRead>
+				<MainTable>AccumulationRegister.ДенежныеСредства</MainTable>
+				<ListSettings>
+					<dcsset:filter>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>UUID-001</dcsset:userSettingID>
+					</dcsset:filter>
+					<dcsset:order>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>UUID-002</dcsset:userSettingID>
+					</dcsset:order>
+					<dcsset:conditionalAppearance>
+						<dcsset:viewMode>Normal</dcsset:viewMode>
+						<dcsset:userSettingID>UUID-003</dcsset:userSettingID>
+					</dcsset:conditionalAppearance>
+					<dcsset:itemsViewMode>Normal</dcsset:itemsViewMode>
+					<dcsset:itemsUserSettingID>UUID-004</dcsset:itemsUserSettingID>
+				</ListSettings>
 			</Settings>
 		</Attribute>
 	</Attributes>

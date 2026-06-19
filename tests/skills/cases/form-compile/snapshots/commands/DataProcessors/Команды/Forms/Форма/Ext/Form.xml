@@ -7,43 +7,66 @@
 		</v8:item>
 	</Title>
 	<AutoTitle>false</AutoTitle>
+	<MobileDeviceCommandBarContent>
+		<xr:Item>
+			<xr:Presentation/>
+			<xr:CheckState>0</xr:CheckState>
+			<xr:Value xsi:type="xs:string">Панель</xr:Value>
+		</xr:Item>
+		<xr:Item>
+			<xr:Presentation/>
+			<xr:CheckState>0</xr:CheckState>
+			<xr:Value xsi:type="xs:string">Выполнить</xr:Value>
+		</xr:Item>
+	</MobileDeviceCommandBarContent>
 	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
 		<Autofill>false</Autofill>
 	</AutoCommandBar>
 	<ChildItems>
 		<CommandBar name="Панель" id="1">
+			<HorizontalLocation>Right</HorizontalLocation>
+			<ExtendedTooltip name="ПанельРасширеннаяПодсказка" id="2"/>
 			<ChildItems>
-				<Button name="Выполнить" id="2">
+				<Button name="Выполнить" id="3">
 					<Type>CommandBarButton</Type>
 					<CommandName>Form.Command.Выполнить</CommandName>
 					<DefaultButton>true</DefaultButton>
-					<ExtendedTooltip name="ВыполнитьРасширеннаяПодсказка" id="3"/>
+					<ExtendedTooltip name="ВыполнитьРасширеннаяПодсказка" id="4"/>
 				</Button>
-				<Button name="Закрыть" id="4">
+				<Button name="Закрыть" id="5">
 					<Type>CommandBarButton</Type>
 					<CommandName>Form.StandardCommand.Close</CommandName>
-					<ExtendedTooltip name="ЗакрытьРасширеннаяПодсказка" id="5"/>
+					<RepresentationInContextMenu>None</RepresentationInContextMenu>
+					<ExtendedTooltip name="ЗакрытьРасширеннаяПодсказка" id="6"/>
+				</Button>
+				<Button name="СоздатьПоТипу" id="7">
+					<Type>CommandBarButton</Type>
+					<CommandName>Form.Command.Выполнить</CommandName>
+					<Parameter xsi:type="v8:TypeDescription">
+						<v8:Type>cfg:CatalogRef.Справочник1</v8:Type>
+					</Parameter>
+					<ExtendedTooltip name="СоздатьПоТипуРасширеннаяПодсказка" id="8"/>
 				</Button>
 			</ChildItems>
 		</CommandBar>
-		<InputField name="Результат" id="6">
+		<InputField name="Результат" id="9">
 			<DataPath>Результат</DataPath>
 			<ReadOnly>true</ReadOnly>
 			<MultiLine>true</MultiLine>
 			<AutoMaxWidth>false</AutoMaxWidth>
 			<Height>8</Height>
-			<ContextMenu name="РезультатКонтекстноеМеню" id="7"/>
-			<ExtendedTooltip name="РезультатРасширеннаяПодсказка" id="8"/>
+			<ContextMenu name="РезультатКонтекстноеМеню" id="10"/>
+			<ExtendedTooltip name="РезультатРасширеннаяПодсказка" id="11"/>
 		</InputField>
 	</ChildItems>
 	<Attributes>
-		<Attribute name="Объект" id="9">
+		<Attribute name="Объект" id="12">
 			<Type>
 				<v8:Type>cfg:DataProcessorObject.Команды</v8:Type>
 			</Type>
 			<MainAttribute>true</MainAttribute>
 		</Attribute>
-		<Attribute name="Результат" id="10">
+		<Attribute name="Результат" id="13">
 			<Title>
 				<v8:item>
 					<v8:lang>ru</v8:lang>
@@ -60,15 +83,46 @@
 		</Attribute>
 	</Attributes>
 	<Commands>
-		<Command name="Выполнить" id="11">
+		<Command name="Выполнить" id="14">
 			<Title>
 				<v8:item>
 					<v8:lang>ru</v8:lang>
 					<v8:content>Выполнить</v8:content>
 				</v8:item>
 			</Title>
+			<Use>
+				<xr:Common>false</xr:Common>
+			</Use>
 			<Action>ВыполнитьОбработка</Action>
+			<ModifiesSavedData>true</ModifiesSavedData>
 			<Shortcut>Ctrl+Enter</Shortcut>
+			<Picture>
+				<xr:Ref>StdPicture.ExecuteTask</xr:Ref>
+				<xr:LoadTransparent>true</xr:LoadTransparent>
+				<xr:TransparentPixel x="1" y="1"/>
+			</Picture>
+		</Command>
+		<Command name="БезЗаголовка" id="15">
+			<Action>БезЗаголовкаОбработка</Action>
+			<Picture>
+				<xr:Ref>StdPicture.Refresh</xr:Ref>
+				<xr:LoadTransparent>true</xr:LoadTransparent>
+			</Picture>
+			<Representation>Picture</Representation>
 		</Command>
 	</Commands>
+	<CommandInterface>
+		<CommandBar>
+			<Item>
+				<Command>Form.Command.Выполнить</Command>
+				<Type>Auto</Type>
+				<CommandGroup>FormCommandBarImportant</CommandGroup>
+				<Index>0</Index>
+				<DefaultVisible>false</DefaultVisible>
+				<Visible>
+					<xr:Common>false</xr:Common>
+				</Visible>
+			</Item>
+		</CommandBar>
+	</CommandInterface>
 </Form>

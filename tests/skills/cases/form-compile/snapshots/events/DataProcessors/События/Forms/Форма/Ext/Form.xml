@@ -26,15 +26,19 @@
 			<DataPath>Период</DataPath>
 			<ContextMenu name="ПериодКонтекстноеМеню" id="5"/>
 			<ExtendedTooltip name="ПериодРасширеннаяПодсказка" id="6"/>
+			<Events>
+				<Event name="OnChange">ПериодПриИзменении</Event>
+			</Events>
 		</InputField>
 		<LabelDecoration name="Подсказка" id="7">
-			<Title formatted="true">
+			<Hyperlink>true</Hyperlink>
+			<Title formatted="false">
 				<v8:item>
 					<v8:lang>ru</v8:lang>
 					<v8:content>Нажмите для перехода</v8:content>
 				</v8:item>
 			</Title>
-			<Hyperlink>true</Hyperlink>
+			<ToolTipRepresentation>Button</ToolTipRepresentation>
 			<ContextMenu name="ПодсказкаКонтекстноеМеню" id="8"/>
 			<ExtendedTooltip name="ПодсказкаРасширеннаяПодсказка" id="9"/>
 			<Events>

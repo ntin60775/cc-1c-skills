@@ -15,13 +15,15 @@
   "validatePath": "DataProcessors/СГруппами/Forms/Форма/Ext/Form.xml",
   "input": {
     "title": "Группы",
+    "properties": { "showCloseButton": false, "horizontalAlign": "Left", "childrenAlign": "ItemsLeftTitlesLeft", "childItemsWidth": "Equal", "verticalAlign": "Top", "horizontalSpacing": "Double" },
     "elements": [
       { "cmdBar": "КоманднаяПанель", "autofill": true },
-      { "group": "horizontal", "name": "ГруппаШапка", "showTitle": true, "title": "Шапка", "children": [
-        { "input": "Поле1", "path": "Поле1", "title": "Поле 1" },
-        { "input": "Поле2", "path": "Поле2", "title": "Поле 2" }
+      { "group": "horizontal", "name": "ГруппаШапка", "behavior": "usual", "showTitle": true, "title": "Шапка", "shortcut": "Ctrl+G", "childrenAlign": "ItemsRightTitlesLeft", "horizontalStretch": true, "groupHorizontalAlign": "Right", "throughAlign": "Use", "verticalAlign": "Top", "childItemsWidth": "Equal", "horizontalSpacing": "None", "children": [
+        { "input": "Поле1", "path": "Поле1", "title": "Поле 1", "width": 20, "skipOnInput": true, "mask": "999-999" },
+        { "input": "Поле2", "path": "Поле2", "title": "Поле 2" },
+        { "labelField": "Метка", "path": "Поле1", "groupVerticalAlign": "Center" }
       ]},
-      { "group": "vertical", "name": "ГруппаПодвал", "children": [
+      { "group": "vertical", "name": "ГруппаПодвал", "behavior": "collapsible", "collapsed": true, "title": { "ru": "Подвал", "en": "Footer" }, "collapsedTitle": "Развернуть подвал", "titleDataPath": "Изменено", "format": { "ru": "БЛ=; БИ=*", "en": "BF=; BT=*" }, "showLeftMargin": false, "enableContentChange": false, "verticalSpacing": "None", "displayImportance": "Low", "children": [
         { "input": "Поле3", "path": "Поле3", "title": "Поле 3" }
       ]}
     ],
@@ -29,7 +31,8 @@
       { "name": "Объект", "type": "DataProcessorObject.СГруппами", "main": true },
       { "name": "Поле1", "type": "string" },
       { "name": "Поле2", "type": "decimal(15,2)" },
-      { "name": "Поле3", "type": "date" }
+      { "name": "Поле3", "type": "date" },
+      { "name": "Изменено", "type": "boolean" }
     ]
   }
 }

@@ -26,9 +26,21 @@
         "radio": "ОтборСтрок",
         "path": "ОтборСтрок",
         "radioButtonType": "Tumbler",
+        "editMode": "EnterOnInput",
+        "warningOnEdit": "Смена отбора перезагрузит список",
         "choiceList": [
           { "value": "Рекомендуемые" },
           { "value": "Все" }
+        ]
+      },
+      {
+        "radio": "ВидСчета",
+        "equalColumnsWidth": true,
+        "columnsCount": 1,
+        "choiceList": [
+          { "value": "Active", "valueType": "ent:AccountType", "presentation": "Активный" },
+          { "value": "Passive", "valueType": "ent:AccountType", "presentation": "Пассивный" },
+          { "value": "ActivePassive", "valueType": "ent:AccountType", "presentation": "Активный/Пассивный" }
         ]
       }
     ]

@@ -218,7 +218,7 @@ console.log('Расшифровка:', JSON.stringify(drilldown.rows));
 
 | Функция | Описание | Возвращает |
 |---------|----------|------------|
-| `navigateSection(name)` | Перейти в раздел (fuzzy match) | `{ sections, commands }` |
+| `navigateSection(name)` | Перейти в раздел (fuzzy match) | form state с `navigated`, `sections`, `commands` |
 | `openCommand(name)` | Открыть команду из панели функций | form state |
 | `navigateLink(path)` | Открыть по пути метаданных (`Документ.ЗаказКлиента`) | form state |
 | `openFile(path)` | Открыть внешнюю обработку/отчёт (EPF/ERF) через «Файл → Открыть» | form state |
@@ -260,38 +260,69 @@ console.log('Расшифровка:', JSON.stringify(drilldown.rows));
 - `_selected: true` — строка выделена (подсвечена). Используйте с `clickElement({ modifier: 'ctrl'|'shift' })` для проверки мультиселекции
 - На объекте результата: `hierarchical: true`, `viewMode: 'tree'`
 
-#### clickElement — клик по ячейке SpreadsheetDocument
+**Виртуализация и `hasMore`.** 1С виртуализирует и динамические списки, и табличные части — в DOM лежит только окно видимых строк. Поля `total` / `shown` — это размер DOM-окна, а **не** размер коллекции. Чтобы понять, есть ли строки за пределами окна, используйте `hasMore`:
 
-Для расшифровки отчётов первый аргумент `clickElement` принимает объект `{ row, column }` вместо текста. Координаты соответствуют выводу `readSpreadsheet()`:
+```js
+const t = await readTable();
+// t.hasMore = { above: false, below: true }  — открыли список, есть строки ниже
+// t.hasMore = { above: true,  below: false } — пролистали в конец
+// t.hasMore = { above: false, below: false } — всё помещается / нет страниц
+```
+
+`hasMore.below` присутствует всегда. `hasMore.above` тоже обычно есть — определяется по кнопкам пагинации (`vertButtonScroll`, есть у большинства дин-списков) или треку скроллбара (у табчастей). Отсутствует только в редких случаях, когда у грида нет ни кнопок, ни видимого скроллбара — тогда трактуйте отсутствие как «неизвестно».
+
+**Колонки-картинки.** Ячейки, где выводится иконка (статусы, этапы, индикатор ЭДО, скрепка «есть файл»), читаются как `'pic:<N>'` при наличии иконки (`N` — индекс кадра/состояния) и `''` при её отсутствии. Присутствие читается как truthy, разные иконки различаются по индексу:
+
+```js
+const t = await readTable();
+if (t.rows[0]['Присоединенные файлы']) { /* у строки есть прикреплённый файл */ }
+t.rows[0]['ЭДО'] === 'pic:1';   // подключён к 1С-ЭДО ('pic:0' = нет)
+```
+
+Колонки без текста в заголовке (одна иконка) тоже попадают в `columns`, именуются по тултипу заголовка или `'(picture)'` — служебное имя колонки 1С в браузер не передаёт. Картиночные значения — **только для чтения и ассертов**: отбирать/фильтровать строки по `'pic:N'` нельзя (фильтр по такому значению бросает понятную ошибку, расширенный поиск 1С такое поле не покажет). Для выбора строки фильтруйте по текстовой колонке; кликать по картиночной ячейке можно по индексу строки.
+
+#### clickElement — клик по ячейке (spreadsheet или грид формы)
+
+Первый аргумент `clickElement` принимает объект `{ row, column }` вместо текста. Маршрутизация автоматическая: если на форме отрисован SpreadsheetDocument (отчёт) — кликаем туда (drill-down), иначе — по ячейке грида (табчасть, список). Параметр `table: 'ИмяГрида'` принудительно указывает грид, если на форме одновременно есть отчёт и таблицы.
+
+**SpreadsheetDocument (drill-down отчёта).** Координаты соответствуют выводу `readSpreadsheet()`:
 
 ```js
 const report = await readSpreadsheet();
 // report.data[0] = { 'К1': 'Материалы строительные', 'К6': '150 000' }
 
-// По индексу строки данных + имя колонки
-await clickElement({ row: 0, column: 'К6' }, { dblclick: true });
-
-// По значению ячейки в строке (fuzzy match)
-await clickElement({ row: { 'К1': 'Материалы' }, column: 'К6' }, { dblclick: true });
-
-// Строка итогов
-await clickElement({ row: 'totals', column: 'К6' }, { dblclick: true });
+await clickElement({ row: 0, column: 'К6' }, { dblclick: true });                      // по индексу
+await clickElement({ row: { 'К1': 'Материалы' }, column: 'К6' }, { dblclick: true });  // по фильтру
+await clickElement({ row: 'totals', column: 'К6' }, { dblclick: true });               // итоги
+await clickElement('150 000', { dblclick: true });                                     // fallback: по тексту в iframe'ах
 ```
 
-Текстовый поиск тоже работает — если элемент не найден в основном DOM, `clickElement` ищет в SpreadsheetDocument iframe'ах:
+**Грид формы (табчасть документа, список каталога/журнала).** Колонка вне viewport — авто-скролл по горизонтали (с учётом frozen-колонок). `scroll: true | number` включает reveal-loop через PageDown для filter-row за пределами DOM-окна:
 
 ```js
-await clickElement('150 000', { dblclick: true }); // найдёт ячейку в отчёте
+await clickElement({ row: 0, column: 'Количество' }, { table: 'Товары', dblclick: true });
+await clickElement({ row: { 'Номенклатура': 'Бумага' }, column: 'Цена' }, { table: 'Товары' });
+await clickElement(
+  { row: { 'Номер': '0000-000601' }, column: 'Сумма' },
+  { table: 'Реализации', scroll: true }  // PageDown loop, лимит по умолчанию 50
+);
 ```
+
+**Подводные камни:**
+- `row: <число>` — индекс в **текущем DOM-окне**, не абсолютный (1С виртуализирует длинные списки). Для произвольной строки в длинном списке — `row: { col: val }` + `scroll: true`.
+- `scroll: true` идёт только **вниз** (PageDown). Для вверх — `page.keyboard.press('Home')` через `getPage()` или сначала `filterList`.
+- На дубликаты при фильтре — первая подходящая строка. Уточняйте фильтр для disambiguation.
 
 ### Действия
 
+Все action-функции возвращают **плоский form state** (как `getFormState()`) с action-specific extras (`clicked`, `focused`, `selected`, `filled`, `notFilled`, `closed`, `opened`, `navigated`, `deleted`, `filtered`, `unfiltered`). Errors всегда на верхнем уровне `.errors` — exec-wrapper автоматически throw'ает на soft validation errors (`modal`/`balloon`).
+
 | Функция | Описание | Возвращает |
 |---------|----------|------------|
-| `clickElement(text, {dblclick?, modifier?})` | Клик по кнопке/ссылке/строке. `{dblclick: true}` для открытия, `{modifier: 'ctrl'\|'shift'}` для мультиселекции. Первый аргумент может быть `{row, column}` для клика по ячейке SpreadsheetDocument (см. выше) | form state или `{ submenu }` |
-| `fillFields({name: value})` | Заполнить поля (текст, чекбокс, радио, ссылки, DCS-фильтры). Пустое значение (`''`/`null`) = очистка | `{ filled: [{field, ok, method}], form }` |
+| `clickElement(text, {dblclick?, modifier?, table?, scroll?})` | Клик по кнопке/ссылке/строке. `{dblclick: true}` для открытия, `{modifier: 'ctrl'\|'shift'}` для мультиселекции. Первый аргумент может быть `{row, column}` для клика по ячейке spreadsheet или грида формы (`table` форсит грид; `scroll: true \| number` включает reveal-loop через PageDown — см. выше). Если `text` не совпал ни с одним контролом и `table` не задан — как последний fallback фокусирует одноимённое поле ввода (без изменения значения), см. раздел про клавиши | form state (`clicked` / `focused` / `submenu`) |
+| `fillFields({name: value})` | Заполнить поля (текст, чекбокс, радио, ссылки, DCS-фильтры). Пустое значение (`''`/`null`) = очистка | form state с `filled` |
 | `selectValue(field, search, opts?)` | Выбрать из справочника. search: текст, `{поле: значение}` или `''`/`null` для очистки. `{ type }` для составного типа | form state с `selected` |
-| `fillTableRow(fields, {tab?, add?, row?})` | Заполнить строку. Значение: строка, `{ value, type }` для составного типа, `''`/`null` для очистки | form state |
+| `fillTableRow(fields, {tab?, add?, row?})` | Заполнить строку. Значение: строка, `{ value, type }` для составного типа, `''`/`null` для очистки | form state с `filled` (per-field ошибки как items `ok: false`, см. ниже) + `notFilled?` |
 | `deleteTableRow(row, {tab?})` | Удалить строку по индексу | form state |
 | `closeForm({save?})` | Закрыть форму. `save: false` = "Нет", `save: true` = "Да". Возвращает `closed: true/false` | form state с `closed` |
 | `filterList(text, {field?, exact?})` | Фильтр списка. Без field = все колонки, с field = расширенный поиск | form state |
@@ -333,27 +364,33 @@ await clickElement('150 000', { dblclick: true }); // найдёт ячейку 
 
 ## Клавиатурные сочетания
 
+Чтобы клавиша применилась к нужному полю, его сперва надо сфокусировать. `clickElement('ИмяПоля')` (без `table`) ставит фокус, ничего не меняя, и возвращает `focused: { field, id, ok }` — после этого жмём клавишу через `getPage()`:
+
 ```js
+await clickElement('Контрагент');          // фокус на ссылочное поле (focused.ok)
 const page = await getPage();
-await page.keyboard.press('F8');  // пример: создать новый элемент в сфокусированном ссылочном поле
+await page.keyboard.press('F4');           // открыть форму выбора
 ```
 
 | Клавиша | Контекст | Действие |
 |---------|----------|----------|
-| `F8` | Ссылочное поле | Создать новый элемент |
+| `F8` | Ссылочное поле | Создать новый элемент (может требовать прав/настройки в 1С) |
 | `Shift+F4` | Любое поле | Очистить значение (автоматизировано: `fillFields({ поле: '' })`) |
 | `F4` | Ссылочное поле | Форма выбора |
 | `Alt+F` | Список/таблица | Расширенный поиск |
 
 ## Типичные ошибки
 
-Все функции бросают исключение при ошибке (не возвращают `{ error }`). Сценарий прерывается на проблемном шаге с информативным сообщением. В интерактиве — `try/catch` для обработки.
+Большинство функций бросают исключение при ошибке. Сценарий прерывается на проблемном шаге с информативным сообщением. В интерактиве — `try/catch` для обработки.
+
+**Исключение — `fillTableRow`**: на per-field ошибках не throws, а возвращает их в `filled[]` как items с `ok: false` (`{ field, ok: false, error: 'code', message: '...' }`). Это позволяет частичное восстановление: например при `error: 'composite_type'` модель может retry'нуть конкретную ячейку с `{ value, type }` синтаксисом, не перезаполняя всю строку. Проверка — `r.filled.filter(f => !f.ok)`. Жёсткие ошибки (нет формы, table не найдена) и soft validation errors от 1С (balloon/modal) — всё равно throws.
 
 | Проблема | Решение |
 |----------|---------|
 | `no form found` — форма не открыта | Добавьте `await wait(2)` после навигации |
 | `not found. Available: ...` — элемент не найден | Проверьте имя через `getFormState()`, используйте вариант из Available |
 | `fillFields: N of M field(s) failed` | Текст ошибки содержит список проблемных полей и доступные варианты |
+| `fillTableRow` вернул item с `ok: false` | См. поле `error` — `composite_type` → retry с `{value, type}`; `column_not_found` → проверьте имя поля через `readTable`; `not_found` → уточните значение поиска |
 | Пустой `readSpreadsheet()` | Увеличьте `await wait(N)` перед чтением |
 
 ## Особенности

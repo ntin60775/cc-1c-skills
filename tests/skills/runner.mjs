@@ -201,8 +201,14 @@ function createWorkspace(fixturePath, readOnly) {
 }
 
 function cleanupWorkspace(ws) {
-  if (!ws.readOnly) {
-    rmSync(ws.path, { recursive: true, force: true });
+  if (ws.readOnly) return;
+  // On Windows, file handles from db-update (1cv8) may linger briefly after the
+  // process exits — rmSync then throws EBUSY. Retry a few times, then swallow:
+  // a leaked tmp dir is preferable to crashing the entire runner.
+  try {
+    rmSync(ws.path, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+  } catch (e) {
+    console.warn(`Warning: failed to clean workspace ${ws.path}: ${e.message}`);
   }
 }
 
@@ -257,9 +263,10 @@ function buildArgs(skillConfig, caseData, workDir, inputFilePath) {
     }
   }
 
-  // Append extra args from case (for optional params like -Vendor, -Version)
+  // Append extra args from case (for optional params like -Vendor, -Version).
+  // Supports {workDir} substitution for tests that need absolute paths inside the workspace.
   if (caseData.args_extra) {
-    args.push(...caseData.args_extra);
+    args.push(...caseData.args_extra.map(a => typeof a === 'string' ? a.replace('{workDir}', workDir) : a));
   }
 
   return { scriptPath, args };
@@ -317,6 +324,31 @@ function normalizeContent(text, config) {
 }
 
 // ─── Snapshot comparison ────────────────────────────────────────────────────
+
+// Capture raw byte contents of every file in dir, keyed by relative path.
+// Used by idempotency checks to verify byte-equality after a re-run.
+function snapshotWorkDirBytes(dir) {
+  const files = listFilesRecursive(dir);
+  const map = new Map();
+  for (const rel of files) {
+    map.set(rel, readFileSync(join(dir, rel)));
+  }
+  return map;
+}
+
+// Compare two byte-snapshots. Returns null if identical, else a list of diff lines.
+function diffByteSnapshots(before, after) {
+  const diffs = [];
+  for (const [rel, b1] of before) {
+    if (!after.has(rel)) { diffs.push(`removed: ${rel}`); continue; }
+    const b2 = after.get(rel);
+    if (b1.length !== b2.length || !b1.equals(b2)) diffs.push(`changed: ${rel} (${b1.length} -> ${b2.length} bytes)`);
+  }
+  for (const rel of after.keys()) {
+    if (!before.has(rel)) diffs.push(`added: ${rel}`);
+  }
+  return diffs.length === 0 ? null : diffs;
+}
 
 function listFilesRecursive(dir, base = '') {
   const result = [];
@@ -529,8 +561,17 @@ async function runCaseAsync(testCase, opts) {
         }
       }
       if (caseData.expect?.stdoutContains) {
-        if (!stdout.includes(caseData.expect.stdoutContains)) {
-          errors.push(`stdout does not contain "${caseData.expect.stdoutContains}"`);
+        const needles = Array.isArray(caseData.expect.stdoutContains)
+          ? caseData.expect.stdoutContains : [caseData.expect.stdoutContains];
+        for (const needle of needles) {
+          if (!stdout.includes(needle)) errors.push(`stdout does not contain "${needle}"`);
+        }
+      }
+      if (caseData.expect?.stdoutNotContains) {
+        const needles = Array.isArray(caseData.expect.stdoutNotContains)
+          ? caseData.expect.stdoutNotContains : [caseData.expect.stdoutNotContains];
+        for (const needle of needles) {
+          if (stdout.includes(needle)) errors.push(`stdout unexpectedly contains "${needle}"`);
         }
       }
       if (errors.length === 0 && !caseData.expectError && !workspace.readOnly) {
@@ -545,6 +586,23 @@ async function runCaseAsync(testCase, opts) {
               else errors.push(`Snapshot: ${d.file}:${d.line} differs\n  expected: ${d.expected}\n  actual:   ${d.actual}`);
             }
           }
+        }
+      }
+
+      // Idempotency check: re-run the same script with the same args and assert
+      // every file in workDir is byte-identical to the first-run output.
+      if (errors.length === 0 && caseData.idempotent && !workspace.readOnly) {
+        const before = snapshotWorkDirBytes(workDir);
+        try {
+          const execCwd = skillConfig.cwd === 'workDir' ? workDir : undefined;
+          await execSkillAsync(opts.runtime, scriptPath, args, execCwd);
+        } catch (e) {
+          errors.push(`Idempotency rerun failed: exitCode=${e.status}\nstderr: ${(e.stderr || '').substring(0, 300)}`);
+        }
+        if (errors.length === 0) {
+          const after = snapshotWorkDirBytes(workDir);
+          const diffs = diffByteSnapshots(before, after);
+          if (diffs) errors.push(`Idempotency: workspace changed on rerun:\n  ${diffs.join('\n  ')}`);
         }
       }
     }
@@ -678,10 +736,19 @@ function runCase(testCase, opts) {
         }
       }
 
-      // expect.stdoutContains
+      // expect.stdoutContains / stdoutNotContains (string or array)
       if (caseData.expect?.stdoutContains) {
-        if (!stdout.includes(caseData.expect.stdoutContains)) {
-          errors.push(`stdout does not contain "${caseData.expect.stdoutContains}"`);
+        const needles = Array.isArray(caseData.expect.stdoutContains)
+          ? caseData.expect.stdoutContains : [caseData.expect.stdoutContains];
+        for (const needle of needles) {
+          if (!stdout.includes(needle)) errors.push(`stdout does not contain "${needle}"`);
+        }
+      }
+      if (caseData.expect?.stdoutNotContains) {
+        const needles = Array.isArray(caseData.expect.stdoutNotContains)
+          ? caseData.expect.stdoutNotContains : [caseData.expect.stdoutNotContains];
+        for (const needle of needles) {
+          if (stdout.includes(needle)) errors.push(`stdout unexpectedly contains "${needle}"`);
         }
       }
 
@@ -701,6 +768,22 @@ function runCase(testCase, opts) {
               }
             }
           }
+        }
+      }
+
+      // Idempotency check: re-run the same script and assert byte-equality.
+      if (errors.length === 0 && caseData.idempotent && !workspace.readOnly) {
+        const before = snapshotWorkDirBytes(workDir);
+        try {
+          const execCwd = skillConfig.cwd === 'workDir' ? workDir : undefined;
+          execSkillRaw(opts.runtime, scriptPath, args, execCwd);
+        } catch (e) {
+          errors.push(`Idempotency rerun failed: exitCode=${e.status}\nstderr: ${(e.stderr || '').substring(0, 300)}`);
+        }
+        if (errors.length === 0) {
+          const after = snapshotWorkDirBytes(workDir);
+          const diffs = diffByteSnapshots(before, after);
+          if (diffs) errors.push(`Idempotency: workspace changed on rerun:\n  ${diffs.join('\n  ')}`);
         }
       }
     }
@@ -925,6 +1008,22 @@ async function runIntegrationTest(test, opts) {
     for (let i = 0; i < test.steps.length; i++) {
       const step = test.steps[i];
       const stepT0 = performance.now();
+
+      // writeFile step: записать содержимое (обычно .bsl модуля) в workDir
+      if (step.writeFile) {
+        try {
+          const target = replacePlaceholders(step.writeFile);
+          const abs = target.includes(':') || target.startsWith('/') ? target : join(workDir, target);
+          mkdirSync(dirname(abs), { recursive: true });
+          writeFileSync(abs, step.content ?? '', 'utf8');
+          const stepElapsed = ((performance.now() - stepT0) / 1000).toFixed(1);
+          stepResults.push({ name: step.name, passed: true, elapsed: `${stepElapsed}s` });
+        } catch (e) {
+          stepResults.push({ name: step.name, passed: false, error: `writeFile failed: ${e.message}` });
+          break;
+        }
+        continue;
+      }
 
       // Write input if provided
       let inputFile = null;
